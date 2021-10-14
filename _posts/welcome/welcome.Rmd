@@ -1,8 +1,9 @@
 ---
 title: "Welcome to my website"
 description: |
-  how I created this site using Distill
+  How I created this site using Distill.
 date: 10-14-2021
+preview: PA120077.png
 output:
   distill::distill_article:
     self_contained: false
@@ -11,12 +12,11 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-# Learn more about creating blogs with Distill at:
-# https://rstudio.github.io/distill/blog.html
-
 ```
 
-Welcome to my personal website! It was made with [Distill](https://rstudio.github.io/distill/), an R package that creates simple blogs and websites. I plan to use this blog to share my research and writings, primarily related to housing.
+![Autumn leaves in Overton Park / October 12, 2020](PA120077.png)
+
+Welcome to my personal website! It was made with [`Distill`](https://rstudio.github.io/distill/), an R package that creates simple blogs and sites within RStudio. I plan to use this blog to share my research and writings, primarily related to housing.
 
 This is my third attempt at creating a personal website within a year, which is a lot, but to be fair I had no idea what I was doing. After a year of trial and error I'm finally beginning to understand the basics of web development and the limitations of my abilities.
 
@@ -36,6 +36,6 @@ I always planned to continue my research after graduation, the question was how.
 
 Just under a month ago I created my first [blogdown](https://bookdown.org/yihui/blogdown/) website. It felt like the logical step after using bookdown. I got the website online but I felt in over my head. There were a lot of new files I didn't understand and the default template felt overwhelming. Originally I was going to push through; I at least knew how to make a new post. But once I started writing I found citations were not natively working.
 
-While searching for how to use citations, I learned about Distill and realized this is the program I probably should have been using all along. I don't have to worry about themes or keeping it updated. There's fewer options, so I'm not overwhelmed, and the R stuff seems to manage better. Citations work right out of the gate. I can focus on the writing and analysis rather than trying to figure out how to make the website work.
+While searching for how to use citations, I learned about [`Distill`](https://rstudio.github.io/distill/) and realized this is the program I probably should have been using all along. I don't have to worry about themes or keeping it updated. There's fewer options, so I'm not overwhelmed, and the R stuff seems to manage better. Citations work right out of the gate. I can focus on the writing and analysis rather than trying to figure out how to make the website work.
 
-Maybe one day I'll outgrow Distill, but I have a lot to learn before that happens.
+To get up and running I used [this post by Thomas Mock](https://themockup.blog/posts/2020-08-01-building-a-blog-with-distill/#step-7-add-to-git) and the `Distill` [documentation](https://rstudio.github.io/distill/blog.html). Maybe one day I'll outgrow `Distill`, but I have a lot to learn before that happens.
