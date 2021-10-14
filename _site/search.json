@@ -5,14 +5,14 @@
       "title": "About",
       "author": [],
       "contents": "\nHello 👋 My name is Sarah Johnson. I recently graduated from the University of Memphis where I received my master’s in urban planning. My research interests include housing quality and affordability.\n\n\n\n",
-      "last_modified": "2021-10-14T04:26:21-05:00"
+      "last_modified": "2021-10-14T10:52:01-05:00"
     },
     {
       "path": "index.html",
       "title": "Sarah Johnson",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-10-14T04:26:23-05:00"
+      "last_modified": "2021-10-14T10:52:02-05:00"
     }
   ],
   "collections": ["posts/posts.json"]
