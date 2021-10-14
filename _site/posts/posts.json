@@ -1,0 +1,14 @@
+[
+  {
+    "path": "posts/welcome/",
+    "title": "Welcome to my website",
+    "description": {},
+    "author": [],
+    "date": "2021-10-14",
+    "categories": [],
+    "contents": "\nWelcome to my personal website! This site was made with Distill, an R package used for creating simple blogs and websites.\n\n\n\n",
+    "preview": {},
+    "last_modified": "2021-10-14T04:26:37-05:00",
+    "input_file": "welcome.knit.md"
+  }
+]

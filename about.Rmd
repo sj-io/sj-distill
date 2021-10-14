@@ -1,0 +1,9 @@
+---
+title: "About"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Hello 👋 My name is Sarah Johnson. I recently graduated from the University of Memphis where I received my master's in urban planning. My research interests include housing quality and affordability.
