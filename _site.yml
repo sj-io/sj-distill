@@ -9,4 +9,8 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
-output: distill::distill_article
+    - icon: fa fa-github
+      href: https://github.com/sj-io
+output: 
+  distill::distill_article:
+    css: styles.css
