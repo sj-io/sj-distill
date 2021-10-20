@@ -1,0 +1,51 @@
+---
+title: "tracts-timeseries"
+description: |
+  A short description of the post.
+date: 2021-10-20
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Boundaries Over Time
+
+As places grow and change, so do their boundaries. It's important we know how boundaries have changed over time before we began analyzing time-series data.
+
+We'll need some extra packages for this section to create our final maps.
+
+```{r}
+library(tidyverse)
+library(tigris)
+library(patchwork)
+library(glue)
+```
+
+## Tracts within County
+
+To create a map over a certain period of time, use `map(seq())` functions. Set your start year, end year, and interval, and define your **tigris** geography, setting `year = .x`. In the same mapping function, set up your `ggplot()` and use the `glue()` function to automatically label maps with the year and number of rows for that year (equal to the number of tracts).
+
+```{r}
+tractsPlot <- map(seq(1990, 2020, 10), ~{
+  tractsYear <- tracts("TN", "Shelby", year = .x, cb = TRUE)
+  
+  ggplot(tractsYear) +
+    geom_sf() +
+    theme_void() +
+    labs(title = glue("{.x}: {nrow(tractsYear)} tracts"))
+})
+```
+
+Then we can use **patchwork** to create up our plots.
+
+```{r}
+(tractsPlot[[1]] + tractsPlot[[2]]) / 
+  (tractsPlot[[3]] + tractsPlot[[4]])
+```
+
+Shelby County gained 65 tracts from 1990 to 2020.
