@@ -1,16 +1,17 @@
 ---
 title: "Mapping Memphis"
 description: |
-  Let's set some boundaries. Make simple interactive maps of Census boundaries using tigris (and other R packages).
+  Let's set some boundaries. Make simple static and interactive maps of Census boundaries using tigris and other R packages.
 date: 2021-10-18
 output:
   distill::distill_article:
     self_contained: false
     toc: true
+    toc_float: true
+    code_download: true
 draft: true
 bibliography: references.bib
 csl: chicago-fullnote-bibliography-16th-edition.csl
-link-citations: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -22,11 +23,15 @@ knitr::opts_chunk$set(
   )
 ```
 
+# Intro
+
 In this post I will map boundaries related to Memphis, TN.
 
-Boundaries are made available by the US Census Bureau on their [TIGER/Line Shapefiles](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) page. These files do not contain demographic data, but their GEOIDs can be linked to [other Census data](http://data.census.gov/).
+## Data Source
 
-In R, the **tigris** package can be used to access these boundaries. I'll also use the **sf** package to ensure consistent coordinates and to filter geographic areas. I use **ggplot** in this post to make maps.
+Boundaries are made available by the US Census Bureau on their [TIGER/Line Shapefiles](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) page. These files do not contain demographic data, but their GEOIDs can be linked to [other Census data](http://data.census.gov/). In R, the **tigris** package can be used to access these boundaries.
+
+I'll also use the **sf** package to ensure consistent coordinates and to filter geographic areas. I use **ggplot** in this post to make maps.
 
 If you're following along in R, load these packages to get started.
 
@@ -39,15 +44,19 @@ options(tigris_use_cache = TRUE)
 
 Determine which boundaries are best for your project. A full list of TIGER/Line boundaries available through **tigris** is available [here](https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html#data-availability-in-tigris).
 
-CRS note: A coordinate reference system (crs) tells a map how to look. If your map doesn't look right, like it's skewed or warped or whatever, you probably need to set the crs. If you plan to combine maps, defining the crs ensures projections are consistent.
+## CRS
 
-If you do not define a crs, it will default to **4269 (NAD 1983)**. Set the crs of a table using `st_transform(crs = ####)`. You can check a table's crs using `st_crs()`. For more info see [here](https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html#coordinate-reference-systems).
+A coordinate reference system (crs) tells a map how to look. If your map doesn't look right, like it's skewed or warped or whatever, you probably need to set the crs. If you plan to combine maps, defining the crs ensures projections are consistent.
 
-The package [**crsuggest**](https://github.com/walkerke/crsuggest) can help find the correct crs for your map. I also found the website [epsg.io](https://epsg.io/) useful; for example, see the boundaries for the crs code **6510** at <https://epsg.io/6510>. This crs code was the top suggestion for my maps, but the projection excluded Tennessee and I found the difference minimal from the default. For simplicity, I stuck with the default.
+If you do not define a crs, **tigris** and **sf** will default to **4269 (NAD 1983)**. Set the crs of a dataset using `st_transform(crs = ####)`. You can check a table's crs using `st_crs()`. For more info see the [section on crs in Analyzing US Census Data](https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html#coordinate-reference-systems).
+
+The package [**crsuggest**](https://github.com/walkerke/crsuggest) can help find the correct crs for your map. I also found the website [epsg.io](https://epsg.io/) useful; for example, you can quickly see the boundaries for the crs code **6510** at <https://epsg.io/6510>. This crs was the top suggestion for my maps, but the projection excluded Tennessee and I found the difference minimal from the default. For simplicity, I stuck with the default.
 
 # Memphis Metro Area
 
-A metropolitan area is centered around an urban core and contains 50,000 or more people. A micropolitan area contains at least 10,000, but less than 50,000 people. The term core-based statistical area (CBSA) refers to these micro and metro areas. CBSAs are made of counties, including the county containing the urban core and any adjacent counties with "a high degree of social and economic integration" (measured by commute to work).[@uscensusbureau2021]
+To understand a place, we need to look further than the city limits and also study the surrounding area. One way to do this is to analyze Census metro and micro areas.
+
+A **metropolitan** area is centered around an urban core and contains 50,000 or more people. A **micropolitan** area contains at least 10,000, but less than 50,000 people. The term **core-based statistical area** (CBSA) refers to both these micro and metro areas. CBSAs are made of counties, including the county containing the urban core and any adjacent counties with "a high degree of social and economic integration" (measured by commute to work).[@uscensusbureau2021]
 
 Use the `core_based_statistical_areas()` function to get boundary data for all metropolitan and micropolitan areas in the United States. To find a specific place, filter the NAME column; in this case we are looking for Memphis.
 
@@ -55,7 +64,7 @@ Use the `core_based_statistical_areas()` function to get boundary data for all m
 metro <- core_based_statistical_areas() %>% 
   filter(str_detect(NAME, "Memphis")) 
 
-#' below example is in base R notation
+#' same thing in base R notation:
 #' cbsa <- core_based_statistical_areas()
 #' metro <- cbsa[grep("Memphis", cbsa$NAME), ]
 
@@ -64,9 +73,9 @@ plot(metro$geometry)
 
 ## Counties within Metro
 
-The Memphis metro area covers three states: Tennessee, Mississippi, and Arkansas. If we want to see which counties are in the metro area, we'll need to get data for each state. We can do with the `counties()` function.
+The Memphis metro area covers three states: Tennessee, Mississippi, and Arkansas. If we want to see which **counties** are in the metro area, we'll need to get data for each state. We can do with the `counties()` function.
 
-To get data for multiple states at once, we can use the `map_dfr()` function. This tells R to get data for `counties("AR")`, `counties("TN")`, and `counties("MS")`, then joins those tables into one.
+To get data for multiple states at once, we can combine the `map_dfr()` and `counties` functions. This tells R to get data from `"AR"`, `"TN"`, and `"MS"`, then joins those tables into one: `stateCounties`.
 
 ```{r stateCounties}
 stateCounties <- map_dfr(c("AR", "TN", "MS"), ~{
@@ -74,13 +83,16 @@ stateCounties <- map_dfr(c("AR", "TN", "MS"), ~{
   })
 ```
 
-Next we can use base R notation to filter the `stateCounties` to only counties within the metro area. Note: removing the `op = st_within` will return all counties within *and adjacent to* the boundary area.
+The result, `stateCounties` (not shown) is a map of all counties in Arkansas, Tennessee, and Mississippi. We can then use base R notation to filter to only counties within the metro area (**sf** package required).
 
 ```{r metroCounties}
 metroCounties <- stateCounties[metro, op = st_within]
+
+#' Note:  op = st_within only returns counties within the metro area. 
+#' Use stateCounties[metro, ] to return all counties that are within or border the metro area.
 ```
 
-Then we can use **ggplot** to create a map of our data showing `metroCounties` in grey and an outline of the `metro` area in red.
+To create a map with multiple customized layers, I'll use **ggplot**. Below, the Memphis metro area is outlined in red and `metroCounties` are outlined in grey.
 
 ```{r mapMetroCounties}
 ggplot() +
@@ -91,9 +103,9 @@ ggplot() +
 
 ## Places within Metro
 
-Similarly, we can find places within the metro area. A place is a legally incorporated area or a Census Designated Place (CDP), which is not legally incorporated but contains a concentration of populations identifiable by name and used for statistics purposes. There's no population size requirements for CDPs.
+Similarly, we can all the cities, towns, and villages within the metro area. A **place** is either a legally incorporated area or a Census Designated Place (CDP), which is not legally incorporated and is used for statistics purposes. There's no population size requirements for CDPs.
 
-First we get the data using `places()`, then we filter is using base R notation, then we plot it using `ggplot`.
+Using R we can easily copy and paste the above process and make small adjustments to create a new plot for all the places within the Memphis metro area.
 
 ```{r places}
 statePlaces <- map_dfr(c("AR", "TN", "MS"), ~{
@@ -108,9 +120,46 @@ ggplot() +
   theme_void()
 ```
 
+## Interactive Map
+
+Making static maps is easy enough, but R packages also makes it simple to create interactive maps. For this first map I'll be using the **mapview** package. **mapview** is great for creating simple maps with basic useful features.
+
+```{r}
+library(mapview)
+```
+
+It's possible to create a map with just `mapview(metro)`, and adding another layer is as simple as `+ mapview(metroCounties)`. I went ahead and adjusted some of the aesthetics for the below map.
+
+Below is a basic interactive map of the Memphis Metro Area, including counties and places within the metro area.
+
+```{r}
+mapview(metro,
+        layer.name = "Memphis Metro Area",
+        label = metro$NAMELSAD,
+        col.regions = "#EC9061", #' fill color
+        alpha.regions = 0.1, #' fill opacity
+        lwd = 3, #' line width
+        color = "#EC9061" #' line color
+        ) +
+  mapview(metroCounties, 
+          layer.name = "Counties in Metro",
+          label = metroCounties$NAMELSAD,
+          col.regions = "#F8F5E6",
+          alpha.regions = 0.3
+          ) +
+  mapview(metroPlaces, 
+          layer.name = "Places in Metro",
+          label = metroPlaces$NAME,
+          col.regions = "#46ABBF",
+          alpha.regions = 0.4
+          )
+```
+
+The layers button in the upper left, default in **mapview**, allows you to change the base layer or turn layers on and off. Hovering over a region displays the Census label name, set in the above code by `label = dataSet$variable`. **mapview** also enables popups by default; clicking on a feature displays all available attribute data. I left it enabled in this instance so you can see what data is available for each selection, but the resulting popup is too large to easily view and will be adjusted in below maps.
+
 # Urban Areas
 
-Because CBSA boundaries are set by county lines (rather than where people actually live and work), their boundaries can be too broad for the project we are working on. Urban areas include "urbanized areas," which are densely developed areas with at least 50,000 people, and "urban clusters," which have a between 2,500 and 50,000 people.[@tigris2021]
+CBSA boundaries are set by county lines rather than where people actually live and work, meaning their boundaries can include too much rural land for what we're trying to study. **Urban areas** include "urbanized areas," which are densely developed areas with at least 50,000 people, and "urban clusters," which have a between 2,500 and 50,000 people.[@tigris2021]
 
 ```{r urb}
 urb <- urban_areas() %>% 
@@ -122,17 +171,21 @@ urb <- urban_areas() %>%
   
 ggplot() +
   geom_sf(data = metroCounties, fill = "white", color = "grey") +
-  geom_sf(data = urb, fill = NA, color = "red") +
+  geom_sf(data = urb, color = "red") +
   theme_void()
 ```
 
+After overlaying the maps, we can see the Memphis urban area is significantly smaller than the overall metro boundaries. Areas outside the boundary are considered rural. We can also see gaps within the urban area where no people would live, like the airport and Shelby Farms.
+
 ## ZCTAs in Urban Areas
 
-ZCTAs are Census representations of USPS ZIP Codes.[@uscensusbureau2021] These boundaries are not bound by place or county lines.
+**ZCTAs** are Census representations of USPS ZIP Codes.[@uscensusbureau2021] These boundaries are not bound by place or county lines.
 
-Usually the ZCTA file is massive; if `cb = TRUE` it is around 502MB, and `cb = FALSE` is around 64 MB. You can narrow down this file by specifying the beginning digits of ZCTAs you want to return.
+Use `zcta()` to get all ZCTAs in the US, or filter by state. The ZCTA file is massive, and you can also narrow down your download by specifying the beginning digits of ZCTAs you want to return.
 
-Lucky for me, the Memphis urban area is used in [the CRAN example](https://rdrr.io/cran/tigris/man/zctas.html) for how to use the `zctas()` function. According to the example, I should filter for ZCTAs that start with "37," "38," and "72." I've always lived around here in a 38\*\*\* ZIP code, so it sounds right.
+While I could use `map_dfr()` again for each state, the Memphis urban area is actually used in [the CRAN example](https://rdrr.io/cran/tigris/man/zctas.html) for how to use the `zctas()` function. According to the example, ZCTAs in the Memphis area start with "37," "38," and "72." I've always lived around here in a 38\*\*\* ZIP code, so it sounds right.
+
+Then I filtered the data to only keep ZCTAs in the urban area.
 
 ```{r}
 zcta <- zctas(cb = TRUE, starts_with = c("37", "38", "72"))
@@ -142,9 +195,13 @@ urbZCTA <- zcta[urb, ]
 plot(urbZCTA$geometry)
 ```
 
+Notice while filtering, `op = st_within` was omitted (unlike the examples under the metro section). Omitting this tells R to get ZCTAs within *or intersecting/bordering* the urban area.
+
 ## PUMAs in Urban Areas
 
-Public Use Micro Areas (PUMAs) contain at least 100,000 people. They are notably used with Public Use Microdata Sample (PUMS) data, which are anonymized individual-level Census records. This data is useful to researchers who can create custom queries of data rather than using pre-tabulated estimates provided by the Census Bureau.
+**Public Use Micro Areas** (PUMAs) are Census boundaries set every 10 years which contain at least 100,000 people. They are notably used with Public Use Microdata Sample (PUMS) data, which are anonymized individual-level Census records.[^1] This data is useful to researchers who want to create custom queries of data rather than using pre-tabulated estimates provided by the Census Bureau.
+
+[^1]: You can also access this data from <https://www.ipums.org/>.
 
 ```{r}
 statePUMAS <- map_dfr(c("AR", "TN", "MS"), ~{
@@ -156,6 +213,72 @@ urbPUMAS <- statePUMAS[urb, ]
 plot(urbPUMAS$geometry)
 ```
 
+PUMAs boundaries are built on census tracts. Though they may be guided by county lines, they are not limited to them, and one PUMA can cover multiple counties.
+
+In the above map, I was concerned that there was no PUMA touching the southeast corner of Shelby County (center). I ran the code again, instead filtering by `metroCounties`, so I could see additional PUMAs.
+
+```{r}
+metroPUMAS <- statePUMAS[metroCounties, ]
+
+plot(metroPUMAS$geometry)
+```
+
+The PUMA touching the SE of Shelby County extends the remainder of north Mississippi, far outside the area I'm trying to study. So, if using PUMAs to study the Memphis metro, I would definitely use `urbPUMAS`.
+
+## Interactive Map
+
+Originally I tried making the plots in this section into another interactive map with **mapview**, like in \@ref(interactive-map). However, the boundaries in this section do not fit neatly into one another. When stacked, they look messy. Users could turn off layers in the settings, but I think this is expecting a lot out of users; if the map is initially busy/confusing, they won't want to use it at all.
+
+At this point, I decided to switch to the **leaflet** package, which is easier for maps requiring more customizing.
+
+```{r}
+library(leaflet)
+```
+
+Leaflet's syntax takes a little bit more to get started. Instead of `mapview() + mapview()`, the minimum code for two layers is `leaflet() %>% addTiles() %>% addPolygons() %>% addPolygons()`.
+
+To show and hide layers, first assign a `group` to each feature. Enable `addLayersControl()` and list which groups you want users to be able to toggle on/off. To hide specific groups initially, use `hideGroup()`. Read more in the [Leaflet for R guide](https://rstudio.github.io/leaflet/showhide.html).
+
+The following is an interactive map of the Memphis urban area, with surrounding ZCTAs and PUMAs.
+
+```{r}
+urbMap <- leaflet() %>% addTiles() %>% 
+  addPolygons(data = urb,
+              fillColor = "#FDA5B3",
+              fillOpacity = 0.5,
+              weight = 1,
+              color = "red",
+              label = ~NAME10,
+              group = "Urban Area") %>% 
+  addPolygons(data = urbPUMAS,
+              fillColor = "#EC9061",
+              fillOpacity = 0.5,
+              weight = 1,
+              color = "red",
+              label = ~NAMELSAD10,
+              group = "PUMAs",
+              highlightOptions = highlightOptions(
+                color = "white", 
+                weight = 3, 
+                bringToFront = TRUE)) %>% 
+  addPolygons(data = urbZCTA,
+              fillColor = "#46ABBF",
+              fillOpacity = 0.5,
+              weight = 1,
+              label = ~ZCTA5CE10,
+              group = "ZCTAs",
+              highlightOptions = highlightOptions(
+                color = "white", 
+                weight = 3, 
+                bringToFront = TRUE)) %>% 
+  addLayersControl(overlayGroups = c("Urban Area", "PUMAs", "ZCTAs"),
+                   options = layersControlOptions(collapsed = FALSE))
+urbMap %>% 
+  hideGroup(c("ZCTAs", "PUMAs"))
+```
+
+Some features are missing from the default `mapview()`. Notably, there is no layers button, no scale, and no zoom buttons. However, these features can still be added be added manually.
+
 # Shelby County
 
 Next let's focus on Shelby County, which contains Memphis. We can filter our `metroCounties` data from earlier.
@@ -165,11 +288,11 @@ shelby <- metroCounties %>%
   filter(str_detect(NAME, "Shelby"))
 ```
 
-This gives us an outline of Shelby County.
+This gives us an outline of Shelby County (not shown).
 
-### Places within County
+## Places within County
 
-There are a decent number of unincorporated areas in Shelby County. We can see this by finding all the `places()` in the county.
+There is a decent amount of rural space in Shelby County. We can see this by finding all the `places()` in the county.
 
 ```{r shelbyPlaces}
 shelbyPlaces <- metroPlaces[shelby, op = st_within]
@@ -180,9 +303,9 @@ ggplot() +
   theme_void()
 ```
 
-### Tracts within County
+## Tracts within County
 
-We can get Census tract data using the `tracts()` function. At this level we can also specify a county name, such as "Shelby," so we don't have to filter the data.
+We can get Census tract data using the `tracts()` function. At this geographic level we can also specify a county name, such as "Shelby," so we don't have to filter the data.
 
 ```{r tracts}
 tracts <- tracts("TN", "Shelby")
@@ -192,6 +315,10 @@ ggplot() +
   geom_sf(data = shelby, fill = NA, color = "red") +
   theme_void()
 ```
+
+## Interactive Map
+
+Below is an interactive map of the plots in this section.
 
 # Boundaries Over Time
 
@@ -219,7 +346,7 @@ tractsPlot <- map(seq(1990, 2020, 10), ~{
 })
 ```
 
-Then we can use **patchwork** to set up our plots.
+Then we can use **patchwork** to create up our plots.
 
 ```{r}
 (tractsPlot[[1]] + tractsPlot[[2]]) / 
