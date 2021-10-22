@@ -46,7 +46,7 @@ Determine which boundaries are best for your project. A full list of TIGER/Line 
 
 ## CRS
 
-A coordinate reference system (crs) tells a map how to look. If your map doesn't look right, like it's skewed or warped or whatever, you probably need to set the crs. If you plan to combine maps, defining the crs ensures projections are consistent.
+In essence, a coordinate reference system (crs) tells a map how to look. If your map doesn't look right, like it's skewed or warped or whatever, you probably need to reangle the map by setting the crs. If you plan to combine maps, defining the crs ensures projections are consistent.
 
 If you do not define a crs, **tigris** and **sf** will default to **4269 (NAD 1983)**. Set the crs of a dataset using `st_transform(crs = ####)`. You can check a table's crs using `st_crs()`. For more info see the [section on crs in Analyzing US Census Data](https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html#coordinate-reference-systems).
 
@@ -94,7 +94,7 @@ metroCounties <- stateCounties[metro, op = st_within]
 
 To create a map with multiple customized layers, I'll use **ggplot**. Below, the Memphis metro area is outlined in red and `metroCounties` are outlined in grey.
 
-```{r mapMetroCounties}
+```{r mapMetroCounties, fig.cap="Counties in Memphis Metro Area"}
 ggplot() +
   geom_sf(data = metroCounties, fill = "white", color = "grey") +
   geom_sf(data = metro, fill = NA, color = "red") +
@@ -107,7 +107,7 @@ Similarly, we can all the cities, towns, and villages within the metro area. A *
 
 Using R we can easily copy and paste the above process and make small adjustments to create a new plot for all the places within the Memphis metro area.
 
-```{r places}
+```{r placesR, fig.cap="Places in Memphis metro area"}
 statePlaces <- map_dfr(c("AR", "TN", "MS"), ~{
   places(.x)
   }) 
@@ -120,7 +120,7 @@ ggplot() +
   theme_void()
 ```
 
-## Interactive Map
+## Interactive Mapview Map
 
 Making static maps is easy enough, but R packages also makes it simple to create interactive maps. For this first map I'll be using the **mapview** package. **mapview** is great for creating simple maps with basic useful features.
 
@@ -132,7 +132,7 @@ It's possible to create a map with just `mapview(metro)`, and adding another lay
 
 Below is a basic interactive map of the Memphis Metro Area, including counties and places within the metro area.
 
-```{r metroMap}
+```{r metroMap, layout="l-body-outset", fig.cap="Interactive mapview map of Memphis metro area"}
 mapview(metro,
         layer.name = "Memphis Metro Area",
         label = metro$NAMELSAD,
@@ -155,13 +155,13 @@ mapview(metro,
           )
 ```
 
-The layers button in the upper left, default in **mapview**, allows you to change the base layer or turn layers on and off. Hovering over a region displays the Census label name, set in the above code by `label = dataSet$variable`. **mapview** also enables popups by default; clicking on a feature displays all available attribute data. I left it enabled in this instance so you can see what data is available for each selection, but the resulting popup is too large to easily view and will be adjusted in below maps.
+The layers button in the upper left, default in **mapview**, allows you to change the base layer or turn layers on and off. Hovering over a region displays the Census label name, set in the above code by `label = dataSet$variable`. **mapview** also enables popups by default; clicking on a feature displays all available attribute data.
 
 # Urban Areas
 
 CBSA boundaries are set by county lines rather than where people actually live and work, meaning their boundaries can include too much rural land for what we're trying to study. **Urban areas** include "urbanized areas," which are densely developed areas with at least 50,000 people, and "urban clusters," which have a between 2,500 and 50,000 people.[@tigris2021]
 
-```{r urb}
+```{r urb, fig.cap="Memphis urban area"}
 urb <- urban_areas() %>% 
   filter(str_detect(NAME10, "Memphis"))
 
@@ -179,55 +179,59 @@ After overlaying the maps, we can see the Memphis urban area is significantly sm
 
 ## ZCTAs
 
-**Zip Code Tabulation Areas (ZCTAs)** are Census representations of USPS ZIP Codes.[@uscensusbureau2021] These boundaries are not bound by place or county lines.
+**Zip Code Tabulation Areas (ZCTAs)** are Census representations of USPS ZIP Codes.[@uscensusbureau2021] They are created using Census blocks and are not bound by place, county, tract, or block group.
 
-Use `zcta()` to get all ZCTAs in the US, or filter by state. The ZCTA file is massive, and you can also narrow down your download by specifying the beginning digits of ZCTAs you want to return.
+Use `zcta()` to download all ZCTAs in the US, filterable by state. Because ZIP Codes starting with the same two digits will usually be clustered together, you can also filter by `starts_with()`. The ZCTA file is massive, so it's a good idea to filter one way or another.
 
-While I could use `map_dfr()` again for each state, the Memphis urban area is actually used in [the CRAN example](https://rdrr.io/cran/tigris/man/zctas.html) for how to use the `zctas()` function. According to the example, ZCTAs in the Memphis area start with "37," "38," and "72." I've always lived around here in a 38\*\*\* ZIP code, so it sounds right.
+While I could use `map_dfr()` again, the Memphis urban area is actually used in [the CRAN example](https://rdrr.io/cran/tigris/man/zctas.html) for how to use the `zctas()` function. According to the example, ZCTAs in the Memphis area start with "37," "38," and "72." After working through the example, I found I only needed "38" and "72" ("37" covered Middle Tennessee). Then I further filtered to only keep ZCTAs intersecting the Memphis urban area.
 
-Then I filtered the data to only keep ZCTAs in the urban area.
-
-```{r urbZCTA}
-zcta <- zctas(cb = TRUE, starts_with = c("37", "38", "72"))
+```{r urbZCTA, fig.cap="ZCTAs in Memphis urban area"}
+zcta <- zctas(cb = TRUE, starts_with = c("38", "72"))
 
 urbZCTA <- zcta[urb, ]
 
-plot(urbZCTA$geometry)
+ggplot() +
+  geom_sf(data = metroCounties, fill = "white", color = "grey") +
+  geom_sf(data = urbZCTA, fill = NA, color = "red") +
+  theme_void()
 ```
 
-Notice while filtering, `op = st_within` was omitted (unlike the examples under the metro section). Omitting this tells R to get ZCTAs within *or intersecting/bordering* the urban area.
+Notice how ZCTAs do not always align with county boundaries.
 
 ## PUMAs
 
-**Public Use Micro Areas** (PUMAs) are Census boundaries set every 10 years which contain at least 100,000 people. They are notably used with Public Use Microdata Sample (PUMS) data, which are anonymized individual-level Census records.[^1] This data is useful to researchers who want to create custom queries of data rather than using pre-tabulated estimates provided by the Census Bureau.
+**Public Use Microdata Areas** (PUMAs) are Census boundaries set every 10 years which contain at least 100,000 people. They are notably used with Public Use Microdata Sample (PUMS) data, which are anonymized individual-level Census records.[^1] This data is useful to researchers who want to create custom queries of data rather than using pre-tabulated estimates provided by the Census Bureau.
 
 [^1]: [Until the API is complete](https://developer.ipums.org/docs/apiprogram/), PUMAs data is available for download from <https://www.ipums.org/>.
 
-```{r urbPUMAS}
+```{r urbPUMAS, fig.cap="PUMAs in Memphis urban area"}
 statePUMAS <- map_dfr(c("AR", "TN", "MS"), ~{
   pumas(.x)
   })
 
 urbPUMAS <- statePUMAS[urb, ]
 
-plot(urbPUMAS$geometry)
+ggplot() +
+  geom_sf(data = metroCounties, fill = "white", color = "grey") +
+  geom_sf(data = urbPUMAS, fill = NA, color = "red") +
+  theme_void()
 ```
 
 PUMAs boundaries are built on census tracts. Though they may be guided by county lines, they are not limited to them, and one PUMA can cover multiple counties.
 
 In the above map, I was concerned that there was no PUMA touching the southeast corner of Shelby County (center). I ran the code again, instead filtering by `metroCounties`, so I could see additional PUMAs.
 
-```{r metroPUMAS}
+```{r metroPUMAS, fig.cap="PUMAs in Memphis metro area"}
 metroPUMAS <- statePUMAS[metroCounties, ]
 
 plot(metroPUMAS$geometry)
 ```
 
-The PUMA touching the SE of Shelby County extends the remainder of north Mississippi, far outside the area I'm trying to study. So, if using PUMAs to study the Memphis metro, I would definitely use `urbPUMAS`.
+The PUMA touching the SE of Shelby County extends the remainder of north Mississippi, far outside the area I'm trying to study. So, if using PUMAs to study the Memphis metro, I would use `urbPUMAS`.
 
-## Interactive Map
+## Interactive Leaflet Map
 
-Originally I tried making the plots in this section into another interactive map with **mapview**, like in \@ref(interactive-map). However, the boundaries in this section do not fit neatly into one another. When stacked, they look messy. Users could turn off layers in the settings, but I think this is expecting a lot out of users; if the map is initially busy/confusing, they won't want to use it at all.
+Originally I tried making the plots in this section into another interactive map with **mapview**, like in \@ref(fig:metroMap). However, the boundaries in this section do not fit neatly into one another. When stacked, they look messy. Users could turn off layers in the settings, but I think this is expecting a lot out of users; if the map is initially busy/confusing, they won't want to use it at all.
 
 At this point, I decided to switch to the **leaflet** package, which is easier for maps requiring more customizing.
 
@@ -241,20 +245,23 @@ To show and hide layers, first assign a `group` to each feature. Enable `addLaye
 
 The following is an interactive map of the Memphis urban area, with surrounding ZCTAs and PUMAs.
 
-```{r urbanMap}
-urbMap <- leaflet() %>% addTiles() %>% 
+```{r urbanMap, layout="l-body-outset", code_folding=TRUE, fig.cap="Interactive leaflet map of Memphis urban area"}
+urbMap <- leaflet() %>% 
+  addProviderTiles(providers$CartoDB.Positron, group = "CartoDB (default)") %>% 
   addPolygons(data = urb,
-              fillColor = "#FDA5B3",
-              fillOpacity = 0.5,
+              fillColor = "#c93335",
+              fillOpacity = 0.2,
               weight = 1,
-              color = "red",
+              color = "#c93335",
+              opacity = 1,
               label = ~NAME10,
               group = "Urban Area") %>% 
   addPolygons(data = urbPUMAS,
-              fillColor = "#EC9061",
-              fillOpacity = 0.5,
+              fillColor = "#9379c2",
+              fillOpacity = 0.2,
               weight = 1,
-              color = "red",
+              color = "#9379c2",
+              opacity = 1,
               label = ~NAMELSAD10,
               group = "PUMAs",
               highlightOptions = highlightOptions(
@@ -262,9 +269,11 @@ urbMap <- leaflet() %>% addTiles() %>%
                 weight = 3, 
                 bringToFront = TRUE)) %>% 
   addPolygons(data = urbZCTA,
-              fillColor = "#46ABBF",
-              fillOpacity = 0.5,
+              fillColor = "#66b888",
+              fillOpacity = 0.2,
               weight = 1,
+              color = "#66b888",
+              opacity = 1,
               label = ~ZCTA5CE10,
               group = "ZCTAs",
               highlightOptions = highlightOptions(
@@ -272,12 +281,11 @@ urbMap <- leaflet() %>% addTiles() %>%
                 weight = 3, 
                 bringToFront = TRUE)) %>% 
   addLayersControl(overlayGroups = c("Urban Area", "PUMAs", "ZCTAs"),
-                   options = layersControlOptions(collapsed = FALSE))
+                   options = layersControlOptions(collapsed = FALSE)) %>% 
+  addScaleBar(position = "bottomleft")
 urbMap %>% 
   hideGroup(c("ZCTAs", "PUMAs"))
 ```
-
-Some features are missing from the default `mapview()`. Notably, there is no layers button, no scale, and no zoom buttons. However, these features can still be added be added manually.
 
 # Shelby County
 
@@ -290,61 +298,50 @@ shelby <- metroCounties %>%
 
 This gives us an outline of Shelby County (not shown here).
 
-## Tracts
+## Tracts and Block Groups
 
 We can get Census tract data using the `tracts()` function. At this geographic level we can also specify a county name, such as "Shelby," so we don't have to filter the data.
 
-```{r tracts}
+```{r}
 tracts <- tracts("TN", "Shelby")
 
-ggplot() +
-  geom_sf(data = tracts, fill = "white", color = "grey") +
-  geom_sf(data = shelby, fill = NA, color = "red") +
-  theme_void()
+blkgrp <- block_groups("TN", "Shelby")
 ```
 
-## Block Groups
-
-Let's go one level of detail finer and get block group data.
-
-```{r blkgrp}
-blkgrp <- block_groups("TN", "Shelby")
+```{r tractBlkgrp, out.width="50%", fig.show="hold", fig.cap="Census tracts and block groups in Shelby County"}
+ggplot() +
+  geom_sf(data = tracts, fill = "white", color = "red") +
+  geom_sf(data = shelby, fill = NA, color = "black") +
+  theme_void()
 
 ggplot() +
   geom_sf(data = blkgrp, fill = "white", color = "grey") +
-  geom_sf(data = shelby, fill = NA, color = "red") +
+  geom_sf(data = tracts, fill = NA, color = "red") +
+  geom_sf(data = shelby, fill = NA, color = "black") +
   theme_void()
 ```
 
-## Interactive Map
+## School Districts
 
-Below is an interactive map of tracts and block groups in Shelby County.
+School districts have been a contentious topic over the past decade, after Memphis City Schools dissolved its charter to merge into the county school district. Following this, suburban towns like Collierville and Germantown separated from Shelby County Schools and formed their own municipal school districts.
 
-```{r countyMap}
-mapview(tracts,
-        layer.name = "Census Tracts",
-        label = tracts$NAMELSAD,
-        col.regions = "#c93335",
-        alpha.regions = 0.3,
-        lwd = 3,
-        color = "#c93335"
-        ) + 
-  mapview(blkgrp,
-          layer.name = "Block Groups",
-          label = blkgrp$GEOID,
-          col.regions = "#9379c2",
-          alpha.regions = 0.25,
-          lwd = 1,
-          color = "#9379c2"
-          )
+The following code gets all school districts in Shelby County
+
+```{r school}
+stateSchools <- school_districts("TN")
+
+schools <- stateSchools[shelby, op = st_within]
 ```
 
 # Final Map
 
 Below is an interactive map combining all of the maps created in this post.
 
-```{r finalMap, layout="l-page"}
-final <- leaflet() %>% addTiles() %>%
+```{r finalMap, layout="l-screen-inset", fig.height=8, code_folding=TRUE, fig.cap="Interactive leaflet map of Memphis boundaries"}
+final <- leaflet() %>%
+  addProviderTiles(providers$CartoDB.Positron, group = "CartoDB (default)") %>%
+  addTiles(group = "OSM") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI World Imagery") %>%
   addPolygons(
     data = metro,
     group = "Metro Area",
@@ -365,6 +362,7 @@ final <- leaflet() %>% addTiles() %>%
     weight = 3,
     opacity = 1,
     color = "#c93335",
+    popup = TRUE,
     highlightOptions = highlightOptions(fillOpacity = 0.5)
   ) %>%
   addPolygons(
@@ -384,7 +382,7 @@ final <- leaflet() %>% addTiles() %>%
     label = urb$NAME10,
     fillColor = "#71b6f7",
     fillOpacity = 0.2,
-    weight = 4,
+    weight = 3,
     opacity = 1,
     color = "#71b6f7",
     highlightOptions = highlightOptions(fillOpacity = 0.5)
@@ -417,7 +415,7 @@ final <- leaflet() %>% addTiles() %>%
     label = tracts$NAMELSAD,
     fillColor = "#ee6668",
     fillOpacity = 0.2,
-    weight = 3,
+    weight = 2.5,
     opacity = 1,
     color = "#ee6668",
     highlightOptions = highlightOptions(fillOpacity = 0.5)
@@ -433,7 +431,19 @@ final <- leaflet() %>% addTiles() %>%
     color = "#f28b73",
     highlightOptions = highlightOptions(fillOpacity = 0.5)
   ) %>%
+  addPolygons(
+    data = schools,
+    group = "School Districts",
+    label = schools$NAME,
+    fillColor = "#dbb4f8",
+    fillOpacity = 0.2,
+    weight = 2,
+    opacity = 1,
+    color = "#dbb4f8",
+    highlightOptions = highlightOptions(fillOpacity = 0.5)
+  ) %>%
   addLayersControl(
+    baseGroups = c("CartoDB (default)", "OSM", "ESRI World Imagery"),
     overlayGroups = c(
       "Metro Area",
       "Counties",
@@ -442,10 +452,11 @@ final <- leaflet() %>% addTiles() %>%
       "ZCTAs",
       "PUMAs",
       "Urban Area",
-      "Places"
+      "Places",
+      "School Districts"
     ),
     options = layersControlOptions(collapsed = FALSE)
-  ) %>% 
+  ) %>%
   addScaleBar(position = "bottomleft")
 
 final %>% hideGroup(
@@ -456,13 +467,16 @@ final %>% hideGroup(
     "ZCTAs",
     "PUMAs",
     "Census Tracts",
-    "Block Groups"
+    "Block Groups",
+    "School Districts"
   )
 )
 ```
 
-## Acknowledgments {.appendix}
+# Acknowledgments {.appendix}
 
-To create this post I mostly referenced the book [Analyzing US Census Data](https://walker-data.com/census-r/index.html) by Kyle Walker, particularly chapters 5 and 7.
+To create this post I mostly referenced the book [Analyzing US Census Data](https://walker-data.com/census-r/index.html) by Kyle Walker, particularly [Chapter 5](https://walker-data.com/census-r/census-geographic-data-and-applications-in-r.html) and the [Chapter 7 section on spatial overlay](https://walker-data.com/census-r/spatial-analysis-with-us-census-data.html#spatial-overlay).
 
-Color palette for the final map was created using this [Animal Crossing: New Horizons palette](https://sokea-cc.tumblr.com/post/611879446851518464/new-horizons-palette-a-lil-palette-made-up-of) by sokea-cc. Colors for the other interactive maps were created by referencing [a screenshot of the NookPhone from AC:NH](https://nookipedia.com/wiki/File:Player_on_Nookphone2.JPG) on Nookipedia.
+The leaflet [website](https://rstudio.github.io/leaflet/) and [package documentation](https://cran.r-project.org/web/packages/leaflet/leaflet.pdf) were useful when I got stuck.
+
+Color palette for maps were created using this [Animal Crossing: New Horizons palette](https://sokea-cc.tumblr.com/post/611879446851518464/new-horizons-palette-a-lil-palette-made-up-of) by sokea-cc and by referencing [a screenshot of the NookPhone from AC:NH](https://nookipedia.com/wiki/File:Player_on_Nookphone2.JPG) on Nookipedia.
