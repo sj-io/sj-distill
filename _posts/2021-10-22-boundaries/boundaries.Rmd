@@ -91,7 +91,7 @@ Below is an interactive map of boundaries related to the Memphis area.
 
 I decided to not include boundaries from the national-state level, instead focusing just on the Memphis region. The broadest geography is the Memphis-Forrest City **combined statistical area** (CSA), which includes the Memphis Metro Area and Forrest City Micro Area. **Metro** and **Micro** areas are collectively known as **core-based statistical areas** (CBSAs), and are created using counties with "a high degree of social and economic integration" (measured by commute to work).[@uscensusbureau2021] Because Forrest City is relatively small, there is only one county difference between the CSA and CBSA boundaries. I plan to use the CBSA/Metro boundaries more often, which is why that layer is visible by default.
 
-There are a few more boundaries that may have unfamiliar abbreviations for the average person. **ZCTA** stands for [ZIP Code Tabulation Areas](https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html), are approximate Census boundaries of USPS ZIP Codes and are not bound by county, place, tract, or blocks. **PUMAs**, or Public Use Microdata Areas, are boundaries set every 10 years which contain at least 100,000 people. They are notably used with Public Use Microdata Sample (PUMS) data, which are anonymized individual-level Census records.[^2] This data is useful to researchers who want to create custom queries of data rather than using pre-tabulated estimates provided by the Census Bureau.
+There are a few more boundaries that may have unfamiliar abbreviations for the average person. **ZCTAs**, which stands for [ZIP Code Tabulation Areas](https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html), are approximate Census boundaries of USPS ZIP Codes and are not bound by county, place, tract, or blocks. **PUMAs**, or Public Use Microdata Areas, are boundaries set every 10 years which contain at least 100,000 people. They are notably used with Public Use Microdata Sample (PUMS) data, which are anonymized individual-level Census records.[^2] This data is useful to researchers who want to create custom queries of data rather than using pre-tabulated estimates provided by the Census Bureau.
 
 [^2]: [Until the API is complete](https://developer.ipums.org/docs/apiprogram/), PUMAs data is available for download from <https://www.ipums.org/>.
 
@@ -300,7 +300,7 @@ map %>% hideGroup(
 )
 ```
 
-Making this map gave me a greater understanding all the different ways to look at Memphis and how boundaries differ. For a while I have been interested in using PUMS data, but I've been partially held back by not understanding local PUMAs boundaries. I have also never used ZCTA data, and now I know if I do use it in the future to be mindful that ZCTAs often cross county borders. School districting is also a hot topic in Shelby County, so it's useful to quickly see which suburbs have set up their own municipal school districts.
+Making this map gave me a greater understanding of all the different ways to look at Memphis and how boundaries differ. For a while I have been interested in using PUMS data, but I've been partially held back by not understanding local PUMAs boundaries. I have also never used ZCTA data, and now I know if I do use it in the future to be mindful that ZCTAs often cross county borders. School districting is also a hot topic in Shelby County, so it's useful to quickly see which suburbs have set up their own municipal school districts.
 
 # The Code
 
