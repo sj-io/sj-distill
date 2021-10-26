@@ -4,15 +4,15 @@
       "path": "about.html",
       "title": "About",
       "author": [],
-      "contents": "\nHello 👋 My name is Sarah Johnson. I recently graduated from the University of Memphis where I received my master’s in urban planning. My research interests include housing quality and affordability.\n\n\n\n",
-      "last_modified": "2021-10-14T23:34:10-05:00"
+      "contents": "\nHello 👋 My name is Sarah Johnson. I recently graduated from the University of Memphis where I received my master’s in urban planning. I am currently seeking a career in the Memphis area related to housing research.\nYou can contact me at sarahviamemphis@gmail.com\n Education\nMA, City and Regional Planning (August 2021)\nUniversity of Memphis\nBBA, Business Economics (August 2015)\nUniversity of MemphisCum Laude\n Experience\nShelby County Department of Housing (August 2018-April 2019)\nGraduate Assistant\nUniversity of Memphis (August 2019-April 2020)\nGraduate Assistant\nInternational Paper (July 2017-January 2019)\nTraining Administrator\n Skills\nArcGIS (proficient)\nR, RStudio (proficient)\nGit, Github (beginner)\n Interests\nHousing quality\nHousing affordability\n\n\n\n",
+      "last_modified": "2021-10-26T16:05:23-05:00"
     },
     {
       "path": "index.html",
       "title": "Writings",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-10-14T23:34:10-05:00"
+      "last_modified": "2021-10-25T14:11:26-05:00"
     }
   ],
   "collections": ["posts/posts.json"]
