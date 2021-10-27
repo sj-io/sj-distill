@@ -1,0 +1,131 @@
+---
+title: "Housing Units"
+description: |
+  A short description of the post.
+date: 2021-10-27
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  R.options = list(width = 60)
+)
+```
+
+# Intro
+
+How many housing units are in Memphis?
+
+```{r library}
+library(tidyverse)
+library(tidycensus)
+library(sf)
+library(rmarkdown)
+library(ggiraph)
+library(patchwork)
+```
+
+```{r}
+v19 <- load_variables(2019, "acs5", cache = TRUE)
+```
+
+# Metro
+
+```{r include=FALSE}
+hsgUnitsMetro <- get_acs(
+  geography = "cbsa",
+  variables = "B25001_001",
+  geometry = TRUE,
+  cache_table = TRUE
+) %>%
+  slice_max(estimate, n = 50) %>% 
+  mutate(area = as.numeric(st_area(geometry)),
+         density = estimate / area)
+```
+
+The following table lists the top 50 metro areas in the US by number of housing units.
+
+```{r}
+metros <- hsgUnitsMetro %>% 
+  select(NAME, estimate) %>% 
+  mutate(NAME = str_remove(NAME, "-.*$")) %>% 
+  mutate(NAME = str_remove(NAME, ",.*$")) 
+
+paged_table(metros)
+```
+
+According to the 2015-2019 5-Year ACS, there are 567,073 housing units in the Memphis metro area. Memphis ranks 43rd in the US for the number of housing units in a metro area, between Oklahoma City and New Orleans.
+
+```{r}
+cbsa <- hsgUnitsMetro %>% filter(str_detect(NAME, "Memphis"))
+memST <- list("TN", "MS", "AR")
+```
+
+```{r include=FALSE}
+hsgUnitsCounties <- map_dfr((memST), ~ {
+  get_acs(
+    geography = "county",
+    state = .x,
+    variables = "B25001_001",
+    geometry = TRUE,
+    cache_table = TRUE
+  )
+}) %>% 
+  st_filter(cbsa, .predicate = st_within) %>% 
+  mutate(area = as.numeric(st_area(geometry)),
+         density = estimate / area)
+```
+
+The below map shows the number of housing units in each county in the Memphis metro area.
+
+```{r}
+metroMap <- ggplot(hsgUnitsCounties, aes(fill = estimate)) +
+  geom_sf_interactive(aes(tooltip = estimate, data_id = GEOID), size = 0.1) +
+  scale_fill_viridis_c(option = "plasma", guide = "none") +
+  theme_void()
+
+metroPlot <- ggplot(hsgUnitsCounties, aes(x = estimate, y = reorder(NAME, estimate), 
+                                          fill = estimate)) +
+  geom_point_interactive(color = "black", size = 4, shape = 21, aes(data_id = GEOID)) +
+  scale_fill_viridis_c(option = "plasma") +
+  scale_x_continuous() +
+  labs(title = "Housing units in Memphis Metro Area",
+       subtitle = "2015-2019 American Community Survey",
+       y = "",
+       x = "ACS estimate",
+       fill = "ACS estimate") +
+  theme_minimal()
+
+girafe(ggobj = metroMap + metroPlot, width_svg = 10, height_svg = 5) %>% 
+  girafe_options(opts_hover(css = "fill:cyan;"))
+```
+
+Of the 567,073 housing units in the Memphis metro area, 405,184 (71%) are in Shelby County. Let's further explore where in Shelby County most of the housing units are located.
+
+# County
+
+```{r include=FALSE}
+hsgUnitsSC <- get_acs(
+  geography = "tract",
+  state = "TN",
+  county = "Shelby",
+  variables = "B25001_001",
+  geometry = TRUE,
+  cache_table = TRUE
+) %>%
+  mutate(area = as.numeric(st_area(geometry)),
+         density = estimate / area)
+```
+
+The first map shows the estimated number of housing units in each Census tract. However, the tracts with the most housing units are also geographically large. The second map shows the density of housing units in each tract, AKA the number of housing units divided by the area of the tract.
+
+```{r}
+plot(hsgUnitsSC["estimate"]) 
+plot(hsgUnitsSC["density"])
+```
