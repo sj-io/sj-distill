@@ -1,12 +1,14 @@
 ---
 title: "Housing Units"
 description: |
-  A short description of the post.
+  How many housing units are in Memphis?
 date: 2021-10-27
 output:
   distill::distill_article:
     self_contained: false
 draft: true
+bibliography: references.bib
+csl: chicago-fullnote-bibliography-16th-edition.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +22,9 @@ knitr::opts_chunk$set(
 
 # Intro
 
-How many housing units are in Memphis?
+In my [last post](https://sarahjohnson.io/posts/2021-10-22-boundaries/), I explored all Census boundaries related to Memphis. This post uses Census data to fill in those boundaries to begin understanding the Memphis housing market.
+
+I will use the most recent 5-year American Community Survey estimates to map the number of housing units in the Memphis area. According to the 2015-2019 5-Year ACS, there are 567,073 housing units in the Memphis metro area; 405,184 within Shelby County; and 299,913 within the city of Memphis.
 
 ```{r library}
 library(tidyverse)
@@ -29,29 +33,93 @@ library(sf)
 library(rmarkdown)
 library(ggiraph)
 library(patchwork)
+library(mapview)
 ```
 
-```{r}
-v19 <- load_variables(2019, "acs5", cache = TRUE)
+# Census Surveys & Programs
+
+For the foreseeable future, posts on this blog will utilize Census data to understand Memphis' housing market. The amount of Census data available can be overwhelming, with [over 130 surveys and programs](https://www.census.gov/programs-surveys/surveys-programs.html) conducted each year. While all Americans are likely aware of the decennial Census, the **American Community Survey** (**ACS**) has become the "premier source for detailed population and housing information about our nation."[@uscensusbureau2021] Unlike the decennial Census, which attempts to count every person living in the US, the ACS estimates are derived from an annual sample of about 3.5 million addresses.
+
+Every year, the Census Bureau releases a 1-year and a 5-year version of the ACS. The **1-year** estimates are collected over a 12-month period for areas with at least 65,000 people and have a higher margin of error; **5-year** estimates are for areas with fewer than 65,000 people over a period of 60 months and have a lower margin of error.[@uscensusbureau2020] There are [nearly 50 subjects](https://www.census.gov/programs-surveys/acs/guidance/subjects.html) included in the ACS, with subtables available for each subject, leading to tens of thousands of detailed variables.
+
+The ACS was designed to provide information about the *characteristics* of a population, rather than basic counts of population and housing.[@uscensusbureau2020] This data should instead be collected from the [**Populations Estimates Program**](https://www.census.gov/programs-surveys/popest.html) (**PEP**), available for states, metro/micro areas, and counties.
+
+Rather than providing population estimates based on a dedicated survey, the PEP "projects forward data from the most recent decennial Census based on birth, death, and migration rates."[@walker2021] Meanwhile, housing unit estimates are determined by new residential construction, new mobile homes, and the estimated number of housing units lost.[@uscensusbureau2019] These estimates are used as controls for other surveys including the ACS, American Housing Survey, and more.
+
+```{r include=FALSE}
+#' https://www.census.gov/data/developers/data-sets/popest-popproj/popest/popest-vars/2019.html for date code definitions
+
+hsgest<- get_estimates(geography = "county",
+              product = "housing",
+              state = "TN",
+              county = "Shelby",
+              time_series = TRUE)
 ```
+
+```{r include=FALSE}
+years <- 2010:2019
+names(years) <- years
+
+hsgest2 <- map_dfr(years, ~ {
+  get_acs(
+    geography = "county",
+    survey = "acs1",
+    variables = "B25001_001",
+    state = "TN",
+    county = "Shelby",
+    year = .x,
+    cache_table = TRUE
+)}, .id = "year")
+```
+
+Frankly, I only learned while drafting this post that the Census recommends the PEP for certain estimates over the ACS. How does ACS and PEP data on housing units compare? Let's use Shelby County as an example.
+
+<!--# insert ggplot linegraph instead? If yes, remove first two rows. -->
+
++----------------+----------------+----------------+----------------+
+| Year           | ACS1           | PEP            | diff           |
++================+================+================+================+
+| 2010           | 398,395        | 398,273        | +122 (ACS)     |
++----------------+----------------+----------------+----------------+
+| 2011           | 398,014        | 398,979        | -965 (PEP)     |
++----------------+----------------+----------------+----------------+
+| 2012           | 399,778        | 399,547        | +231 (ACS)     |
++----------------+----------------+----------------+----------------+
+| 2013           | 401,161        | 400,990        | +171 (ACS)     |
++----------------+----------------+----------------+----------------+
+| 2014           | 403,395        | 402,246        | +1,149 (ACS)   |
++----------------+----------------+----------------+----------------+
+| 2015           | 404,294        | 402,818        | +1,476 (ACS)   |
++----------------+----------------+----------------+----------------+
+| 2016           | 406,023        | 404,141        | +1,882 (ACS)   |
++----------------+----------------+----------------+----------------+
+| 2017           | 405,590        | 405,455        | +135 (ACS)     |
++----------------+----------------+----------------+----------------+
+| 2018           | 406,236        | 406,116        | +120 (ACS)     |
++----------------+----------------+----------------+----------------+
+| 2019           | 407,303        | 407,273        | +30 (ACS)      |
++----------------+----------------+----------------+----------------+
+
+: Housing Units in Shelby County, 1-year ACS and PEP, 2010-2019
+
+For the most part, ACS and PEP estimates are not too different. In 2019, there was only a 30 unit difference between the two. However, the years 2011 and 2014-2016 do have a bit of variation, mostly with the ACS estimating more units than the PEP. While the PEP estimates gradually increased over the decade, the ACS estimate saw a drop from 2016 to 2017 before rebounding, perhaps a correction in overestimates.
 
 # Metro
 
-```{r include=FALSE}
+How many housing units are in the Memphis metro area compared to other metros across America?
+
+```{r hsgUnitsMetro, include=FALSE}
 hsgUnitsMetro <- get_acs(
   geography = "cbsa",
   variables = "B25001_001",
-  geometry = TRUE,
   cache_table = TRUE
 ) %>%
-  slice_max(estimate, n = 50) %>% 
-  mutate(area = as.numeric(st_area(geometry)),
-         density = estimate / area)
+  slice_max(estimate, n = 50)
 ```
 
 The following table lists the top 50 metro areas in the US by number of housing units.
 
-```{r}
+```{r metroTbl}
 metros <- hsgUnitsMetro %>% 
   select(NAME, estimate) %>% 
   mutate(NAME = str_remove(NAME, "-.*$")) %>% 
@@ -62,12 +130,16 @@ paged_table(metros)
 
 According to the 2015-2019 5-Year ACS, there are 567,073 housing units in the Memphis metro area. Memphis ranks 43rd in the US for the number of housing units in a metro area, between Oklahoma City and New Orleans.
 
-```{r}
-cbsa <- hsgUnitsMetro %>% filter(str_detect(NAME, "Memphis"))
+```{r cbsa, include=FALSE}
+cbsa <- get_acs(geography = "cbsa",
+                variables = "B25001_001",
+                geometry = TRUE,
+                cache_table = TRUE) %>% 
+  filter(str_detect(NAME, "Memphis"))
 memST <- list("TN", "MS", "AR")
 ```
 
-```{r include=FALSE}
+```{r hsgUnitsCounties, include=FALSE}
 hsgUnitsCounties <- map_dfr((memST), ~ {
   get_acs(
     geography = "county",
@@ -84,7 +156,7 @@ hsgUnitsCounties <- map_dfr((memST), ~ {
 
 The below map shows the number of housing units in each county in the Memphis metro area.
 
-```{r}
+```{r metroCounties}
 metroMap <- ggplot(hsgUnitsCounties, aes(fill = estimate)) +
   geom_sf_interactive(aes(tooltip = estimate, data_id = GEOID), size = 0.1) +
   scale_fill_viridis_c(option = "plasma", guide = "none") +
@@ -93,8 +165,8 @@ metroMap <- ggplot(hsgUnitsCounties, aes(fill = estimate)) +
 metroPlot <- ggplot(hsgUnitsCounties, aes(x = estimate, y = reorder(NAME, estimate), 
                                           fill = estimate)) +
   geom_point_interactive(color = "black", size = 4, shape = 21, aes(data_id = GEOID)) +
-  scale_fill_viridis_c(option = "plasma") +
-  scale_x_continuous() +
+  scale_fill_viridis_c(option = "plasma", labels = scales::comma) +
+  scale_x_continuous(labels = scales::comma) +
   labs(title = "Housing units in Memphis Metro Area",
        subtitle = "2015-2019 American Community Survey",
        y = "",
@@ -106,11 +178,65 @@ girafe(ggobj = metroMap + metroPlot, width_svg = 10, height_svg = 5) %>%
   girafe_options(opts_hover(css = "fill:cyan;"))
 ```
 
-Of the 567,073 housing units in the Memphis metro area, 405,184 (71%) are in Shelby County. Let's further explore where in Shelby County most of the housing units are located.
+Of the 567,073 housing units in the Memphis metro area, 405,184 (71%) are in Shelby County.
 
-# County
+# Shelby County
 
-```{r include=FALSE}
+Since over 70% of the housing units in the Memphis metro are in Shelby County, let's further explore where in the county most housing units are located.
+
+## Places
+
+```{r shelby}
+shelby <- hsgUnitsCounties %>% filter(str_detect(NAME, "Shelby"))
+```
+
+```{r hsgUnitsPl, include=FALSE}
+hsgUnitsPl <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = "B25001_001",
+  geometry = TRUE,
+  cache_table = TRUE
+  ) %>%
+  st_filter(shelby, .predicate = st_within) %>% 
+  mutate(area = as.numeric(st_area(geometry)),
+         density = estimate / area,
+         NAME = str_remove(NAME, "\\s.*$"))
+```
+
+The map below shows how many housing units are in each place in Shelby County.
+
+```{r placeMap}
+placeMap <- ggplot(hsgUnitsPl, aes(fill = estimate)) +
+  geom_sf_interactive(aes(tooltip = estimate, data_id = GEOID), size = 0.1) +
+  scale_fill_viridis_c(option = "plasma", guide = "none") +
+  theme_void()
+
+placePlot <- ggplot(hsgUnitsPl, aes(x = estimate, y = reorder(NAME, estimate), 
+                                          fill = estimate)) +
+  geom_point_interactive(color = "black", size = 4, shape = 21, aes(data_id = GEOID)) +
+  scale_fill_viridis_c(option = "plasma", labels = scales::comma) +
+  scale_x_continuous(labels = scales::comma) +
+  labs(title = "Housing units in Shelby County",
+       subtitle = "2015-2019 American Community Survey",
+       y = "",
+       x = "ACS estimate",
+       fill = "ACS estimate") +
+  theme_minimal()
+
+girafe(ggobj = placeMap + placePlot, width_svg = 10, height_svg = 5) %>% 
+  girafe_options(opts_hover(css = "fill:cyan;"))
+```
+
+Of the 405,184 housing units in Shelby County, 299,913 (74%) are within the city of Memphis.
+
+It is important to point out that large sections of Shelby County remain unincorporated yet also contain housing units. In total, 366,901 housing units are within a city or town in Shelby County, while 38,283 units are in the unincorporated County.
+
+## Tracts
+
+Let's continue to narrow our scope by looking at Census tract data.
+
+```{r hsgUnitsSC, include=FALSE}
 hsgUnitsSC <- get_acs(
   geography = "tract",
   state = "TN",
@@ -123,9 +249,29 @@ hsgUnitsSC <- get_acs(
          density = estimate / area)
 ```
 
-The first map shows the estimated number of housing units in each Census tract. However, the tracts with the most housing units are also geographically large. The second map shows the density of housing units in each tract, AKA the number of housing units divided by the area of the tract.
+The below maps show the number of housing units in each Census tract in Shelby County. The first map shows the estimated number of units in each tract. However, the tracts with the most housing units are also geographically large. The second map shows the density of housing units in each tract, AKA the number of housing units divided by the area of the tract.
 
-```{r}
+```{r tract, fig.show='hold', out.width='50%'}
 plot(hsgUnitsSC["estimate"]) 
 plot(hsgUnitsSC["density"])
 ```
+
+The density map shows most housing units are concentrated in tracts within the city of Memphis. While there are high levels of density in older parts of the city like Downtown and Midtown, the densest tract is in the southeast portion of the city, closer to Germantown than Downtown. As it turns out, there's a high concentration of apartment complexes in this area.
+
+Below is an interactive version of the density map. Clicking the layers button in the upper left corner allows you to change the map background; switch to **Esri.WorldImagery** for a satellite view.
+
+```{r mapview, layout='l-page', fig.height=6}
+mapview(hsgUnitsSC, zcol = "density", legend = FALSE)
+```
+
+# Summary
+
+The below table summarizes the number of housing units in the Memphis area.
+
+| Area               | Estimate | \% Metro | \% County |
+|--------------------|----------|----------|-----------|
+| Memphis Metro Area | 567,073  | 100%     | \-        |
+| Shelby County      | 405,184  | 71.45%   | 100%      |
+| Memphis            | 299,913  | 52.89%   | 74.02%    |
+
+: Housing units in Memphis area, ACS 5-Year 2015-2019
