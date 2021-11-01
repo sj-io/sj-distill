@@ -1,0 +1,113 @@
+---
+title: "Occupancy Status"
+description: |
+  A short description of the post.
+date: 2021-11-01
+output:
+  distill::distill_article:
+    self_contained: false
+draft: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Intro
+
+In my last post, I looked at Census data for how many housing units there were in the Memphis area. According to the 2015-2019 5-Year ACS, there are 567,073 housing units in the Memphis metro area; 405,184 within Shelby County; and 299,913 within the city of Memphis.
+
+This post will look at the occupancy status of housing units: whether they are occupied or vacant.
+
+# Metro Area
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(sf)
+```
+
+```{r include=FALSE}
+occStat <- get_acs(
+  geography = "cbsa",
+  variables = c(
+    Occupied = "B25002_002",
+    Vacant = "B25002_003"
+  ),
+  summary_var = "B25002_001",
+  cache_table = TRUE
+) %>%
+  slice_max(summary_est, n = 100)
+```
+
+```{r}
+occStatPct <- occStat %>% 
+  mutate(percent = 100 * (estimate / summary_est)) %>%
+  select(NAME, variable, estimate, percent)
+```
+
+In my previous post, I made a table of the top 50 metro areas in the US by number of housing units, where Memphis ranked 43rd.
+
+Below is a table ranking those metros by vacancy.
+
+```{r}
+library(rmarkdown)
+```
+
+```{r}
+vacMetro <- occStatPct %>% 
+  filter(variable == "Vacant") %>% 
+  select(-variable) %>% 
+  arrange(desc(percent)) %>% 
+  mutate(NAME = str_remove(NAME, "-.*$")) %>% 
+  mutate(NAME = str_remove(NAME, ",.*$")) 
+paged_table(vacMetro)
+```
+
+Unfortunately, Memphis ranks high on this list, with a vacancy rate of 12.32%. Of the top 50 metros (by number of housing units), Memphis has the 10th highest vacancy rate. According to the 2015-2019 5-Year ACS, there are 69,841 vacant housing units in the Memphis metro area.
+
+```{r include=FALSE}
+cbsa <- get_acs(
+  geography = "cbsa",
+  variables = "B25002_001",
+  geometry = TRUE,
+  cache_table = TRUE
+) %>% filter(str_detect(NAME, "Memphis"))
+
+memST <- list("TN", "MS", "AR")
+```
+
+```{r include=FALSE}
+occCo <- map_dfr((memST), ~ {
+  get_acs(
+    geography = "county",
+    state = .x,
+    variables = c(
+    Occupied = "B25002_002",
+    Vacant = "B25002_003"),
+  summary_var = "B25002_001",
+    geometry = TRUE,
+    cache_table = TRUE
+  )
+}) %>% 
+  st_filter(cbsa, .predicate = st_within) %>% 
+  mutate(area = as.numeric(st_area(geometry)),
+         percent = 100 * (estimate / summary_est))
+```
+
+```{r}
+library(ggiraph)
+library(patchwork)
+```
+
+```{r}
+vacCo <- occCo %>% filter(variable == "Vacant")
+```
+
+```{r}
+vacCoMap <- ggplot(vacCo, aes(fill = percent)) +
+  geom_sf() +
+  theme_void()
+
+vacCoMap
+```
