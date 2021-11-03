@@ -3,10 +3,18 @@ title: "SJ"
 description: |
   SJ
 output_dir: "_site"
+base_url: https://sarahjohnson.io
+collections:
+  posts:
+    categories: true
+  analyses:
+    categories: true
 navbar:
   right:
     - text: "Home"
       href: index.html
+    - text: "Capstone"
+      href: capstone.html
     - text: "About"
       href: about.html
     - icon: fa fa-github

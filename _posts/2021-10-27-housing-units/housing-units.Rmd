@@ -10,7 +10,6 @@ output:
     toc_float: true
     code_download: true
 repository_url: https://github.com/sj-io/sj-distill
-base_url: https://sarahjohnson.io
 bibliography: references.bib
 csl: chicago-fullnote-bibliography-16th-edition.csl
 ---
@@ -53,7 +52,7 @@ While all Americans are likely aware of the decennial Census, the **American Com
 
 Every year, the Census Bureau releases a 1-year and a 5-year version of the ACS. The **1-year** estimates are collected over a 12-month period for areas with at least 65,000 people, and have a higher margin of error; **5-year** estimates are for areas with fewer than 65,000 people over a period of 60 months, and have a lower margin of error.[@uscensusbureau2020] ACS 5-year estimates should be labeled to show all years data was collected, not just the midpoint or year the dataset was released (for example "2015-2019 ACS 5-Year" is correct but not "2017 ACS 5-Year" or "2019 ACS 5-Year").
 
-When comparing data over time, the Census Bureau recommends using 1-year data, or to compare 5-year estimates that do not overlap, such as 2009-2013 estimates and 2014-2018 estimates. Five-year estimates are more precise, but they are also less likely to show year-to-year fluctuations or recent trends.[@uscensusbureau2020] Users should also [research](www.census.gov/programs-surveys/acs/guidance /comparing-acs-data.html) how ACS questions have changed over time, and whether certain variables/time frames should or should not be compared.
+When comparing data over time, the Census Bureau recommends using 1-year data, or to compare 5-year estimates that do not overlap, such as 2009-2013 estimates and 2014-2018 estimates. Five-year estimates are more precise, but they are also less likely to show year-to-year fluctuations or recent trends.[@uscensusbureau2020] Users should also [research](www.census.gov/programs-surveys/acs/guidance%20/comparing-acs-data.html) how ACS questions have changed over time, and whether certain variables/time frames should or should not be compared.
 
 Lastly, the 2020 Census ran into significant data collection problems due to COVID. As such, the Census Bureau will not release its standard 2020 ACS 1-year estimates. Instead, [experimental estimates](https://www.census.gov/programs-surveys/acs/data/experimental-data.html) developed from the 1-year data will be released later this year. The 5-year ACS will still be released as normal.
 
@@ -164,7 +163,7 @@ As seen in the [last post](https://sarahjohnson.io/posts/2021-10-22-boundaries/)
 
 I want to know how many housing units are in the Memphis metro area. However, this data point will not have much significance unless we have something to compare it to. The following table lists the top 50 metro areas in the US by number of housing units.[^3]
 
-[^3]:  Apologies for the lack of commas and rank numbers. This was just meant to be a quick table.
+[^3]: Apologies for the lack of commas and rank numbers. This was just meant to be a quick table.
 
 ```{r hsgUnitsMetro, include=FALSE}
 hsgUnitsMetro <- get_acs(
