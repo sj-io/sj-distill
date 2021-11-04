@@ -1,25 +1,25 @@
 {
   "articles": [
     {
-      "path": "about.html",
-      "title": "About",
-      "author": [],
-      "contents": "\nHello 👋 My name is Sarah Johnson. I recently graduated from the University of Memphis where I received my master’s in urban planning. I am currently seeking a career in the Memphis area related to housing research.\nYou can contact me at sarahviamemphis@gmail.com\n Education\nMA, City and Regional Planning (August 2021)\nUniversity of Memphis\nBBA, Business Economics (August 2015)\nUniversity of MemphisCum Laude\n Experience\nShelby County Department of Housing (August 2018-April 2019)\nGraduate Assistant\nUniversity of Memphis (August 2019-April 2020)\nGraduate Assistant\nInternational Paper (July 2017-January 2019)\nTraining Administrator\n Skills\nArcGIS (proficient)\nR, RStudio (proficient)\nGit, Github (beginner)\n Interests\nHousing quality\nHousing affordability\n\n\n\n",
-      "last_modified": "2021-11-02T20:59:53-05:00"
-    },
-    {
       "path": "capstone.html",
       "title": "Capstone",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-11-02T20:59:56-05:00"
+      "last_modified": "2021-11-04T10:51:30-05:00"
     },
     {
       "path": "index.html",
-      "title": "Writings",
+      "title": "Sarah Johnson",
+      "author": [],
+      "contents": "\n\n          \n          \n          SJ\n          \n          \n          Capstone\n          Research\n          About\n          \n          \n          \n          ☰\n          \n          \n      \n        \n          \n            \n              \n            \n              Sarah Johnson\n            \n            \n              \n                \n                    \n                      \n                        Email\n                      \n                    \n                  \n                                    \n                    \n                      \n                        Github\n                      \n                    \n                  \n                                  \n            \n          \n        \n        \n        \n          \n            Hello 👋 I’m a recent graduate from the University of Memphis where I received my master’s in urban planning. I am currently seeking a career in the Memphis area related to housing research.\n            \n            Education\n            MA, City and Regional Planning (August 2021)\n            University of Memphis\n            BBA, Business Economics (August 2015)\n            University of MemphisCum Laude\n            \n            \n            Experience\n            Shelby County Department of Housing (August 2018-April 2019)\n            Graduate Assistant\n            University of Memphis (August 2019-April 2020)\n            Graduate Assistant\n            International Paper (July 2017-January 2019)\n            Training Administrator\n            \n            \n            Skills\n            ArcGIS (proficient)\n            R, RStudio (proficient)\n            Git, Github (beginner)\n            \n            \n            Interests\n            Housing quality\n            Housing affordability\n            \n          \n        \n      \n    \n\n    \n      \n        \n          \n            \n              \n            \n              Sarah Johnson\n            \n            \n              \n                \n                                    \n                    \n                      Email\n                    \n                  \n                                    \n                    \n                      Github\n                    \n                  \n                                  \n              \n            \n            \n              Hello 👋 I’m a recent graduate from the University of Memphis where I received my master’s in urban planning. I am currently seeking a career in the Memphis area related to housing research.\n              \n              Education\n              MA, City and Regional Planning (August 2021)\n              University of Memphis\n              BBA, Business Economics (August 2015)\n              University of MemphisCum Laude\n              \n              \n              Experience\n              Shelby County Department of Housing (August 2018-April 2019)\n              Graduate Assistant\n              University of Memphis (August 2019-April 2020)\n              Graduate Assistant\n              International Paper (July 2017-January 2019)\n              Training Administrator\n              \n              \n              Skills\n              ArcGIS (proficient)\n              R, RStudio (proficient)\n              Git, Github (beginner)\n              \n              \n              Interests\n              Housing quality\n              Housing affordability\n              \n            \n        \n      \n    \n\n    \n    \n    ",
+      "last_modified": "2021-11-04T10:51:30-05:00"
+    },
+    {
+      "path": "research.html",
+      "title": "Research",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-11-02T20:59:57-05:00"
+      "last_modified": "2021-11-04T10:51:31-05:00"
     }
   ],
   "collections": ["posts/posts.json", "capstone/capstone.json"]

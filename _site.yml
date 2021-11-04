@@ -11,12 +11,12 @@ collections:
     categories: true
 navbar:
   right:
-    - text: "Home"
-      href: index.html
     - text: "Capstone"
       href: capstone.html
+    - text: "Research"
+      href: research.html
     - text: "About"
-      href: about.html
+      href: index.html
     - icon: fa fa-github
       href: https://github.com/sj-io
 output: 

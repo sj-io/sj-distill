@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" version="1.0">
   <url>
-    <loc>https://sarahjohnson.io/about.html</loc>
-    <lastmod>2021-10-26T16:18:10-05:00</lastmod>
-  </url>
-  <url>
     <loc>https://sarahjohnson.io/capstone.html</loc>
     <lastmod>2021-11-02T20:54:10-05:00</lastmod>
   </url>
   <url>
     <loc>https://sarahjohnson.io/</loc>
-    <lastmod>2021-10-14T22:48:39-05:00</lastmod>
+    <lastmod>2021-11-04T10:48:21-05:00</lastmod>
+  </url>
+  <url>
+    <loc>https://sarahjohnson.io/research.html</loc>
+    <lastmod>2021-11-04T10:20:12-05:00</lastmod>
   </url>
   <url>
     <loc>https://sarahjohnson.io/posts/2021-10-27-housing-units/</loc>
@@ -26,6 +26,6 @@
   </url>
   <url>
     <loc>https://sarahjohnson.io/capstone/2021-11-02-health/</loc>
-    <lastmod>2021-11-03T19:35:56-05:00</lastmod>
+    <lastmod>2021-11-03T19:35:57-05:00</lastmod>
   </url>
 </urlset>
