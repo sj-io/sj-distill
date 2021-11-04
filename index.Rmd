@@ -13,18 +13,22 @@ site: distill::distill_website
 
 Hello 👋 I'm a recent graduate from the University of Memphis where I received my master's in urban planning. I am currently seeking a career in the Memphis area related to housing research.
 
+------------------------------------------------------------------------
+
 ### Education
 
-**MA, City and Regional Planning** (August 2021) \
+**MA, City and Regional Planning** (August 2021)\
 University of Memphis
 
-**BBA, Business Economics** (August 2015) \
-University of Memphis \
+**BBA, Business Economics** (August 2015)\
+University of Memphis\
 *Cum Laude*
 
-### Experience 
+------------------------------------------------------------------------
 
-**Shelby County Department of Housing** (August 2018-April 2019) \
+### Experience
+
+**Shelby County Department of Housing** (August 2018-April 2019)\
 Graduate Assistant
 
 **University of Memphis** (August 2019-April 2020)\
@@ -33,13 +37,18 @@ Graduate Assistant
 **International Paper** (July 2017-January 2019)\
 Training Administrator
 
-### Skills 
+------------------------------------------------------------------------
+
+### Skills
 
 -   ArcGIS (proficient)
 -   R, RStudio (proficient)
 -   Git, Github (beginner)
 
-### Interests 
+------------------------------------------------------------------------
+
+### Interests
 
 -   Housing quality
 -   Housing affordability
+-   Data analysis
