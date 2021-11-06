@@ -1,0 +1,94 @@
+---
+title: "Incomes and Affordable Rents"
+description: |
+  A table of incomes and corresponding affordable rents.
+author:
+  - name: Sarah Johnson
+date: 2021-11-06
+output:
+  distill::distill_article:
+    self_contained: false
+repository_url: https://github.com/sj-io/sj-distill
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Earlier today, [an article about Memphis](https://www.nytimes.com/2021/11/05/arts/design/memphis-museum.html) ran in the New York Times. It touched on fears that recent rental developments have not been affordable to local residents. A local developer, Chance Carlisle, said of rents in his upscale apartment building: "You can get something for \$1,200 to \$1,500," he said. "It's still dirt cheap."
+
+Considering that most new developments in the area have rents in this range[^1], I believe this quote hits on a disconnect between what developers believe is affordable, compared to actual incomes of people in Memphis.
+
+[^1]: Anecdotally, at least. I have not yet completed a full survey of rents for new developments.
+
+The federal government determines **affordable housing** to be no more than 30% of a person's income. Someone paying more than 30% is considered **cost burdened**; more than 50% is **extremely cost burdened**.
+
+The following table lists incomes and corresponding affordable rents. This table does not account for any taxes that decrease take-home wages (and thus lowering how much rent one can afford) or if someone with an hourly wage works more/less than 40 hours a week.
+
+**Yearly Income** is hourly wage \* 40 hours a week \* 52 weeks a year.
+
+**Monthly Rent** is 30% of the yearly wage, divided by 12 months of the year.
+
+<br>
+
+```{r library}
+library(tidyverse)
+library(DT)
+income <- read_csv("income.csv")
+```
+
+```{r affRents}
+affRents <- income %>% 
+  mutate(wageYear = wageHour * 40 * 52,
+         rent = wageYear * .3 / 12)
+```
+
+```{r}
+datatable(affRents,
+          rownames = FALSE,
+          colnames = c("Hourly Wage", "Yearly Income", "Monthly Rent"),
+          caption = "Table 1: Incomes and maximum affordable rent.",
+          options = list(pageLength = 20)
+          ) %>% 
+  formatCurrency(1) %>% 
+  formatCurrency(2:3, digits = 0)
+```
+
+According to the 2019 ACS, the median household income in Memphis is \$43,794; the corresponding maximum affordable rent would be between \$1,095. Thus, while Mr. Carlisle says rents of \$1,200 to \$1,500 are "dirt cheap," they are unaffordable to more than half of all households in Memphis. A household would need to earn between \$48,000 and \$60,000 to affordably live there.
+
+The disparities get worse when we break down households by race, age, or number of people living in the household. The table shows median household incomes in 2019 for selected demographic groups.[^2]
+
+[^2]: Some racial groups and family types have been omitted, so percentages may not total 100%.
+
+| Demographic Group           | \% of Households | Median Household Income |
+|-----------------------------|------------------|-------------------------|
+| Overall                     | 100%             | \$43,794                |
+|                             |                  |                         |
+| **Race/Ethnicity**          |                  |                         |
+| Black                       | 61.2%            | \$35,668                |
+| White (not Hispanic/Latino) | 30.9%            | \$69,395                |
+| Hispanic or Latino          | 5.1%             | \$35,704                |
+| Asian                       | 1.8%             | \$72,894                |
+|                             |                  |                         |
+| **Age**                     |                  |                         |
+| 15-24 years                 | 4.4%             | \$30,390                |
+| 25-44 years                 | 36.6%            | \$43,600                |
+| 45-64 years                 | 35.4%            | \$50,256                |
+| 65 years and over           | 23.7%            | \$38,706                |
+|                             |                  |                         |
+| **People in household**     |                  |                         |
+| Female, living alone        | 21.4%            | \$23,698                |
+| Male, living alone          | 17.6%            | \$33,581                |
+| 2-person family             | 26.2%            | \$52,806                |
+| 3-person family             | 13.8%            | \$55,794                |
+| 4-person family             | 8.6%             | \$58,558                |
+
+: Table 2: Median household income in Memphis, TN by demographic group (2019 ACS 1-Year)
+
+Based on median household incomes, rents of \$1,200 are mostly affordable to White and Asian households (32.7% of all households); households aged 45-64 (35.4%); and families with 2-4 person (48.6%).
+
+Rents of \$1,200 are mostly unaffordable to Black and Hispanic/Latino households (66.3% of all households); households aged 15-44 years and over 65 years (64.7%); and householders who live alone (39%).
+
+Meanwhile, rents would need to be \$892 to be affordable to the median Black household; \$760 for households age 15-24; and \$592 for women living alone.
+
+To be clear, this post is not meant to insult Mr. Carlisle; it's possible his words were taken out of context and he meant that rents of \$1,200 to \$1,500 are cheap for an upscale apartment, or compared to rents nationwide. But when studying housing, it's important to point out that affordability is relative and if you're constructing housing in Memphis, where the minimum wage is still \$7.25/hour, rents of \$1,200-\$1,500 are not considered affordable by a majority of residents (and thus should not be considered "dirt cheap"). There is a legitimate reason existing residents, particularly Black residents in a majority Black city, feel that new developments are not meant for them.

@@ -7,7 +7,9 @@ base_url: https://sarahjohnson.io
 collections:
   posts:
     categories: true
-  analyses:
+  capstone:
+    categories: true
+  reference:
     categories: true
 navbar:
   right:
@@ -15,6 +17,8 @@ navbar:
       href: capstone.html
     - text: "Research"
       href: research.html
+    - text: "Reference"
+      href: reference.html
     - text: "About"
       href: index.html
     - icon: fa fa-github

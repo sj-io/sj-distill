@@ -1,0 +1,36 @@
+---
+title: "Why Rent?"
+description: |
+  This section discusses why some populations have no choice but to rent.
+author:
+  - name: Sarah Johnson
+date: 2021-11-04
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+In the long term, the cost of renting a home is higher than the cost of owning. While an owner is expected to pay the cost of housing, renters must pay housing costs and landlord profits. If a landlord earned no profit or lost money on a property, there would be no financial incentive to manage the property.
+
+So why do people rent? There are still reasons why one may choose to be a renter---for example, their living situation is temporary or they do not want to worry about sudden maintenance expenses. If a renter lives under a neglectful landlord, it can be tempting to tell the renter to save so they can be a homeowner and be free from relying on another person to maintain their home.
+
+There are multiple faults with this argument. First and foremost, it places the blame on the renter for renting, rather than on the landlord for not maintaining the property and forcing renters to live in substandard housing conditions. Secondly, this argument ignores that many people are renters not because they want to be, but because they have no other choice.
+
+This section discusses on why people may be forced into rentership.
+
+# Vulnerable Populations
+
+Homeownership requires a down payment and credit.
+
+Young people have not had the time to build credit or the wealth needed for a down payment.
+
+# Mortgage Discrimination
+
+Mortgage lending discrimination in Memphis has disproportionately denied non-white residents the ability to purchase homes.
+
+or build wealth---not just as a part of redlining practices, but also in recent years before and after the Great Recession. The fallout of the recession caused high foreclosure rates, transitioning Memphis from majority homeowner to majority renter city. In the following decade, Memphis tenants saw rents outpace incomes, leading to increased cost burdenship.
