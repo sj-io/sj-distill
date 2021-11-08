@@ -18,7 +18,7 @@ bibliography: references.bib
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-The following is a (mostly) comprehensive list of federal housing legislation, sorted by decade and the president in office during passage. Below each act is the public law number, date the act was passed, a link to the original act, followed by a summary of the important points of each act.
+The following is a (mostly) comprehensive list of federal housing legislation, sorted by decade and the president in office during passage. Beside each act is the public law number, date the act was passed, a link to the original act, followed by a summary of the important points of each act.
 
 This post was created by combining three sources who reviewed the history of federal housing laws: @coan1969, @soifer2014, and @mccarty2019.
 
