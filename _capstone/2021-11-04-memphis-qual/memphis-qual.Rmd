@@ -1,7 +1,7 @@
 ---
-title: "Why Rent?"
+title: "Rental Housing Quality in Memphis"
 description: |
-  This section discusses why some populations have no choice but to rent.
+  Tbd.
 author:
   - name: Sarah Johnson
 date: 2021-11-04
@@ -9,28 +9,27 @@ output:
   distill::distill_article:
     self_contained: false
 draft: true
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-In the long term, the cost of renting a home is higher than the cost of owning. While an owner is expected to pay the cost of housing, renters must pay housing costs and landlord profits. If a landlord earned no profit or lost money on a property, there would be no financial incentive to manage the property.
+# Methodology
 
-So why do people rent? There are still reasons why one may choose to be a renter---for example, their living situation is temporary or they do not want to worry about sudden maintenance expenses. If a renter lives under a neglectful landlord, it can be tempting to tell the renter to save so they can be a homeowner and be free from relying on another person to maintain their home.
+Current regulation of housing quality in the private rental market assumes that tenants will report substandard housing, yet this is often not the case. Regulations that rely on their reporting fail to protect tenants from retaliation, and low-income households may lack housing alternatives \[@chisholm2018\]. In this scenario, tenants must choose between living in substandard housing, or jeopardizing their housing stability.
 
-There are multiple faults with this argument. First and foremost, it places the blame on the renter for renting, rather than on the landlord for not maintaining the property and forcing renters to live in substandard housing conditions. Secondly, this argument ignores that many people are renters not because they want to be, but because they have no other choice.
+This paper will use Memphis, Tennessee as a case study to explore how these problems manifest in a particular place. First, I will explore the laws and regulations that govern housing quality in the private rental market. Then, I will examine data to determine the amount of housing alternatives available for low-income renters. Finally, I will analyze code enforcement data to see how often tenants do report problems, and how those problems are resolved.
 
-This section discusses on why people may be forced into rentership.
+# Housing Quality Laws
 
-# Vulnerable Populations
+## URLTA
 
-Homeownership requires a down payment and credit.
+The Uniform Residential Landlord and Tenant Act (URLTA) was created in 1972 by the Uniform Law Commission to modernize laws governing rental units. Prior to URLTA, landlords and tenants were bound by common law developed in an agricultural society, based on a theory that a rental lease gave the tenant land, and any buildings or improvements were incidental. Landlords had no obligation to maintain structures; for example, a Tennessee Supreme Court case from 1854 found a tenant responsible for all rent, despite his home having been flooded and made uninhabitable \[@scott2003\].
 
-Young people have not had the time to build credit or the wealth needed for a down payment.
+URLTA changed many of the agrarian common law principles, notably creating a warranty of habitability for tenants. Under the warranty of habitability, landlords are required to provide and maintain habitable conditions for the premises. If conditions become uninhabitable, URLTA provides remedies to the tenant, including termination of the lease \[@scott2003\].
 
-# Mortgage Discrimination
+Tennessee was one of the first ten states to enact a version of URLTA, adopting it in 1975. However, Tennessee is unique in that it is the only state that limits URLTA's application based on population; the law only applies to counties with more than 75,000 people based on the 2010 census. \[@uniform1975\] While Memphians, located in Shelby County, qualify for protection under URLTA, residents of neighboring Tennessee counties are excluded.[^1]
 
-Mortgage lending discrimination in Memphis has disproportionately denied non-white residents the ability to purchase homes.
-
-or build wealth---not just as a part of redlining practices, but also in recent years before and after the Great Recession. The fallout of the recession caused high foreclosure rates, transitioning Memphis from majority homeowner to majority renter city. In the following decade, Memphis tenants saw rents outpace incomes, leading to increased cost burdenship.
+[^1]: The Memphis MSA covers three states: Tennessee, Mississippi, and Arkansas. Residents in Mississippi counties are protected under URLTA with no population exemptions. However, Arkansas is the only state in the U.S. with no warranty of habitability for renters, and thus landlords are not legally required to maintain habitable conditions.
