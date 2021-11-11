@@ -1,14 +1,16 @@
 ---
-title: "Rental Housing Quality in Memphis"
+title: "Housing Quality Regulations"
 description: |
-  Tbd.
+  Reviewing regulation and enforcement of housing quality in Memphis.
 author:
   - name: Sarah Johnson
-date: 2021-11-04
+date: 2021-11-11
 output:
   distill::distill_article:
     self_contained: false
-draft: true
+    toc: true
+repository_url: https://github.com/sj-io/sj-distill
+csl: chicago-note-bibliography-with-ibid.csl
 bibliography: references.bib
 ---
 
@@ -16,17 +18,9 @@ bibliography: references.bib
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-# Methodology
+# Uniform Residential Landlord and Tenant Act (URLTA)
 
-Current regulation of housing quality in the private rental market assumes that tenants will report substandard housing, yet this is often not the case. Regulations that rely on their reporting fail to protect tenants from retaliation, and low-income households may lack housing alternatives [@chisholm2018]. In this scenario, tenants must choose between living in substandard housing, or jeopardizing their housing stability.
-
-This paper will use Memphis, Tennessee as a case study to explore how these problems manifest in a particular place. First, I will explore the laws and regulations that govern housing quality in the private rental market. Then, I will examine data to determine the amount of housing alternatives available for low-income renters. Finally, I will analyze code enforcement data to see how often tenants do report problems, and how those problems are resolved.
-
-# Housing Quality Regulations
-
-## Uniform Residential Landlord and Tenant Act (URLTA)
-
-The Uniform Residential Landlord and Tenant Act (URLTA) was created in 1972 by the Uniform Law Commission to modernize laws governing rental units. Prior to URLTA, landlords and tenants were bound by common law developed in an agricultural society, based on a theory that a rental lease gave the tenant land, and any buildings or improvements were incidental. Landlords had no obligation to maintain structures; for example, a Tennessee Supreme Court case from 1854 found a tenant responsible for all rent, despite his home having been flooded and made uninhabitable [@scott2003].
+The Uniform Residential Landlord and Tenant Act (URLTA) was created in 1972 by the Uniform Law Commission to modernize laws governing rental units. Prior to URLTA, landlords and tenants were bound by common law developed in an agricultural society, based on a theory that a rental lease gave the tenant land, and any buildings or improvements were incidental. Landlords had no obligation to maintain structures; for example, a Tennessee Supreme Court case from 1854 found a tenant responsible for paying all rent due on his lease, despite his home having been flooded and made uninhabitable [@scott2003].
 
 URLTA changed many of the agrarian common law principles, notably creating a warranty of habitability for tenants. Under the warranty of habitability, landlords are required to provide and maintain habitable conditions for the premises. If conditions become uninhabitable, URLTA provides remedies to the tenant, including termination of the lease [@scott2003].
 
@@ -38,10 +32,20 @@ Under Tennessee's URLTA, landlords are required to comply with building and hous
 
 Tenants who give their landlord written notice and follow the remedies laid out in the code are supposed to be protected from retaliation, including rent increases, decreased services, or eviction [@uniform1975a §514]. This may adequately protect tenants under a long-term lease; however, protections are more vague for tenants on short-term leases. Landlords are allowed to evict week-to-week or month-to-month tenants for no cause, as long as adequate notice is given (10 or 30 days, respectively) [@uniform1975a §512].
 
-How are tenants meant to be protected from retaliatory eviction if landlords need no cause to evict in the first place? How long do retaliation protections last? These arguments have lead some states, like California and Washington, to enact "just cause" eviction ordinances, requiring landlords to provide a specific, valid reason to evict tenants (such as non-payment of rent) [@apstaff2021]. With the absence of such protections in Tennessee, lawyers at local renter rights meetings recommend tenants continue paying rent and keep a record of any photos, receipts, and conversations with their landlord.
+How are tenants meant to be protected from retaliatory eviction if landlords need no cause to evict in the first place? How long do retaliation protections last? These arguments have lead some states, like California and Washington, to enact "just cause" eviction ordinances, requiring landlords to provide a specific, valid reason to evict tenants (such as non-payment of rent) [@apstaff2021]. With the absence of such protections in Tennessee, lawyers at local renter rights meetings recommend tenants continue paying rent and keep a record of any photos, receipts, and conversations with their landlord to improve their chances in court.
 
-## International Property Maintenance Code (IPMC) and Code Enforcement
+# Code Enforcement
 
 As stated above, URLTA requires landlords to comply with building and housing codes, which are established at the local level. In 2018, Memphis replaced local housing codes by adopting the International Property Maintenance Code (IPMC) [@harrison2018]. The IPMC sets minimum housing standards for existing residential buildings and related environmental conditions. The IPMC is enforced by the Department of Code Enforcement [@codeenf].
 
-Once a complaint is received, an investigation is conducted to assess the violation, determine property ownership, and research past violations at the property. If warranted, a Code Inspector will issue a Notice to Correct Violation to the property owner. After a Notice is issued, follow-up inspections are conducted to determine compliance. Depending on the circumstances and severity, the department can then: give an extension; cite the owner to court; issue an order to vacate; issue an order to not occupy until repairs are made; or refer the property to the Condemnation Department. Cases where court action is initiated are resolved in the General Sessions Environmental Court [@codeenf].
+While state and local laws vary, the use of code enforcement to enforce local housing codes is standard across American cities. Typically, residents are told to call '311' to report any problems to a city. This method of self-reporting, while convenient for residents, can create biases in the data and the types of issues code enforcement pursues. A recent study of Kansas City 311 data found that, despite greater need, low-income and minority neighborhoods are less likely to report street condition or "nuisance" issues, while prioritizing more serious problems [@kontokosta2021]. Two extensive reports of Memphis code enforcement found that reliance on self-reporting led inspectors to spend a disproportionate amount of time on minor cases, rather than more serious violations [@betts2001; @stacy2018].
+
+The Memphis reports, though released nearly two decades apart, contained similar findings and recommendations. Each saw the vast majority of violations were related to nonstructural issues like weeds, junk, and vehicles: the 2001 paper found three out of four properties were cited for these problems, and the 2018 paper stated 81% of all requests were nonstructural [@betts2001 93; @stacy2018 48]. Apartment complexes tend to be underreported compared to single-family homes or duplexes [@stacy2018 58]. The @betts2001 paper conducted a visual survey of properties in the Binghampton neighborhood, and while at least half of multi-family properties had violations in multiple units, code enforcement recorded only eight violations out of 1200 apartment units. Both reports recommended fundamentally changing code enforcement from a reactive process built on citizen reporting to a proactive, strategic system [@betts2001 9; @stacy2018 13].
+
+Memphis has already taken this to heart by founding the [Strategic Code Enforcement Management Academy](http://strategiccodeenforcement.com/) (SCEMA) in 2017, which invites individuals from cities around the country to learn and share best practices for code enforcement.
+
+## Code Enforcement Process
+
+Despite an emphasis on strategic enforcement, most code enforcement cases still begin with a citizen report, either by calling 311 or using the app [SeeClickFix](https://seeclickfix.com/). Once a complaint is received, an investigation is conducted to assess the violation, determine property ownership, and research past violations at the property. If a violation is found, a code inspector will issue a "Notice to Correct Violation" to the property owner. 
+
+After a notice is issued, follow-up inspections are conducted to determine compliance. Depending on the circumstances and severity, the department can then: give an extension; cite the owner to court; issue an order to vacate; issue an order to not occupy until repairs are made; or refer the property to the Condemnation Department. Cases where court action is initiated are resolved in the General Sessions Environmental Court [@codeenf].
