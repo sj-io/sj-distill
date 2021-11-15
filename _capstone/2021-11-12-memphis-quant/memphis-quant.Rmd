@@ -1,0 +1,188 @@
+---
+title: "Memphis Housing Market"
+description: |
+  Reviewing the Memphis housing market.
+author:
+  - name: Sarah Johnson
+date: 2021-11-12
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Much of the discourse surrounding housing, particularly housing affordability, has been focused on "superstar" cities like New York, Los Angeles, and San Francisco. In these cities there is high demand for housing, and zoning laws have been blamed for limiting the supply (particularly in California), furthering the shortage.
+
+Memphis has neither of these problems. The population has remained stagnant over the past decade. In 2019, Memphis enacted a new comprehensive plan, Memphis 3.0, which instructed development to "build up, not out." Memphis 3.0 has received national awards for its progressiveness in regards to zoning \[citation needed\].
+
+And yet, Memphis has not fixed its housing problems. How have rents changed, especially since 2019? How many renters are in Memphis? (compared to other places? in Shelby County? requires Shelby first, lib(sf), and st_filter)
+
+```{r library, include=FALSE}
+library(tidyverse)
+library(tidycensus)
+library(sf)
+```
+
+Below is a table of the top 50 metros by number of occupied housing units, sorted by the percentage of renters.
+
+```{r variables}
+vbs <- load_variables(2019, "acs5")
+```
+
+```{r cbsa, include=FALSE}
+cbsa <- get_acs(
+  geography = "cbsa",
+  variables = c(
+    Owner = "B25003_002",
+    Renter = "B25003_003"
+  ),
+  summary_var = "B25003_001",
+  cache_table = TRUE
+) %>%
+  slice_max(summary_est, n = 100) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r cbsaRent}
+library(rmarkdown)
+cbsaRent <- cbsa %>% 
+  filter(variable == "Renter") %>% 
+  select(NAME, estimate, summary_est, percent) %>% 
+  arrange(desc(percent)) %>% 
+  mutate(NAME = str_remove(NAME, "-.*$")) %>% 
+  mutate(NAME = str_remove(NAME, ",.*$")) 
+paged_table(cbsaRent)
+```
+
+The Memphis MSA ranks 10th, with 40% of all occupied housing units being renter-occupied.
+
+Where are the renters?
+
+```{r county, include=FALSE}
+county <- get_acs(
+  geography = "county",
+  state = "TN",
+  county = "Shelby",
+  variables = c(
+    Owner = "B25003_002",
+    Renter = "B25003_003"
+  ),
+  summary_var = "B25003_001",
+  cache_table = TRUE,
+  geometry = TRUE
+) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r place, include=FALSE}
+place <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = c(
+    Owner = "B25003_002",
+    Renter = "B25003_003"
+  ),
+  summary_var = "B25003_001",
+  cache_table = TRUE,
+  geometry = TRUE
+) %>% 
+  st_filter(county, .predicate = st_within) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r tract, include=FALSE}
+tract <- get_acs(
+  geography = "tract",
+  state = "TN",
+  county = "Shelby",
+  variables = c(
+    Owner = "B25003_002",
+    Renter = "B25003_003"
+  ),
+  summary_var = "B25003_001",
+  cache_table = TRUE,
+  geometry = TRUE
+) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r map}
+library(mapview)
+mapview(tract, zcol = "percent") + mapview(place, zcol = "percent")
+```
+
+Who are the renters?
+
+```{r racevbs}
+raceVs <- c(
+  White = "B25003H_003",
+  Black = "B25003B_003",
+  Hispanic = "B25003I_003",
+  Asian = "B25003D_003"
+)
+```
+
+(in Shelby County)
+
+```{r raceShelby, include=FALSE}
+raceShelby <- get_acs(
+  geography = "county",
+  state = "TN",
+  county = "Shelby",
+  variables = raceVs,
+  summary_var = "B25003_003",
+  cache_table = TRUE
+) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r raceTable}
+raceTable <- raceShelby %>% 
+  select(variable, estimate, summary_est, percent) %>% 
+  arrange(desc(percent))
+paged_table(raceTable)
+```
+
+Where do the renters live? (by race)
+
+```{r raceTract, include=FALSE}
+raceTract <- get_acs(
+  geography = "tract",
+  state = "TN",
+  county = "Shelby",
+  variables = raceVs,
+  summary_var = "B25003_003",
+  cache_table = TRUE,
+  geometry = TRUE
+) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r mapRace, layout = 'l-page'}
+ggplot(raceTract, aes(fill = percent)) +
+  geom_sf() +
+  facet_wrap(~variable) +
+  theme_void()
+```
+
+How old are the renters? B25007
+
+Household size B25009
+
+Tenure by Year Householder Moved Into Unit B25038
+
+Rent Burden? B25070
+
+What is the age of housing?
+
+-   Year Structure Built B25034 or
+
+-   Tenure by Year Structure Built B25036 or
+
+-   Median Year Structure Built by Tenure B25037
+
+What kind of problems does the housing have?
