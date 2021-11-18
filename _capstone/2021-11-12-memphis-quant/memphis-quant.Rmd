@@ -60,7 +60,7 @@ paged_table(cbsaRent)
 
 The Memphis MSA ranks 10th, with 40% of all occupied housing units being renter-occupied.
 
-Where are the renters?
+# Location
 
 ```{r county, include=FALSE}
 county <- get_acs(
@@ -78,6 +78,11 @@ county <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
+```{r placesV}
+placesV <- c("Memphis", "Lakeland", "Bartlett", "Germantown", "Collierville", "Millington", "Arlington")
+places <- str_c(placesV, collapse = "|")
+```
+
 ```{r place, include=FALSE}
 place <- get_acs(
   geography = "place",
@@ -87,10 +92,9 @@ place <- get_acs(
     Renter = "B25003_003"
   ),
   summary_var = "B25003_001",
-  cache_table = TRUE,
-  geometry = TRUE
+  cache_table = TRUE
 ) %>% 
-  st_filter(county, .predicate = st_within) %>% 
+  filter(str_detect(NAME, places)) %>% 
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
@@ -124,10 +128,14 @@ tract <- get_acs(
 
 ```{r map}
 library(mapview)
-mapview(tract, zcol = "percent") + mapview(place, zcol = "percent")
+mapview(tract, zcol = "percent")
 ```
 
 Who are the renters?
+
+# Demographics
+
+## Race of Householder
 
 ```{r racevbs}
 raceVs <- c(
@@ -138,22 +146,23 @@ raceVs <- c(
 )
 ```
 
-(in Shelby County)
+The below table shows the number of renting households in Memphis, by race.
 
 ```{r raceShelby, include=FALSE}
 raceShelby <- get_acs(
-  geography = "county",
+  geography = "place",
   state = "TN",
-  county = "Shelby",
   variables = raceVs,
   summary_var = "B25003_003",
   cache_table = TRUE
 ) %>% 
+  filter(str_detect(NAME, places)) %>% 
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
 ```{r raceTable}
 raceTable <- raceShelby %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
   select(variable, estimate, summary_est, percent) %>% 
   arrange(desc(percent))
 paged_table(raceTable)
@@ -181,6 +190,8 @@ ggplot(raceTract, aes(fill = percent)) +
   theme_void()
 ```
 
+## Age of Householder
+
 How old are the renters? B25007
 
 ```{r ageVs}
@@ -195,11 +206,6 @@ ageVs <- c(
   "75-84" = "B25007_020",
   "85+" = "B25007_021"
 )
-```
-
-```{r}
-placesV <- c("Memphis", "Lakeland", "Bartlett", "Germantown", "Collierville", "Millington", "Arlington")
-places <- str_c(placesV, collapse = "|")
 ```
 
 ```{r agePlace, include=FALSE}
@@ -225,7 +231,7 @@ paged_table(memphisAge)
 
 Of renting households in Memphis, the highest percentage are in the 25-34 age range, followed by the 35-44 age range, then the 45-54 age range. While renters skew younger, there are still a sizeable number of older renters; 12.6% of all renting households in Memphis are over 65, the typical retirement age. Note that this figure does not include people in nursing homes (these individuals are included in the "group quarters population").
 
-Household size
+## Household Size
 
 What is the household size of renters?
 
@@ -262,11 +268,13 @@ paged_table(memphisHHsize)
 
 Of renting households in Memphis, 42% live alone.
 
+## Cost Burden
+
 Rent Burdened?
 
 ```{r GRAPHIvs}
 GRAPHIvs <- c(
-  "< 10.0%" = "B25070_002",
+  "Less than 10.0%" = "B25070_002",
   "10.0-14.9%" = "B25070_003",
   "15.0-19.9%" = "B25070_004",
   "20.0-24.9%" = "B25070_005",
@@ -300,12 +308,113 @@ paged_table(memphisGRAPHI)
 
 Of renting households in Memphis, the majority, 51.2% are cost burdened or extremely cost burdened. 23.5% pay between 30-50% of their income in rent. 27.7% pay 50% or more of their income in rent.
 
+# Housing Characteristics
+
+## Year Structure Built
+
 What is the age of housing?
 
--   Year Structure Built B25034 or
+```{r yearBltVs}
+yearBltVs <- c(
+  "Built 2014 or later" = "B25036_014",
+  "Built 2010 to 2013" = "B25036_015",
+  "Built 2000 to 2009" = "B25036_016",
+  "Built 1990 to 1999" = "B25036_017",
+  "Built 1980 to 1989" = "B25036_018",
+  "Built 1970 to 1979" = "B25036_019",
+  "Built 1960 to 1969" = "B25036_020",
+  "Built 1950 to 1959" = "B25036_021",
+  "Built 1940 to 1949" = "B25036_022",
+  "Built 1939 or earlier" = "B25036_023"
+)
+```
 
--   Tenure by Year Structure Built B25036 or
+```{r yearBltPlace, include=FALSE}
+yearBltPlace <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = yearBltVs,
+  summary_var = "B25036_013",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, places)) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
 
--   Median Year Structure Built by Tenure B25037
+The table below shows the year the home was built for renter-occupied households.
+
+```{r memphisYrBlt}
+memphisYrBlt <- yearBltPlace %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  select(variable, estimate, summary_est, percent)
+paged_table(memphisYrBlt)
+```
+
+Of renter-occupied housing in Memphis, the greatest percentage was built between 1970 and 1979. Very little of this housing was built within the past decade.
+
+Older structures are more likely to need maintenance, and they can be susceptible to health risks that are not in newer homes. For instance, the ban on lead based paint was not passed until 1979, and homes built before the ban are likely to have lead paint unless they have been remediated. In Memphis, 63% of renter-occupied housing was built before 1979.
+
+## Housing Quality Problems
 
 What kind of problems does the housing have?
+
+```{r AHSimport}
+AHSimport <- read_csv("AHS-mem-hsgqual-all.csv")
+```
+
+```{r AHSall}
+AHSall <- AHSimport %>% 
+  filter(tenure == "Renter") %>% 
+  select(char:estimate, total) %>% 
+  mutate(percent = 100 * (estimate/total))
+```
+
+According to the American Housing Survey, 93.53% of renters had adequate housing, while 6.47% had moderate or severely inadequate housing.
+
+The table below shows the most common problems renters experience, according to the American Housing Survey.
+
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Characteristic                                                                                        | Estimate | Percentage |
++=======================================================================================================+==========+============+
+| Signs of cockroaches in last 12 months                                                                | 50,900   | 22.72%     |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Bars on windows\*                                                                                     | 16,100\* | 13.69%\*   |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Signs of mice or rats inside home in last 12 months                                                   | 24,400   | 10.89%     |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Water leakage from inside structure in last 12 months                                                 | 19,500   | 8.71%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Water leakage from outside structure in last 12 months                                                | 18,900   | 8.44%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Uncomfortably cold for 24 hours or more last winter (occupying the same home, with heating equipment) | 12,300   | 6.61%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Broken windows\*                                                                                      | 7,600\*  | 6.46%\*    |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Open cracks or holes (interior)                                                                       | 14,400   | 6.43%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| With fuse or breaker blown in last 3 months                                                           | 14,100   | 6.30%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Missing roofing material\*                                                                            | 7,000\*  | 5.95%\*    |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Mold in last 12 months                                                                                | 11,800   | 5.27%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Hole in roof\*                                                                                        | 4,200\*  | 3.57%\*    |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Missing bricks, siding, or other outside wall material\*                                              | 3,900\*  | 3.32%\*    |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| With no toilet working some time in last 3 months                                                     | 7,000    | 3.13%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Rooms without electric outlets                                                                        | 6,600    | 2.95%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| With water stoppage in last 3 months                                                                  | 6,400    | 2.86%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Broken plaster or peeling paint (interior)                                                            | 5,300    | 2.37%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Sewage breakdown in last 3 months                                                                     | 5,100    | 2.34%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+| Exposed wiring                                                                                        | 3,900    | 1.74%      |
++-------------------------------------------------------------------------------------------------------+----------+------------+
+
+: Housing Quality Problems
+
+Problems related to the exterior of the structure are only collected for single-family structures; these have been marked with an asterisk (\*).
