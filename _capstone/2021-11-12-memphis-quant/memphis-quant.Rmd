@@ -4,10 +4,11 @@ description: |
   Reviewing the Memphis housing market.
 author:
   - name: Sarah Johnson
-date: 2021-11-12
+date: 2021-11-18
 output:
   distill::distill_article:
     self_contained: false
+    toc: true
 draft: true
 ---
 
@@ -15,19 +16,11 @@ draft: true
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Much of the discourse surrounding housing, particularly housing affordability, has been focused on "superstar" cities like New York, Los Angeles, and San Francisco. In these cities there is high demand for housing, and zoning laws have been blamed for limiting the supply (particularly in California), furthering the shortage.
-
-Memphis has neither of these problems. The population has remained stagnant over the past decade. In 2019, Memphis enacted a new comprehensive plan, Memphis 3.0, which instructed development to "build up, not out." Memphis 3.0 has received national awards for its progressiveness in regards to zoning (citation needed).
-
-And yet, Memphis has not fixed its housing problems. How have rents changed, especially since 2019? How many renters are in Memphis? (compared to other places? in Shelby County? requires Shelby first, lib(sf), and st_filter)
-
 ```{r library, include=FALSE}
 library(tidyverse)
 library(tidycensus)
-library(sf)
+library(DT)
 ```
-
-Below is a table of the top 50 metros by number of occupied housing units, sorted by the percentage of renters.
 
 ```{r variables}
 vbs <- load_variables(2019, "acs5")
@@ -47,15 +40,26 @@ cbsa <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
+Below is a table of the top 50 metros by number of occupied housing units, sorted by the percentage of renters.
+
 ```{r cbsaRent}
-library(rmarkdown)
 cbsaRent <- cbsa %>% 
   filter(variable == "Renter") %>% 
   select(NAME, estimate, summary_est, percent) %>% 
   arrange(desc(percent)) %>% 
   mutate(NAME = str_remove(NAME, "-.*$")) %>% 
   mutate(NAME = str_remove(NAME, ",.*$")) 
-paged_table(cbsaRent)
+```
+
+```{r cbsaDT}
+datatable(
+  cbsaRent,
+  rownames = FALSE,
+  colnames = c('Metro Area', 'Renters', 'Total Households', 'Rent Percentage'),
+  caption = "Table 1: Percent of Renters in US Metro Areas"
+) %>%
+  formatPercentage(4, mark = ".", interval = 2) %>%
+  formatRound(2:3, digits = 0)
 ```
 
 The Memphis MSA ranks 10th, with 40% of all occupied housing units being renter-occupied.
@@ -79,8 +83,8 @@ county <- get_acs(
 ```
 
 ```{r placesV}
-placesV <- c("Memphis", "Lakeland", "Bartlett", "Germantown", "Collierville", "Millington", "Arlington")
-places <- str_c(placesV, collapse = "|")
+places <- c("Memphis", "Lakeland", "Bartlett", "Germantown", "Collierville", "Millington", "Arlington") %>% 
+  str_c(collapse = "|")
 ```
 
 ```{r place, include=FALSE}
@@ -104,8 +108,21 @@ The following table shows the percentage of renters for each place in Shelby Cou
 placeTable <- place %>% 
   filter(variable == "Renter") %>% 
   select(NAME, estimate, summary_est, percent) %>% 
-  arrange(desc(percent))
-paged_table(placeTable)
+  arrange(desc(percent)) %>%  
+  mutate(NAME = str_remove(NAME, ",.*$"),
+         NAME = str_remove(NAME, " town| city")) 
+```
+
+```{r placeDT}
+datatable(
+  placeTable,
+  rownames = FALSE,
+  colnames = c('Place', 'Renters', 'Total Households', 'Rent Percentage'),
+  caption = "Table 2: Percent of Renters in Places in Shelby County",
+  options = list(pageLength = 7),
+  autoHideNavigation = getOption("DT.autoHideNavigation", TRUE)
+) %>% formatPercentage(4, mark = ".", interval = 2) %>% 
+  formatRound(2:3, digits = 0)
 ```
 
 While the overall MSA is majority owner-occupied housing, the city of Memphis is majority renter-occupied. The next highest percentage is Millington, which is home to an Air Force base, where people may be only temporarily stationed.
@@ -126,18 +143,16 @@ tract <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
-```{r map}
+```{r map, layout = 'l-page'}
 library(mapview)
 mapview(tract, zcol = "percent")
 ```
 
-Who are the renters?
-
-# Demographics
+# Renter Demographics
 
 ## Race of Householder
 
-```{r racevbs}
+```{r raceVs}
 raceVs <- c(
   White = "B25003H_003",
   Black = "B25003B_003",
@@ -148,8 +163,8 @@ raceVs <- c(
 
 The below table shows the number of renting households in Memphis, by race.
 
-```{r raceShelby, include=FALSE}
-raceShelby <- get_acs(
+```{r racePlace, include=FALSE}
+racePlace <- get_acs(
   geography = "place",
   state = "TN",
   variables = raceVs,
@@ -161,11 +176,22 @@ raceShelby <- get_acs(
 ```
 
 ```{r raceTable}
-raceTable <- raceShelby %>% 
+raceTable <- racePlace %>% 
   filter(str_detect(NAME, "Memphis")) %>% 
   select(variable, estimate, summary_est, percent) %>% 
   arrange(desc(percent))
-paged_table(raceTable)
+```
+
+```{r raceDT}
+datatable(
+  raceTable,
+  rownames = FALSE,
+  colnames = c('Race/Ethnicity', 'Renters', 'Total Renters', 'Percentage'),
+  caption = "Table 3: Race/Ethnicity of Renters in Memphis",
+  options = list(pageLength = 4),
+  autoHideNavigation = getOption("DT.autoHideNavigation", TRUE)
+) %>% formatPercentage(4, mark = ".", interval = 2) %>% 
+  formatRound(2:3, digits = 0)
 ```
 
 Where do the renters live? (by race)
@@ -187,12 +213,13 @@ raceTract <- get_acs(
 ggplot(raceTract, aes(fill = percent)) +
   geom_sf() +
   facet_wrap(~variable) +
-  theme_void()
+  theme_void() +
+  labs(title = "Race/Ethnicity of Renters in Shelby County Census Tracts")
 ```
 
 ## Age of Householder
 
-How old are the renters? B25007
+How old are the renters?
 
 ```{r ageVs}
 ageVs <- c(
@@ -220,13 +247,22 @@ agePlace <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
-The table below shows the number of renters in Memphis, by age.
+The below graph shows the number of renters in Memphis, by age.
 
-```{r memphisAgeTable}
-memphisAge <- agePlace %>% 
+```{r memphisAge}
+ageMemphis <- agePlace %>% 
   filter(str_detect(NAME, "Memphis")) %>% 
   select(variable, estimate, summary_est, percent)
-paged_table(memphisAge)
+```
+
+```{r ggAge}
+ggplot(ageMemphis, aes(x = variable, y = estimate)) +
+  geom_col(fill = "lightseagreen") +
+  theme_minimal() +
+  labs(title = "Age of renters in Memphis, TN",
+       subtitle = "2015-2019 5-year ACS estimates",
+       y = "Estimate",
+       x = "Age")
 ```
 
 Of renting households in Memphis, the highest percentage are in the 25-34 age range, followed by the 35-44 age range, then the 45-54 age range. While renters skew younger, there are still a sizeable number of older renters; 12.6% of all renting households in Memphis are over 65, the typical retirement age. Note that this figure does not include people in nursing homes (these individuals are included in the "group quarters population").
@@ -243,7 +279,7 @@ HHsizeVs <- c(
   "4" = "B25009_014",
   "5" = "B25009_015",
   "6" = "B25009_016",
-  "7 or more" = "B25009_017"
+  "7+" = "B25009_017"
 )
 ```
 
@@ -260,10 +296,19 @@ HHsizePlace <- get_acs(
 ```
 
 ```{r memphisHHsizeTable}
-memphisHHsize <- HHsizePlace %>% 
+HHsizeMemphis <- HHsizePlace %>% 
   filter(str_detect(NAME, "Memphis")) %>% 
   select(variable, estimate, summary_est, percent)
-paged_table(memphisHHsize)
+```
+
+```{r ggHHsize}
+ggplot(HHsizeMemphis, aes(x = variable, y = estimate)) + 
+  geom_col(fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Household size of renters in Memphis, TN",
+       subtitle = "2015-2019 5-year ACS estimates",
+       y = "Estimate",
+       x = "People in Household")
 ```
 
 Of renting households in Memphis, 42% live alone.
@@ -299,14 +344,80 @@ GRAPHIplace <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
-```{r memphisGRAPHItable}
-memphisGRAPHI <- GRAPHIplace %>% 
+```{r memGRAPHItbl}
+GRAPHImemphis <- GRAPHIplace %>% 
   filter(str_detect(NAME, "Memphis")) %>% 
   select(variable, estimate, summary_est, percent)
-paged_table(memphisGRAPHI)
+```
+
+```{r ggGRAPHI}
+ggplot(GRAPHImemphis, aes(x = estimate, y = fct_reorder(variable, GRAPHIvs, .desc = TRUE))) +
+  geom_col(fill = "mediumseagreen") +
+  theme_minimal() +
+  labs(title = "Cost burden of renters in Memphis, TN",
+       subtitle = "2015-2019 5-year ACS estimates",
+       y = "Cost Burden",
+       x = "Estimate")
 ```
 
 Of renting households in Memphis, the majority, 51.2% are cost burdened or extremely cost burdened. 23.5% pay between 30-50% of their income in rent. 27.7% pay 50% or more of their income in rent.
+
+The below table shows cost burden rates for every place in Shelby County.
+
+```{r GRAPHI2, include=FALSE}
+GRAPHIplace2 <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = c(
+    "B25070_002",
+    "B25070_003",
+    "B25070_004",
+    "B25070_005",
+    "B25070_006",
+    "B25070_007",
+    "B25070_008",
+    "B25070_009",
+    "B25070_010",
+    "B25070_011"
+  ), 
+  summary_var = "B25070_001",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, places)) %>% 
+  mutate(percent = 100 * (estimate / summary_est))
+```
+
+```{r groupedGRAPHI, layout = 'l-page'}
+GRAPHIgrouped <- GRAPHIplace2 %>% 
+  mutate(costBurden = case_when(
+    variable < "B25070_007" ~ "notCostBurdened",
+    variable < "B25070_010" ~ "costBurdened",
+    variable < "B25070_011" ~ "extremelyCostBurdened",
+    TRUE ~ "notComputed"
+  )) %>% 
+  group_by(NAME, costBurden, summary_est) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  mutate(percent = 100 * (estimate / summary_est)) %>% 
+  select(-c(summary_est, estimate)) %>% 
+  pivot_wider(names_from = costBurden, values_from = percent) %>% 
+  select(NAME, notCostBurdened, costBurdened, extremelyCostBurdened, notComputed) %>% 
+  arrange(desc(notCostBurdened)) %>%  
+  mutate(NAME = str_remove(NAME, ",.*$"),
+         NAME = str_remove(NAME, " town| city"))
+```
+
+```{r}
+datatable(
+  GRAPHIgrouped,
+  rownames = FALSE,
+  colnames = c('Place', 'Not Cost Burdened', 'Cost Burdened', 'Extremely Cost Burdened', 'Not Computed'),
+  caption = "Table 4: Cost Burden of Renters in Places in Shelby County",
+  options = list(pageLength = 7),
+  autoHideNavigation = getOption("DT.autoHideNavigation", TRUE)
+) %>% formatPercentage(2:5, mark = ".", interval = 2)
+```
+
+Collierville has the lowest rate of cost burdenship, with 61% of renting households having affordable housing. Memphis has the highest rate of cost burdenship, with the majority of households paying more than 30% of their income in rent.
 
 # Housing Characteristics
 
@@ -344,10 +455,19 @@ yearBltPlace <- get_acs(
 The table below shows the year the home was built for renter-occupied households.
 
 ```{r memphisYrBlt}
-memphisYrBlt <- yearBltPlace %>% 
+yearBltMemphis <- yearBltPlace %>% 
   filter(str_detect(NAME, "Memphis")) %>% 
   select(variable, estimate, summary_est, percent)
-paged_table(memphisYrBlt)
+```
+
+```{r ggYrBlt}
+ggplot(yearBltMemphis, aes(x = estimate, y = variable)) +
+  geom_col(fill = "peru") +
+  theme_minimal() +
+  labs(title = "Year built of renter-occupied housing in Memphis, TN",
+       subtitle = "2015-2019 5-year ACS estimates",
+       y = "Year Built",
+       x = "Estimate")
 ```
 
 Of renter-occupied housing in Memphis, the greatest percentage was built between 1970 and 1979. Very little of this housing was built within the past decade.
@@ -358,7 +478,7 @@ Older structures are more likely to need maintenance, and they can be susceptibl
 
 What kind of problems does the housing have?
 
-```{r AHSimport}
+```{r AHSimport, include=FALSE}
 AHSimport <- read_csv("AHS-mem-hsgqual-all.csv")
 ```
 
@@ -415,6 +535,6 @@ The table below shows the most common problems renters experience, according to 
 | Exposed wiring                                                                                        | 3,900    | 1.74%      |
 +-------------------------------------------------------------------------------------------------------+----------+------------+
 
-: Housing Quality Problems
+: Table 5: Housing Quality Problems in Memphis MSA
 
 Problems related to the exterior of the structure are only collected for single-family structures; these have been marked with an asterisk (\*).
