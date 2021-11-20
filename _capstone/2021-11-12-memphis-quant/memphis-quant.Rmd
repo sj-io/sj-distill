@@ -25,9 +25,9 @@ This section uses data from the 2015-2019 5-year American Community Survey to un
 
 ### Renter-Occupied Households
 
-There are two main ways to study the population of an area: individuals and households. In a place where all individuals live alone, the number of households and individuals are identical. When multiple people live together in the same housing unit, they are counted as one household. Additionally, the Census counts individuals who live in group quarters, like nursing homes, adult correctional facilities, and military quarters, separate from renter- and owner-occupied households.
+There are two main ways to study the population of an area using Census data: individuals and households. In a place where all individuals live alone, the number of households and individuals would be identical. When multiple people live together in the same housing unit, they are counted as one household. Additionally, the Census counts individuals who live in group quarters, like nursing homes, adult correctional facilities, and military quarters, separate from renter- and owner-occupied households.
 
-Typically when we think of population, we are referring to the number of individuals in a place. However, this paper seeks to understand the characteristics of renters. For this topic, a wider range of Census data is available when we limit our scope to households. There are certain limitations---demographic data is limited to the head of the household, and if multiple individuals under the same household have different characteristics, some data will be missing. Still, the data allows a general understanding of households in an area. As such, any mentions of "renters" in the below sections refers to renter-occupied households, rather than individual renters.
+Typically when we think of population, we are referring to the number of individuals in a place. However, this paper seeks to understand the characteristics of renters. For this topic, a wider range of Census data is available when we narrow our scope to households. There are certain limitations---demographic data is limited to the head of the household, and if multiple individuals under the same household have different characteristics, some data will be omitted. Still, the data allows a general understanding of an area's population. As such, any mentions of "renters" in the below sections refers to renter-occupied households, rather than individual renters.
 
 ```{r library, include=FALSE}
 library(tidyverse)
@@ -35,7 +35,7 @@ library(tidycensus)
 library(DT)
 ```
 
-```{r variables}
+```{r variables, eval=FALSE, include=FALSE}
 vbs <- load_variables(2019, "acs5")
 ```
 
@@ -64,7 +64,7 @@ cbsa <- get_acs(
 ```{r cbsaRent}
 cbsaRent <- cbsa %>% 
   filter(variable == "Renter") %>% 
-  select(NAME, estimate, summary_est, percent) %>% 
+  select(NAME, summary_est, estimate, percent) %>% 
   arrange(desc(percent)) %>% 
   mutate(NAME = str_remove(NAME, "-.*$")) %>% 
   mutate(NAME = str_remove(NAME, ",.*$")) 
@@ -76,7 +76,7 @@ The table below lists the top 50 metros in the US (by number of households), sor
 datatable(
   cbsaRent,
   rownames = FALSE,
-  colnames = c('Metro Area', 'Renters', 'Total Households', 'Rent Percentage'),
+  colnames = c('Metro Area', 'Total Households', 'Renters', 'Rent Percentage'),
   caption = "Table 1: Percent of Renters in US Metro Areas"
 ) %>%
   formatPercentage(4, mark = ".", interval = 2) %>%
@@ -89,7 +89,7 @@ Memphis ranks 43rd in the US for the total number of households in a metro area.
 
 While 40% of households in the Memphis MSA are renters, this percentage varies when we subdivide the metro area. In general, there are more rental units in a central city/county compared to neighboring areas. This section will focus on Shelby County, and any mention of "Memphis" refers exclusively to the city of Memphis.
 
-```{r placesV}
+```{r vPlaces}
 places <- c("Memphis", "Lakeland", "Bartlett", "Germantown", "Collierville", "Millington", "Arlington") %>% 
   str_c(collapse = "|")
 ```
@@ -117,13 +117,13 @@ The following table shows the percentage of renters for places in Shelby County.
 #' Housing Units in places = 315,835 total; 145,705 rent
 #' Housing units not in places = 35,359 total; 12,142 rent
 
-placeUninc <- c('Unincorporated County', 12142, 35359, 34.33921)
+placeUninc <- c('Unincorporated county', 35359, 12142, 34.33921)
 ```
 
 ```{r placeTable}
 placeTable <- place %>% 
   filter(variable == "Renter") %>% 
-  select(NAME, estimate, summary_est, percent) %>% 
+  select(NAME, summary_est, estimate, percent) %>% 
   rbind(placeUninc) %>% 
   arrange(desc(percent)) %>%  
   mutate(NAME = str_remove(NAME, ",.*$"),
@@ -134,7 +134,7 @@ placeTable <- place %>%
 datatable(
   placeTable,
   rownames = FALSE,
-  colnames = c('Place', 'Renters', 'Total Households', 'Rent Percentage'),
+  colnames = c('Place', 'Total Households', 'Renters', 'Rent (Pct)'),
   caption = "Table 2: Percent of Renters in Places in Shelby County",
   options = list(pageLength = 8),
   autoHideNavigation = getOption("DT.autoHideNavigation", TRUE)
@@ -151,6 +151,8 @@ Lakeland has the smallest percentage of renting households in the county. Howeve
 Germantown has also sought to limit new multifamily housing. The city first initiated an 18-month moratorium on all apartment development in January 2018, followed by a shorter moratorium on standalone, single-use multifamily complexes. In January 2020, the city's aldermen voted to ban these complexes altogether by amending zoning ordinances. Apartments and condos are still allowed as part of mixed-use developments in certain areas of the city [@warren2020].
 
 Meanwhile, Collierville has been home to Schilling Farms since the early 1990s, "the premier mixed-use development in West Tennessee and the Mid-South region." The site contains 1,180 apartments and the town recently voted to expand and include another 259 rental units [@warren2021].
+
+### Map: Percent of Renters in Shelby County Census Tracts
 
 The map below shows the percentage of renters in Shelby County census tracts. The map is interactive, and the layers button to the left can be used to change the map background (ESRI.WorldImagery offers a satellite view).
 
@@ -179,10 +181,38 @@ Most tracts with the highest percentage of renters are located near the downtown
 
 # Renter Demographics
 
+This section will explore various characteristics of renting households in Memphis. First I will look at the race/ethnicity of renters, and where certain racial/ethnic groups are more likely to live. Then I will look into the age of renters, followed by household size and cost burden.
+
 ## Race of Householder
 
-```{r raceVs}
-raceVs <- c(
+Are certain racial/ethnic groups more likely to rent than others? To figure this out, we first need to see how much each racial/ethnic group is represented in the total number of households. Then, we need to know what percentage of that racial/ethnic group rents. In a place with no disparity in tenure, these percentages would be equal (i.e., if Black households make up 60% of all households, they would also comprise 60% of all renters).
+
+Racial/ethnic representation of Memphis households is shown in the table below. The first column lists four racial/ethnic groups that make up 99% of all households in Memphis. The second column shows their percentage of the total households. The third column is how many of these households rent. The last column is the difference between the percentage of households who rent, compared to that racial/ethnic groups representation in the total number of households.
+
+```{r vRaceTotal}
+vRaceTotal <- c(
+  White = "B25003H_001",
+  Black = "B25003B_001",
+  Hispanic = "B25003I_001",
+  Asian = "B25003D_001"
+)
+```
+
+```{r raceTotal, include=FALSE}
+raceTotal <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = vRaceTotal,
+  summary_var = "B25003_001",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, places)) %>% 
+  mutate(percent = 100 * (estimate / summary_est),
+         total = "Total")
+```
+
+```{r vRaceRent}
+vRaceRent <- c(
   White = "B25003H_003",
   Black = "B25003B_003",
   Hispanic = "B25003I_003",
@@ -190,47 +220,64 @@ raceVs <- c(
 )
 ```
 
-The below table shows the number of renting households in Memphis, by race.
-
-```{r racePlace, include=FALSE}
-racePlace <- get_acs(
+```{r raceRent, include=FALSE}
+raceRent <- get_acs(
   geography = "place",
   state = "TN",
-  variables = raceVs,
+  variables = vRaceRent,
   summary_var = "B25003_003",
   cache_table = TRUE
 ) %>% 
   filter(str_detect(NAME, places)) %>% 
-  mutate(percent = 100 * (estimate / summary_est))
+  mutate(percent = 100 * (estimate / summary_est),
+         total = "Rent")
+```
+
+```{r race}
+race <- rbind(raceRent, raceTotal) %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  select(variable, percent, total) %>% 
+  pivot_wider(names_from = total, values_from = percent) %>% 
+  mutate(difference = Total - Rent) %>% 
+  select(variable, Total, everything()) %>% 
+  arrange(desc(Rent))
+```
+
+```{r racePlaces, eval=FALSE, include=FALSE}
+racePlaces <- rbind(raceRent, raceTotal) %>% 
+  select(NAME, variable, percent, total) %>% 
+  pivot_wider(names_from = total, values_from = percent) %>% 
+  mutate(difference = Total - Rent) %>% 
+  select(NAME, variable, Total, everything())
 ```
 
 ```{r raceTable}
-raceTable <- racePlace %>% 
-  filter(str_detect(NAME, "Memphis")) %>% 
-  select(variable, estimate, summary_est, percent) %>% 
-  arrange(desc(percent))
-```
-
-```{r raceDT}
 datatable(
-  raceTable,
-  rownames = FALSE,
-  colnames = c('Race/Ethnicity', 'Renters', 'Total Renters', 'Percentage'),
+  race,
+  rownames = FALSE, 
+  colnames = c('Race/Ethnicity', 'Total Households', 'Renters', 'Difference'),
   caption = "Table 3: Race/Ethnicity of Renters in Memphis",
   options = list(pageLength = 4),
   autoHideNavigation = getOption("DT.autoHideNavigation", TRUE)
-) %>% formatPercentage(4, mark = ".", interval = 2) %>% 
-  formatRound(2:3, digits = 0)
+) %>% 
+  formatPercentage(2:3, mark = ".", interval = 2) %>% 
+  formatRound(4)
 ```
 
-Where do the renters live? (by race)
+According to the above table, Black households make up 62% of all households in Memphis, yet around 71% of these households rent, a difference of 9 percentage points. Hispanic/Latino households are also slightly more likely to rent compared to their representation in the total number of households. Meanwhile, Asian households are slightly less likely to rent compared to their overall representation. The largest disparity is in White households; though they make up about 31% of all households in Memphis, only about 20% are renters, a difference of 10 percentage points.
+
+In summary, there is a significant disparity in the tenure of White and Black households compared to their representation in the total number of households. White households are significantly less likely to rent, while black householders are significantly more likely to rent. Hispanic/Latino households are also more likely to rent, and Asian households less likely to rent, though the disparity is much smaller.
+
+### Map: Race/Ethnicity of Renters in Shelby County Census Tracts
+
+The following map shows, for each census tract in Shelby county, what percentage of renters are represented by each racial/ethnic group.
 
 ```{r raceTract, include=FALSE}
 raceTract <- get_acs(
   geography = "tract",
   state = "TN",
   county = "Shelby",
-  variables = raceVs,
+  variables = vRaceRent,
   summary_var = "B25003_003",
   cache_table = TRUE,
   geometry = TRUE
@@ -242,9 +289,10 @@ raceTract <- get_acs(
 ggplot(raceTract, aes(fill = percent)) +
   geom_sf() +
   facet_wrap(~variable) +
-  theme_void() +
-  labs(title = "Race/Ethnicity of Renters in Shelby County Census Tracts")
+  theme_void()
 ```
+
+The map shows distinct divisions of where certain racial/ethnic groups are more likely to rent. White renters make up a majority along the Poplar corridor and in areas outside the city limits. Meanwhile, Black renters make up the majority of renting households in North and South Memphis, and in unincorporated parts of the county to the east and along the Mississippi River. Hispanic/Latino renters are most represented in and near the Berclair neighborhood (within the I-240 loop, north of Summer Avenue and west of Highland Street). Asian renters are predominantly outside the city of Memphis, in the suburbs of Germantown, Collierville, and Bartlett.
 
 ## Age of Householder
 
