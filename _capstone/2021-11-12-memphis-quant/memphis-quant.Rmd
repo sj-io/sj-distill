@@ -172,16 +172,16 @@ tract <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
-```{r map, layout = 'l-page', fig.height=6}
+```{r map, layout = 'l-page', fig.height=6, fig.cap="Renters in Shelby County"}
 library(mapview)
 mapview(tract, zcol = "percent")
 ```
 
 Most tracts with the highest percentage of renters are located near the downtown core of Memphis.
 
-# Renter Demographics
+# Demographics
 
-This section will explore various characteristics of renting households in Memphis. First I will look at the race/ethnicity of renters, and where certain racial/ethnic groups are more likely to live. Then I will look into the age of renters, followed by household size and cost burden.
+This section will explore various characteristics of renting households in Memphis. First I will look at the race/ethnicity of renters, and where certain racial/ethnic groups are more likely to live. Then I will breakdown housing cost burden, paying special attention to renting households. Lastly, I will provide additional info on renting households, including age and household size.
 
 ## Race of Householder
 
@@ -264,13 +264,13 @@ datatable(
   formatRound(4)
 ```
 
-According to the above table, Black households make up 62% of all households in Memphis, yet around 71% of these households rent, a difference of 9 percentage points. Hispanic/Latino households are also slightly more likely to rent compared to their representation in the total number of households. Meanwhile, Asian households are slightly less likely to rent compared to their overall representation. The largest disparity is in White households; though they make up about 31% of all households in Memphis, only about 20% are renters, a difference of 10 percentage points.
+According to the above table, Black households make up 62% of all households in Memphis, yet around 71% of renting households, a difference of 9 percentage points. Hispanic/Latino households are also slightly more likely to rent compared to their representation in the total number of households. Meanwhile, Asian households are slightly less likely to rent compared to their overall representation. The largest disparity is in White households; though they make up about 31% of all households in Memphis, they only account for 20% of all renters, a difference of 10 percentage points.
 
-In summary, there is a significant disparity in the tenure of White and Black households compared to their representation in the total number of households. White households are significantly less likely to rent, while black householders are significantly more likely to rent. Hispanic/Latino households are also more likely to rent, and Asian households less likely to rent, though the disparity is much smaller.
+In summary, there is a significant disparity in tenure of White and Black households compared to their total representation in households. White households are significantly less likely to rent, while black householders are significantly more likely to rent. Hispanic/Latino households are also more likely to rent, and Asian households less likely to rent, though the disparity is much smaller.
 
 ### Map: Race/Ethnicity of Renters in Shelby County Census Tracts
 
-The following map shows, for each census tract in Shelby county, what percentage of renters are represented by each racial/ethnic group.
+The following map shows, for each census tract in Shelby County, what percentage of renters are represented by each racial/ethnic group.
 
 ```{r raceTract, include=FALSE}
 raceTract <- get_acs(
@@ -285,21 +285,310 @@ raceTract <- get_acs(
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
-```{r mapRace, layout = 'l-page'}
+```{r mapRace, layout = 'l-page', fig.cap="Renters by race/ethnicity in Shelby County"}
 ggplot(raceTract, aes(fill = percent)) +
   geom_sf() +
   facet_wrap(~variable) +
-  theme_void()
+  theme_void() +
+  labs(fill = "Percent",
+       caption = "Source: 2015-2019 5-Year ACS estimates")
 ```
 
-The map shows distinct divisions of where certain racial/ethnic groups are more likely to rent. White renters make up a majority along the Poplar corridor and in areas outside the city limits. Meanwhile, Black renters make up the majority of renting households in North and South Memphis, and in unincorporated parts of the county to the east and along the Mississippi River. Hispanic/Latino renters are most represented in and near the Berclair neighborhood (within the I-240 loop, north of Summer Avenue and west of Highland Street). Asian renters are predominantly outside the city of Memphis, in the suburbs of Germantown, Collierville, and Bartlett.
+The map shows distinct divisions of where certain racial/ethnic groups rent. White renters make up a majority along the Poplar corridor and in areas outside the city limits. Meanwhile, Black renters make up the majority of renting households in North and South Memphis, and in unincorporated parts of the county to the east and along the Mississippi River. Hispanic/Latino renters are most represented in and near the Berclair neighborhood (within the I-240 loop, north of Summer Avenue and west of Highland Street). Asian renters are predominantly outside the city of Memphis, in the suburbs of Germantown, Collierville, and Bartlett.
 
-## Age of Householder
+## Cost Burden
 
-How old are the renters?
+Do renters pay more of their income to housing than owners? The more a household pays towards housing, the less they will have for other needs and wants, and the less they will be able to put towards savings. If renters want to own, yet pay most of their income towards rent, they will have a harder time saving the money necessary for a down payment.
 
-```{r ageVs}
-ageVs <- c(
+In this section I will break down housing costs by tenure and incomes to understand cost burden rates in Memphis. The following graphs exclude households who have zero/negative income or who do not pay rent. For this reason, percentages mentioned may not total 100%.
+
+### All Households
+
+The federal government determines affordable housing to be no more than 30% of a person's income. Someone paying more than 30% is considered cost burdened; more than 50% is extremely cost burdened. These measures are not perfect---smaller income households may find 30% is still stressful, while larger income households can pay over 30% and still be well off.
+
+The graph below shows housing cost burden for households, divided by tenure.
+
+```{r vGRAPHIown}
+vGRAPHIown <- c(
+  "<$35,000!!affordable" = "B25106_003",
+  "<$35,000!!affordable" = "B25106_004",
+  "<$35,000!!burden" = "B25106_005",
+  "<$35,000!!affordable" = "B25106_008",
+  "<$35,000!!affordable" = "B25106_009",
+  "<$35,000!!burden" = "B25106_010",
+  "$35,000 to $74,999!!affordable" = "B25106_012",
+  "$35,000 to $74,999!!affordable" = "B25106_013",
+  "$35,000 to $74,999!!burden" = "B25106_014",
+  "$35,000 to $74,999!!affordable" = "B25106_016",
+  "$35,000 to $74,999!!affordable" = "B25106_017",
+  "$35,000 to $74,999!!burden" = "B25106_018",
+  "$75,000+!!affordable" = "B25106_020",
+  "$75,000+!!affordable" = "B25106_021",
+  "$75,000+!!burden" = "B25106_022"
+)
+```
+
+```{r GRAPHIown, include=FALSE}
+GRAPHIown <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = vGRAPHIown,
+  summary_var = "B25106_002",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  mutate(tenure = "owner")
+```
+
+```{r vGRAPHIrent}
+vGRAPHIrent <- c(
+  "<$35,000!!affordable" = "B25106_026",
+  "<$35,000!!affordable" = "B25106_027",
+  "<$35,000!!burden" = "B25106_028",
+  "<$35,000!!affordable" = "B25106_030",
+  "<$35,000!!affordable" = "B25106_031",
+  "<$35,000!!burden" = "B25106_032",
+  "$35,000 to $74,999!!affordable" = "B25106_034",
+  "$35,000 to $74,999!!affordable" = "B25106_035",
+  "$35,000 to $74,999!!burden" = "B25106_036",
+  "$35,000 to $74,999!!affordable" = "B25106_038",
+  "$35,000 to $74,999!!affordable" = "B25106_039",
+  "$35,000 to $74,999!!burden" = "B25106_040",
+  "$75,000+!!affordable" = "B25106_042",
+  "$75,000+!!affordable" = "B25106_043",
+  "$75,000+!!burden" = "B25106_044"
+)
+```
+
+```{r GRAPHIrent, include=FALSE}
+GRAPHIrent <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = vGRAPHIrent,
+  summary_var = "B25106_024",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  mutate(tenure = "renter")
+```
+
+```{r GRAPHItotal}
+GRAPHItotal <- rbind(GRAPHIown, GRAPHIrent) %>% 
+  select(tenure, variable, estimate, summary_est) %>% 
+  separate(variable, into = c("income", "burden"), sep = "!!") %>% 
+  group_by(tenure, summary_est, income, burden) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  ungroup() %>% 
+  mutate(percentTen = 100 * (estimate / summary_est),
+         percentTot = 100 * (estimate / 251732))
+```
+
+```{r CB1, fig.cap="Cost burden by tenure"}
+ggplot(GRAPHItotal, aes(x = burden, y = estimate, fill = tenure)) +
+  geom_col(position = "stack") +
+  theme_minimal() +
+  scale_fill_manual(values = c("mediumturquoise", "salmon")) +
+  labs(title = "Cost burden by tenure for households in Memphis, TN",
+       caption = "2015-2019 5-year ACS estimates",
+       y = "",
+       x = "",
+       fill = "Tenure")
+```
+
+Overall, the majority of households in Memphis have affordable housing, with 62% paying less than 30% of their income towards housing, compared to 35% who are cost burdened. However, separating households by tenure reveals that the majority of households with affordable housing are owner-occupied. In fact, more renters are cost burdened than have affordable housing. Comparatively, very few homeowners are cost burdened.
+
+As mentioned above, households with higher incomes can afford to pay more of their income towards housing; while they may be literally cost burdened, they can still easily meet their other needs. So let's divide the above graph by income, seen in the figure below.
+
+```{r CB2, fig.cap="Cost burden by income by tenure"}
+ggplot(GRAPHItotal, aes(x = burden, y = estimate, fill = tenure)) +
+  geom_col(position = "stack") +
+  facet_grid(~income) +
+  theme_minimal() +
+  scale_fill_manual(values = c("mediumturquoise", "salmon")) +
+  labs(title = "Cost burden by income by tenure for households in Memphis, TN",
+       caption = "2015-2019 5-year ACS estimates",
+       y = "",
+       x = "",
+       fill = "Tenure")
+```
+
+As shown above, households earning less than \$35,000 are mostly renters, and the vast majority of these renters are cost burdened. While there are also many owner-occupied households earning less than \$35,000, their housing costs are more often affordable.
+
+Households in the middle income range are much more likely to have affordable housing. There are nearly an identical number of owners and renters with affordable units. Slightly more renters are cost burdened, but the difference is very small compared to low-income earners.
+
+Nearly all housing is affordable for households earning more than \$75,000, no matter the tenure. For the few households who are cost burdened, they are likely still financially secure. At this income range, households are much more likely to own than to rent.
+
+### Renters
+
+Next, look more into housing costs paid by renters. Recall that households who pay more than 50% of their income in rent are considered extremely cost burdened. These households are shown in the graph below.
+
+```{r vGRAPHIdet}
+vGRAPHIdet <- c(
+  "affordable" = "B25070_002",
+  "affordable" = "B25070_003",
+  "affordable" = "B25070_004",
+  "affordable" = "B25070_005",
+  "affordable" = "B25070_006",
+  "burden" = "B25070_007",
+  "burden" = "B25070_008",
+  "burden" = "B25070_009",
+  "extreme burden" = "B25070_010"
+)
+```
+
+```{r GRAPHIdet, include=FALSE}
+GRAPHIdet <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = vGRAPHIdet,
+  summary_var = "B25070_001",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, "Memphis"))
+```
+
+```{r GRAPHIdetMem}
+GRAPHIdetMem <- GRAPHIdet %>% 
+  select(variable, estimate) %>% 
+  group_by(variable) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  ungroup() %>% 
+  mutate(percent = 100*(estimate/134371))
+```
+
+```{r ggGRAPHIdetMem, fig.cap="Cost burden for renters"}
+ggplot(GRAPHIdetMem, aes(x = variable, y = percent, fill = variable)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+  scale_y_continuous(labels = function(y) paste0(y, "%")) +
+  scale_fill_manual(values = c("mediumseagreen", "goldenrod", "tomato")) +
+  labs(title = "Cost burden for renter-occupied households in Memphis, TN",
+       caption = "2015-2019 5-year ACS estimates",
+       y = "",
+       x = "",
+       fill = "")
+```
+
+Just over 40% of renting households in Memphis have affordable housing, while the majority, 51%, are cost burdened in some way. When we break down cost burden, we see there are more renters who pay over half their income towards rent than those who pay between 30-50%.
+
+As before, let's separate our graph by income. This time I will take a more detailed look at income groups.
+
+```{r vGRAPHIdet2}
+vGRAPHIdet2 <- c(
+  "<$10,000!!affordable" = "B25074_003",
+  "<$10,000!!affordable" = "B25074_004",
+  "<$10,000!!affordable" = "B25074_005",
+  "<$10,000!!burden" = "B25074_006",
+  "<$10,000!!burden" = "B25074_007",
+  "<$10,000!!burden" = "B25074_008",
+  "<$10,000!!extreme burden" = "B25074_009",
+  "$10,000-$19,999!!affordable" = "B25074_012",
+  "$10,000-$19,999!!affordable" = "B25074_013",
+  "$10,000-$19,999!!affordable" = "B25074_014",
+  "$10,000-$19,999!!burden" = "B25074_015",
+  "$10,000-$19,999!!burden" = "B25074_016",
+  "$10,000-$19,999!!burden" = "B25074_017",
+  "$10,000-$19,999!!extreme burden" = "B25074_018",
+  "$20,000-$34,999!!affordable" = "B25074_021",
+  "$20,000-$34,999!!affordable" = "B25074_022",
+  "$20,000-$34,999!!affordable" = "B25074_023",
+  "$20,000-$34,999!!burden" = "B25074_024",
+  "$20,000-$34,999!!burden" = "B25074_025",
+  "$20,000-$34,999!!burden" = "B25074_026",
+  "$20,000-$34,999!!extreme burden" = "B25074_027",
+  "$35,000-$49,999!!affordable" = "B25074_030",
+  "$35,000-$49,999!!affordable" = "B25074_031",
+  "$35,000-$49,999!!affordable" = "B25074_032",
+  "$35,000-$49,999!!burden" = "B25074_033",
+  "$35,000-$49,999!!burden" = "B25074_034",
+  "$35,000-$49,999!!burden" = "B25074_035",
+  "$35,000-$49,999!!extreme burden" = "B25074_036",
+  "$50,000-$74,999!!affordable" = "B25074_039",
+  "$50,000-$74,999!!affordable" = "B25074_040",
+  "$50,000-$74,999!!affordable" = "B25074_041",
+  "$50,000-$74,999!!burden" = "B25074_042",
+  "$50,000-$74,999!!burden" = "B25074_043",
+  "$50,000-$74,999!!burden" = "B25074_044",
+  "$50,000-$74,999!!extreme burden" = "B25074_045",
+  "$75,000-$99,999!!affordable" = "B25074_048",
+  "$75,000-$99,999!!affordable" = "B25074_049",
+  "$75,000-$99,999!!affordable" = "B25074_050",
+  "$75,000-$99,999!!burden" = "B25074_051",
+  "$75,000-$99,999!!burden" = "B25074_052",
+  "$75,000-$99,999!!burden" = "B25074_053",
+  "$75,000-$99,999!!extreme burden" = "B25074_054",
+  "$100,000+!!affordable" = "B25074_057",
+  "$100,000+!!affordable" = "B25074_058",
+  "$100,000+!!affordable" = "B25074_059",
+  "$100,000+!!burden" = "B25074_060",
+  "$100,000+!!burden" = "B25074_061",
+  "$100,000+!!burden" = "B25074_062",
+  "$100,000+!!extreme burden" = "B25074_063"
+)
+```
+
+```{r GRAPHIdet2, include=FALSE}
+GRAPHIdet2 <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = vGRAPHIdet2,
+  summary_var = "B25074_001",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, "Memphis"))
+```
+
+```{r GRAPHIdetMem2}
+GRAPHIdetMem2 <- GRAPHIdet2 %>% 
+  select(variable, estimate) %>% 
+  group_by(variable) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  ungroup() %>% 
+  separate(variable, into = c("income", "burden"), sep = "!!")
+```
+
+```{r factorIncome}
+GRAPHIdetMem2$income <- factor(
+  GRAPHIdetMem2$income,
+  levels = c(
+    "$100,000+",
+    "$75,000-$99,999",
+    "$50,000-$74,999",
+    "$35,000-$49,999",
+    "$20,000-$34,999",
+    "$10,000-$19,999",
+    "<$10,000"
+  )
+)
+```
+
+```{r ggGRAPHIdetMem2, fig.cap="Cost burden by income for renters"}
+ggplot(GRAPHIdetMem2, aes(x = income, y = estimate, fill = burden)) +
+  geom_col(position = "stack") +
+  coord_flip() +
+  theme_minimal() +
+  scale_fill_manual(values = c("mediumseagreen", "goldenrod", "tomato")) +
+  labs(title = "Cost burden by income for renter-occupied households in Memphis, TN",
+       caption = "2015-2019 5-year ACS estimates",
+       y = "",
+       x = "",
+       fill = "Cost Burden") 
+```
+
+Below \$20,000, the vast majority of renters face extreme cost burden and there are very few with affordable housing. The largest percentage of renters in Memphis earn between \$20,000 to \$34,999, and nearly all of these renters are still cost burdened, though most no longer face extreme burden. Only above \$35,000 are a majority of renters affordably housed, with a very small rate of extreme burden. Above \$50,000, the vast majority of renters have affordable housing and cost burden is infrequent, and it is practically nonexistent above \$75,000. However, there are few renters at this income range compared to lower income ranges.
+
+In order to be affordably housed, a household earning \$35,000 should pay no more than \$875 per month. Half, 50%, of renting households in Memphis earn below \$35,000. This graph suggests there is a large shortage of rental homes below this price.
+
+## Additional Info
+
+The final portion of this section will touch on a few more characteristics of households who rent.
+
+### Age of Householder
+
+How old are renters?
+
+```{r vAge}
+vAge <- c(
   "15-24" = "B25007_013",
   "25-34" = "B25007_014",
   "35-44" = "B25007_015",
@@ -316,7 +605,7 @@ ageVs <- c(
 agePlace <- get_acs(
   geography = "place",
   state = "TN",
-  variables = ageVs,
+  variables = vAge,
   summary_var = "B25007_012",
   cache_table = TRUE
 ) %>% 
@@ -344,7 +633,7 @@ ggplot(ageMemphis, aes(x = variable, y = estimate)) +
 
 Of renting households in Memphis, the highest percentage are in the 25-34 age range, followed by the 35-44 age range, then the 45-54 age range. While renters skew younger, there are still a sizeable number of older renters; 12.6% of all renting households in Memphis are over 65, the typical retirement age. Note that this figure does not include people in nursing homes (these individuals are included in the "group quarters population").
 
-## Household Size
+### Household Size
 
 What is the household size of renters?
 
@@ -390,113 +679,9 @@ ggplot(HHsizeMemphis, aes(x = variable, y = estimate)) +
 
 Of renting households in Memphis, 42% live alone.
 
-## Cost Burden
-
-Rent Burdened?
-
-```{r GRAPHIvs}
-GRAPHIvs <- c(
-  "Less than 10.0%" = "B25070_002",
-  "10.0-14.9%" = "B25070_003",
-  "15.0-19.9%" = "B25070_004",
-  "20.0-24.9%" = "B25070_005",
-  "25.0-29.9%" = "B25070_006",
-  "30.0-34.9%" = "B25070_007",
-  "35.0-39.9%" = "B25070_008",
-  "40.0-49.9%" = "B25070_009",
-  "50.0% or more" = "B25070_010",
-  "Not computed" = "B25070_011"
-)
-```
-
-```{r GRAPHI, include=FALSE}
-GRAPHIplace <- get_acs(
-  geography = "place",
-  state = "TN",
-  variables = GRAPHIvs,
-  summary_var = "B25070_001",
-  cache_table = TRUE
-) %>% 
-  filter(str_detect(NAME, places)) %>% 
-  mutate(percent = 100 * (estimate / summary_est))
-```
-
-```{r memGRAPHItbl}
-GRAPHImemphis <- GRAPHIplace %>% 
-  filter(str_detect(NAME, "Memphis")) %>% 
-  select(variable, estimate, summary_est, percent)
-```
-
-```{r ggGRAPHI}
-ggplot(GRAPHImemphis, aes(x = estimate, y = fct_reorder(variable, GRAPHIvs, .desc = TRUE))) +
-  geom_col(fill = "mediumseagreen") +
-  theme_minimal() +
-  labs(title = "Cost burden of renters in Memphis, TN",
-       subtitle = "2015-2019 5-year ACS estimates",
-       y = "Cost Burden",
-       x = "Estimate")
-```
-
-Of renting households in Memphis, the majority, 51.2% are cost burdened or extremely cost burdened. 23.5% pay between 30-50% of their income in rent. 27.7% pay 50% or more of their income in rent.
-
-The below table shows cost burden rates for every place in Shelby County.
-
-```{r GRAPHI2, include=FALSE}
-GRAPHIplace2 <- get_acs(
-  geography = "place",
-  state = "TN",
-  variables = c(
-    "B25070_002",
-    "B25070_003",
-    "B25070_004",
-    "B25070_005",
-    "B25070_006",
-    "B25070_007",
-    "B25070_008",
-    "B25070_009",
-    "B25070_010",
-    "B25070_011"
-  ), 
-  summary_var = "B25070_001",
-  cache_table = TRUE
-) %>% 
-  filter(str_detect(NAME, places)) %>% 
-  mutate(percent = 100 * (estimate / summary_est))
-```
-
-```{r groupedGRAPHI, layout = 'l-page'}
-GRAPHIgrouped <- GRAPHIplace2 %>% 
-  mutate(costBurden = case_when(
-    variable < "B25070_007" ~ "notCostBurdened",
-    variable < "B25070_010" ~ "costBurdened",
-    variable < "B25070_011" ~ "extremelyCostBurdened",
-    TRUE ~ "notComputed"
-  )) %>% 
-  group_by(NAME, costBurden, summary_est) %>% 
-  summarise(estimate = sum(estimate)) %>% 
-  mutate(percent = 100 * (estimate / summary_est)) %>% 
-  select(-c(summary_est, estimate)) %>% 
-  pivot_wider(names_from = costBurden, values_from = percent) %>% 
-  select(NAME, notCostBurdened, costBurdened, extremelyCostBurdened, notComputed) %>% 
-  arrange(desc(notCostBurdened)) %>%  
-  mutate(NAME = str_remove(NAME, ",.*$"),
-         NAME = str_remove(NAME, " town| city"))
-```
-
-```{r}
-datatable(
-  GRAPHIgrouped,
-  rownames = FALSE,
-  colnames = c('Place', 'Not Cost Burdened', 'Cost Burdened', 'Extremely Cost Burdened', 'Not Computed'),
-  caption = "Table 4: Cost Burden of Renters in Places in Shelby County",
-  options = list(pageLength = 7),
-  autoHideNavigation = getOption("DT.autoHideNavigation", TRUE)
-) %>% formatPercentage(2:5, mark = ".", interval = 2)
-```
-
-Collierville has the lowest rate of cost burdenship, with 61% of renting households having affordable housing. Memphis has the highest rate of cost burdenship, with the majority of households paying more than 30% of their income in rent.
-
 # Housing Characteristics
+
+This final section looks into certain qualities of housing in Memphis. First I will look into the year built for renter-occupied housing. Then I will use data from the American Housing survey to identify common housing quality problems that renters experience.
 
 ## Year Structure Built
 
