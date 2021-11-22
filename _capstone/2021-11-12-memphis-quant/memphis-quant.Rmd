@@ -36,7 +36,7 @@ library(DT)
 ```
 
 ```{r variables, eval=FALSE, include=FALSE}
-vbs <- load_variables(2019, "acs5")
+Vs <- load_variables(2019, "acs5")
 ```
 
 # Renter Locations
@@ -181,7 +181,7 @@ Most tracts with the highest percentage of renters are located near the downtown
 
 # Demographics
 
-This section will explore various characteristics of renting households in Memphis. First I will look at the race/ethnicity of renters, and where certain racial/ethnic groups are more likely to live. Then I will breakdown housing cost burden, paying special attention to renting households. Lastly, I will provide additional info on renting households, including age and household size.
+This section will explore various characteristics of renting households in Memphis. First I will look at the race/ethnicity of renters, and where certain racial/ethnic groups are more likely to live. Then I will breakdown housing cost burden, paying special attention to renting households, and addressing the amount of government assistance available.
 
 ## Race of Householder
 
@@ -388,7 +388,8 @@ ggplot(GRAPHItotal, aes(x = burden, y = estimate, fill = tenure)) +
   geom_col(position = "stack") +
   theme_minimal() +
   scale_fill_manual(values = c("mediumturquoise", "salmon")) +
-  labs(title = "Cost burden by tenure for households in Memphis, TN",
+  labs(title = "Cost burden by tenure",
+       subtitle = "Memphis, TN",
        caption = "2015-2019 5-year ACS estimates",
        y = "",
        x = "",
@@ -405,7 +406,8 @@ ggplot(GRAPHItotal, aes(x = burden, y = estimate, fill = tenure)) +
   facet_grid(~income) +
   theme_minimal() +
   scale_fill_manual(values = c("mediumturquoise", "salmon")) +
-  labs(title = "Cost burden by income by tenure for households in Memphis, TN",
+  labs(title = "Cost burden by income by tenure",
+       subtitle = "Memphis, TN",
        caption = "2015-2019 5-year ACS estimates",
        y = "",
        x = "",
@@ -462,7 +464,8 @@ ggplot(GRAPHIdetMem, aes(x = variable, y = percent, fill = variable)) +
   theme_minimal() +
   scale_y_continuous(labels = function(y) paste0(y, "%")) +
   scale_fill_manual(values = c("mediumseagreen", "goldenrod", "tomato")) +
-  labs(title = "Cost burden for renter-occupied households in Memphis, TN",
+  labs(title = "Cost burden for renters",
+       subtitle = "Memphis, TN",
        caption = "2015-2019 5-year ACS estimates",
        y = "",
        x = "",
@@ -568,177 +571,154 @@ ggplot(GRAPHIdetMem2, aes(x = income, y = estimate, fill = burden)) +
   coord_flip() +
   theme_minimal() +
   scale_fill_manual(values = c("mediumseagreen", "goldenrod", "tomato")) +
-  labs(title = "Cost burden by income for renter-occupied households in Memphis, TN",
+  labs(title = "Cost burden by income for renters",
+       subtitle = "Memphis, TN",
        caption = "2015-2019 5-year ACS estimates",
        y = "",
        x = "",
-       fill = "Cost Burden") 
+       fill = "Housing Costs") 
 ```
 
 Below \$20,000, the vast majority of renters face extreme cost burden and there are very few with affordable housing. The largest percentage of renters in Memphis earn between \$20,000 to \$34,999, and nearly all of these renters are still cost burdened, though most no longer face extreme burden. Only above \$35,000 are a majority of renters affordably housed, with a very small rate of extreme burden. Above \$50,000, the vast majority of renters have affordable housing and cost burden is infrequent, and it is practically nonexistent above \$75,000. However, there are few renters at this income range compared to lower income ranges.
 
 In order to be affordably housed, a household earning \$35,000 should pay no more than \$875 per month. Half, 50%, of renting households in Memphis earn below \$35,000. This graph suggests there is a large shortage of rental homes below this price.
 
-## Additional Info
+### Race
 
-The final portion of this section will touch on a few more characteristics of households who rent.
+A recent Zillow research report discussed where rent burden is most unequal in major metro areas across the US [@zillowresearch2021]. The data used combines ACS rent and income data, migration data, and Zillow rent data to estimate cost burden for renters by race. The research is useful because it offers a more up-to-date analysis of housing costs than is currently available from the Census.
 
-### Age of Householder
+Note that while most of my analysis in this section has focused on Memphis, this graph is for the Memphis metro area.
 
-How old are renters?
+![Figure from Zillow Research](aff.png)
 
-```{r vAge}
-vAge <- c(
-  "15-24" = "B25007_013",
-  "25-34" = "B25007_014",
-  "35-44" = "B25007_015",
-  "45-54" = "B25007_016",
-  "55-59" = "B25007_017",
-  "60-64" = "B25007_018",
-  "65-74" = "B25007_019",
-  "75-84" = "B25007_020",
-  "85+" = "B25007_021"
-)
-```
+The above graph shows consistent disparities in rent affordability between Black and White households in the Memphis MSA. The latest data from August 2021 shows the average Black renter is cost burdened, paying 32.1% of their income towards rent, while the average White renter is affordably housed, paying 24.2% towards rent. Affordability for White renters has remained constant since around January 2019, hovering around 24%. Over the same period, cost burden for Black renters has worsened from 30.3% to 32.1%.
 
-```{r agePlace, include=FALSE}
-agePlace <- get_acs(
-  geography = "place",
-  state = "TN",
-  variables = vAge,
-  summary_var = "B25007_012",
-  cache_table = TRUE
-) %>% 
-  filter(str_detect(NAME, places)) %>% 
-  mutate(percent = 100 * (estimate / summary_est))
-```
+### Government Assistance
 
-The below graph shows the number of renters in Memphis, by age.
-
-```{r memphisAge}
-ageMemphis <- agePlace %>% 
-  filter(str_detect(NAME, "Memphis")) %>% 
-  select(variable, estimate, summary_est, percent)
-```
-
-```{r ggAge}
-ggplot(ageMemphis, aes(x = variable, y = estimate)) +
-  geom_col(fill = "lightseagreen") +
-  theme_minimal() +
-  labs(title = "Age of renters in Memphis, TN",
-       subtitle = "2015-2019 5-year ACS estimates",
-       y = "Estimate",
-       x = "Age")
-```
-
-Of renting households in Memphis, the highest percentage are in the 25-34 age range, followed by the 35-44 age range, then the 45-54 age range. While renters skew younger, there are still a sizeable number of older renters; 12.6% of all renting households in Memphis are over 65, the typical retirement age. Note that this figure does not include people in nursing homes (these individuals are included in the "group quarters population").
-
-### Household Size
-
-What is the household size of renters?
-
-```{r HHsizeVs}
-HHsizeVs <- c(
-  "1" = "B25009_011",
-  "2" = "B25009_012",
-  "3" = "B25009_013",
-  "4" = "B25009_014",
-  "5" = "B25009_015",
-  "6" = "B25009_016",
-  "7+" = "B25009_017"
-)
-```
-
-```{r HHsizePlace, include=FALSE}
-HHsizePlace <- get_acs(
-  geography = "place",
-  state = "TN",
-  variables = HHsizeVs,
-  summary_var = "B25009_010",
-  cache_table = TRUE
-) %>% 
-  filter(str_detect(NAME, places)) %>% 
-  mutate(percent = 100 * (estimate / summary_est))
-```
-
-```{r memphisHHsizeTable}
-HHsizeMemphis <- HHsizePlace %>% 
-  filter(str_detect(NAME, "Memphis")) %>% 
-  select(variable, estimate, summary_est, percent)
-```
-
-```{r ggHHsize}
-ggplot(HHsizeMemphis, aes(x = variable, y = estimate)) + 
-  geom_col(fill = "steelblue") +
-  theme_minimal() +
-  labs(title = "Household size of renters in Memphis, TN",
-       subtitle = "2015-2019 5-year ACS estimates",
-       y = "Estimate",
-       x = "People in Household")
-```
-
-Of renting households in Memphis, 42% live alone.
+In the face of such high rates of rent burden, some may wonder how much the government is assisting with housing costs. The Memphis Housing Authority (MHA) is the local agency that manages public housing and housing vouchers. According to the agency's annual plan, the MHA manages 2,565 public housing units and provides 8,031 vouchers, for a total of 10,596 government-supported units. Due to funding limits, the MHA is not able to fully meet the housing needs of residents in the city. MHA's public housing and HCV programs each have waiting lists, yet even the waiting lists are closed. The HCV waiting list was last opened in 2017 and currently has over 15,000 people on the list [@MHA2020].
 
 # Housing Characteristics
 
-This final section looks into certain qualities of housing in Memphis. First I will look into the year built for renter-occupied housing. Then I will use data from the American Housing survey to identify common housing quality problems that renters experience.
+This final section looks into certain qualities of housing in Memphis. First I will look into the type of housing renters live in and the year the structures were built. Then I will use data from the American Housing survey to identify common housing quality problems that renters experience.
 
-## Year Structure Built
+## Units in Structure
 
-What is the age of housing?
+Typically apartment complexes are associated with renter-occupied housing, but how true is this for Memphis? The graph below divides housing structures into four categories: single-family; duplex, triplex, and quadplexes, which often resemble single-family homes; larger multifamily structures with five or more units; and alternative housing like mobile homes, boats, vans, etc.
 
-```{r yearBltVs}
-yearBltVs <- c(
-  "Built 2014 or later" = "B25036_014",
-  "Built 2010 to 2013" = "B25036_015",
-  "Built 2000 to 2009" = "B25036_016",
-  "Built 1990 to 1999" = "B25036_017",
-  "Built 1980 to 1989" = "B25036_018",
-  "Built 1970 to 1979" = "B25036_019",
-  "Built 1960 to 1969" = "B25036_020",
-  "Built 1950 to 1959" = "B25036_021",
-  "Built 1940 to 1949" = "B25036_022",
-  "Built 1939 or earlier" = "B25036_023"
+```{r vUnits}
+vUnits <- c(
+  "Single-family" = "B25032_014",
+  "Single-family" = "B25032_015",
+  "Duplex-Quadplex" = "B25032_016",
+  "Duplex-Quadplex" = "B25032_017",
+  "Larger Multifamily" = "B25032_018",
+  "Larger Multifamily" = "B25032_019",
+  "Larger Multifamily" = "B25032_020",
+  "Larger Multifamily" = "B25032_021",
+  "Mobile home, boat, etc." = "B25032_022",
+  "Mobile home, boat, etc." = "B25032_023"
 )
 ```
 
-```{r yearBltPlace, include=FALSE}
-yearBltPlace <- get_acs(
+```{r unitsMem, include=FALSE}
+unitsMem <- get_acs(
   geography = "place",
   state = "TN",
-  variables = yearBltVs,
+  variables = vUnits,
+  summary_var = "B25032_013",
+  cache_table = TRUE
+) %>% 
+  filter(str_detect(NAME, "Memphis"))
+```
+
+```{r units}
+units <- unitsMem %>% 
+  group_by(summary_est, variable) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  ungroup() %>% 
+  mutate(percent = 100*(estimate/summary_est))
+```
+
+```{r factorUnits}
+units$variable <- factor(
+  units$variable,
+  levels = c(
+    "Mobile home, boat, etc.",
+    "Larger Multifamily",
+    "Duplex-Quadplex",
+    "Single-family"
+  )
+)
+```
+
+```{r ggUnits, fig.cap="Units in structure"}
+ggplot(units, aes(x = variable, y = estimate)) +
+  geom_col(fill = "darkcyan") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Units in structure for renter-occupied housing",
+       subtitle = "Memphis, TN",
+       caption = "2015-2019 5-year ACS estimates",
+       y = "",
+       x = "")
+```
+
+The largest proportion of renters, 43%, live in single-family homes. While the majority of renters live in multifamily units, 16% are in duplexes-quadplexes, and 40% are in larger multifamily structures with five or more units. Less than 1% of renters live in a mobile home, RV, boat, van, or some other form of housing.
+
+## Year Structure Built
+
+How old is renter-occupied housing? Older structures are more likely to need maintenance, and they can be susceptible to health risks that are not in newer homes. For instance, the ban on lead based paint was not passed until 1979, and homes built before the ban are likely to have lead paint unless they have been remediated.
+
+```{r}
+vBuilt <- c(
+  "2010 or later" = "B25036_014",
+  "2010 or later" = "B25036_015",
+  "2000-2009" = "B25036_016",
+  "1990-1999" = "B25036_017",
+  "1980-1989" = "B25036_018",
+  "1970-1979" = "B25036_019",
+  "1960-1969" = "B25036_020",
+  "1950-1959" = "B25036_021",
+  "1940-1949" = "B25036_022",
+  "1939 or earlier" = "B25036_023"
+)
+```
+
+```{r}
+built <- get_acs(
+  geography = "place",
+  state = "TN",
+  variables = vBuilt,
   summary_var = "B25036_013",
   cache_table = TRUE
 ) %>% 
-  filter(str_detect(NAME, places)) %>% 
+  filter(str_detect(NAME, "Memphis"))
+```
+
+```{r}
+built2 <- built %>% 
+  group_by(summary_est, variable) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  ungroup() %>% 
   mutate(percent = 100 * (estimate / summary_est))
 ```
 
-The table below shows the year the home was built for renter-occupied households.
-
-```{r memphisYrBlt}
-yearBltMemphis <- yearBltPlace %>% 
-  filter(str_detect(NAME, "Memphis")) %>% 
-  select(variable, estimate, summary_est, percent)
-```
-
-```{r ggYrBlt}
-ggplot(yearBltMemphis, aes(x = estimate, y = variable)) +
+```{r fig.cap="Year structure built"}
+ggplot(built2, aes(x = estimate, y = variable)) +
   geom_col(fill = "peru") +
   theme_minimal() +
-  labs(title = "Year built of renter-occupied housing in Memphis, TN",
-       subtitle = "2015-2019 5-year ACS estimates",
-       y = "Year Built",
-       x = "Estimate")
+  labs(title = "Year structure built of renter-occupied housing",
+       subtitle = "Memphis, TN",
+       caption = "2015-2019 5-year ACS estimates",
+       y = "",
+       x = "")
 ```
 
-Of renter-occupied housing in Memphis, the greatest percentage was built between 1970 and 1979. Very little of this housing was built within the past decade.
-
-Older structures are more likely to need maintenance, and they can be susceptible to health risks that are not in newer homes. For instance, the ban on lead based paint was not passed until 1979, and homes built before the ban are likely to have lead paint unless they have been remediated. In Memphis, 63% of renter-occupied housing was built before 1979.
+Most renters live in older housing structures. Overall, 62% of renter-occupied housing was built before 1980 (and thus are at risk for lead paint problems unless they have been fully remediated). Only 3% of renter-occupied housing was built within the past decade.
 
 ## Housing Quality Problems
 
-What kind of problems does the housing have?
+Every five years, the American Housing Survey (AHS) provides data on housing quality problems in the Memphis MSA. The most recent survey was released in 2019. Note that while most of the analysis on this page is specifically for Memphis, the AHS surveys the entire metro region.
 
 ```{r AHSimport, include=FALSE}
 AHSimport <- read_csv("AHS-mem-hsgqual-all.csv")
@@ -751,16 +731,12 @@ AHSall <- AHSimport %>%
   mutate(percent = 100 * (estimate/total))
 ```
 
-According to the American Housing Survey, 93.53% of renters had adequate housing, while 6.47% had moderate or severely inadequate housing.
-
-The table below shows the most common problems renters experience, according to the American Housing Survey.
+According to the AHS, 93.53% of renters had adequate housing, while 6.47% had moderately or severely inadequate housing. The table below shows the most common problems renters experience. Rows marked with an asterisk (\*) are related to exterior problems; the AHS only collects this data for single-family structures.
 
 +-------------------------------------------------------------------------------------------------------+----------+------------+
 | Characteristic                                                                                        | Estimate | Percentage |
 +=======================================================================================================+==========+============+
 | Signs of cockroaches in last 12 months                                                                | 50,900   | 22.72%     |
-+-------------------------------------------------------------------------------------------------------+----------+------------+
-| Bars on windows\*                                                                                     | 16,100\* | 13.69%\*   |
 +-------------------------------------------------------------------------------------------------------+----------+------------+
 | Signs of mice or rats inside home in last 12 months                                                   | 24,400   | 10.89%     |
 +-------------------------------------------------------------------------------------------------------+----------+------------+
@@ -799,4 +775,6 @@ The table below shows the most common problems renters experience, according to 
 
 : Table 5: Housing Quality Problems in Memphis MSA
 
-Problems related to the exterior of the structure are only collected for single-family structures; these have been marked with an asterisk (\*).
+The AHS reports that pests are the most common problem renters experience: 23% reported recently spotting signs of cockroaches, and 11% for mice or rats. Water leakage problems affected 8-9% of renters, likely contributing to the 5% who reported mold. Many homes are not properly sealed, with 6% of renters reporting broken windows and open cracks or holes. This can contribute to pest problems and residents being uncomfortably cold in their homes.
+
+If the percentage of renters experiencing a problem seems small compared to the overall number of renters, it's useful to look at the estimates. For instance, the number of renter-occupied units who have seen signs of mice or rats within the past year is larger than the total number of households in any one of Memphis's incorporated suburbs in Shelby County. The number of renters who have recently experienced mold is roughly equal to the total number of households in Millington, Arlington, and Lakeland, combined.
