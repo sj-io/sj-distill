@@ -7,7 +7,15 @@
     <description>SJ
 </description>
     <generator>Distill</generator>
-    <lastBuildDate>Mon, 22 Nov 2021 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 25 Nov 2021 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>Housing Quality Regulations</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/capstone/2021-11-04-memphis-qual</link>
+      <description>Reviewing regulation and enforcement of housing quality in Memphis.</description>
+      <guid>https://sarahjohnson.io/capstone/2021-11-04-memphis-qual</guid>
+      <pubDate>Thu, 25 Nov 2021 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>Memphis Rental Housing</title>
       <dc:creator>Sarah Johnson</dc:creator>
@@ -16,14 +24,6 @@
       <guid>https://sarahjohnson.io/capstone/2021-11-12-memphis-quant</guid>
       <pubDate>Mon, 22 Nov 2021 00:00:00 +0000</pubDate>
       <media:content url="https://sarahjohnson.io/capstone/2021-11-12-memphis-quant/memphis-quant_files/figure-html5/mapRace-1.png" medium="image" type="image/png" width="1248" height="768"/>
-    </item>
-    <item>
-      <title>Housing Quality Regulations</title>
-      <dc:creator>Sarah Johnson</dc:creator>
-      <link>https://sarahjohnson.io/capstone/2021-11-04-memphis-qual</link>
-      <description>Reviewing regulation and enforcement of housing quality in Memphis.</description>
-      <guid>https://sarahjohnson.io/capstone/2021-11-04-memphis-qual</guid>
-      <pubDate>Thu, 11 Nov 2021 00:00:00 +0000</pubDate>
     </item>
     <item>
       <title>Health and Housing</title>
