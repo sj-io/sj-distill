@@ -15,109 +15,6 @@ draft: true
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Download the dataset from [Memphis Data Hub](https://data.memphistn.gov/dataset/Service-Requests-since-2016/hmd4-ddta).
-
-```{r import}
-library(tidyverse)
-Service_Requests_since_2016 <-
-  read_csv(
-    "Service_Requests_since_2016.csv",
-    col_types = cols(
-      ADDRESS2 = "c",
-      ADDRESS3 = "c",
-      COLLECTION_DAY = "c",
-      CLOSE_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      CREATION_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      FOLLOWUP_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      INCIDENT_RESOLVED_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      LAST_MODIFIED_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      LAST_UPDATE_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      NEXT_OPEN_TASK_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
-      REPORTED_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p")
-    )
-  )
-```
-
-As of November 9, 2021, the dataset contains 53 columns and 1,302,280 rows.
-
-Filter for code enforcement data.
-
-```{r CE}
-CE <- Service_Requests_since_2016 %>%
-  filter(DEPARTMENT == "Code Enforcement") %>%
-  select(
-    INCIDENT_NUMBER, #' service request (sr) number
-    PARCEL_ID, #' parcel ID
-    ADDRESS1, #' the street name & number
-    STREET_NAME,
-    REQUEST_TYPE, #' request category
-    CE_CATEGORY, #' category for CE action
-    RESOLUTION_CODE:RESOLUTION_SUMMARY, #' how the request resolved
-    REQUEST_STATUS, #' open or closed?
-    REPORTED_DATE, 
-    LAST_MODIFIED_DATE, 
-    OWNER_NAME, #' assigned code inspector
-    CREATED_BY_USER,
-    location1 #' geocoordinates
-  ) %>% mutate(RESOLUTION_SUMMARY = str_to_lower(RESOLUTION_SUMMARY))
-```
-
-The output is 14 columns and 164,481 rows.
-
-First, count the number of unique rows in each column.
-
-```{r}
-CE %>% count(INCIDENT_NUMBER) #164,481
-CE %>% count(PARCEL_ID) #67,715
-CE %>% count(ADDRESS1) #76,745
-CE %>% count(REQUEST_TYPE) #14
-CE %>% count(CE_CATEGORY) #10
-CE %>% count(RESOLUTION_CODE) #89
-CE %>% count(RESOLUTION_CODE_MEANING) #86
-CE %>% count(RESOLUTION_SUMMARY) #47,328
-CE %>% count(REQUEST_STATUS) #6
-CE %>% count(REPORTED_DATE) #162,466
-CE %>% count(LAST_MODIFIED_DATE) #60,227
-CE %>% count(OWNER_NAME) #43
-CE %>% count(CREATED_BY_USER) #326
-CE %>% count(location1) #19,491
-```
-
-What information can we gather by finding the number of unique rows in each column?
-
-    INCIDENT_NUMBER = unique key
-
-    location1 19491
-    PARCEL_ID 67715
-    ADDRESS1 76745
-    All location variables have different # of unique rows, meaning we're going to run into problems trying to map the data.
-
-    REQUEST_STATUS 6
-    CE_CATEGORY 10
-    REQUEST_TYPE 14
-    RESOLUTION_CODE_MEANING 86
-    RESOLUTION_CODE 89
-    RESOLUTION_SUMMARY 47328
-
-    LAST_MODIFIED_DATE 60227 Possibly unreliable
-    REPORTED_DATE 162466
-
-    OWNER_NAME 43
-    CREATED_BY_USER 326
-
-First, sort by `REPORTED_DATE`.
-
-```{r reportedDate}
-yr2016 <- CE %>% filter(REPORTED_DATE < "2017-01-01")
-yr2017 <- CE %>% filter(REPORTED_DATE >= "2017-01-01", REPORTED_DATE < "2018-01-01")
-yr2018 <- CE %>% filter(REPORTED_DATE >= "2018-01-01", REPORTED_DATE < "2019-01-01")
-yr2019 <- CE %>% filter(REPORTED_DATE >= "2019-01-01", REPORTED_DATE < "2020-01-01")
-yr2020 <- CE %>% filter(REPORTED_DATE >= "2020-01-01", REPORTED_DATE < "2021-01-01")
-yr2021 <- CE %>% filter(REPORTED_DATE >= "2021-01-01")
-```
-
-Below is the number of requests for each year (not excluding duplicates).
-
 | Reported Date           | Number of Requests |
 |-------------------------|--------------------|
 | 2016                    | 30,361             |
@@ -128,22 +25,6 @@ Below is the number of requests for each year (not excluding duplicates).
 | 2021 (as of 11/09/2021) | 27,326             |
 
 : Code Enforcement requests by reported date.
-
-Active Cases
-
-```{r}
-closed <- c("Closed", "Resolved")
-closedM <- str_c(closed, collapse = "|")
-```
-
-```{r}
-nc2016 <- yr2016 %>% filter(!str_detect(REQUEST_STATUS, closedM))
-nc2017 <- yr2017 %>% filter(!str_detect(REQUEST_STATUS, closedM))
-nc2018 <- yr2018 %>% filter(!str_detect(REQUEST_STATUS, closedM))
-nc2019 <- yr2019 %>% filter(!str_detect(REQUEST_STATUS, closedM))
-nc2020 <- yr2020 %>% filter(!str_detect(REQUEST_STATUS, closedM))
-nc2021 <- yr2021 %>% filter(!str_detect(REQUEST_STATUS, closedM))
-```
 
 Below are cases that have not been marked "Closed" or "Resolved."
 
@@ -157,41 +38,6 @@ Below are cases that have not been marked "Closed" or "Resolved."
 | 2021 | 5,572        |
 
 : Active cases for each year.
-
-Request Type
-
-```{r}
-yr2016 %>% 
-  count(REQUEST_TYPE) %>% 
-  mutate(total = sum(n),
-         pct = n / total) %>% 
-  slice_max(n, n = 5)
-yr2017 %>% 
-  count(REQUEST_TYPE) %>% 
-  mutate(total = sum(n),
-         pct = n / total) %>% 
-  slice_max(n, n = 5)
-yr2018 %>% 
-  count(REQUEST_TYPE) %>% 
-  mutate(total = sum(n),
-         pct = n / total) %>% 
-  slice_max(n, n = 5)
-yr2019 %>% 
-  count(REQUEST_TYPE) %>% 
-  mutate(total = sum(n),
-         pct = n / total) %>% 
-  slice_max(n, n = 5)
-yr2020 %>% 
-  count(REQUEST_TYPE) %>% 
-  mutate(total = sum(n),
-         pct = n / total) %>% 
-  slice_max(n, n = 5)
-yr2021 %>% 
-  count(REQUEST_TYPE) %>% 
-  mutate(total = sum(n),
-         pct = n / total) %>% 
-  slice_max(n, n = 5)
-```
 
 AHHH
 

@@ -1,0 +1,106 @@
+---
+title: "code-data"
+description: |
+  A short description of the post.
+author:
+  - name: Sarah Johnson
+date: 2021-11-24
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## How to Report Maintenance Neglect in Memphis
+
+To review, landlords in Shelby County are obligated to comply with "building and housing codes materially affecting health and safety."[^1] If the landlord deliberately or negligently fails to supply essential services, the tenant must first give written notice to the landlord. Then, tenants can move acquire essential services and deduct the cost from rent
+
+[^1]: [See TCA URLTA 66-28-304. Maintenance by Landlord](https://sarahjohnson.io/reference/2021-11-10-urlta/#maintenance-by-landlord.)
+
+Moreover, how are tenants supposed to procure essential services? We've already learned that the highest proportion of renters in Shelby County are extremely cost burdened, paying over half of their income in rent. Here's the kicker: our eviction courts work extremely fast. Landlords can have renters evicted faster than landlords are required to complete repairs. Landlords are not supposed to retaliate, but they don't need a reason to evict renters in the first place if the lease is month-to-month.
+
+## Reference {.appendix}
+
+``` {#TCA6628304}
+#' TCA Title 66 Property > 
+#' Chapter 28 Uniform Residential Landlord Tenant Act
+#' Part 3 Landlord Obligations
+#' 66-28-304. Maintenance by landlord.
+
+(a) The landlord shall:
+
+   (1) Comply with 
+       requirements of applicable building and housing codes 
+       materially affecting health and safety;
+   (2) Make all repairs 
+       and do whatever is necessary 
+       to put and keep the premises in a fit and habitable condition;
+   (3) Keep all common areas of the premises 
+       in a clean and safe condition; and
+   (4) In multi-unit complexes of four (4) or more units, 
+       provide and maintain appropriate receptacles and conveniences 
+       for the removal of ashes, garbage, rubbish and other waste 
+       from common points of collection subject to §66-28-401(3).
+
+(b) If the duty imposed by subdivision (a)(1) 
+       is greater than 
+       any duty imposed by any other paragraph of subsection (a), 
+    the landlord's duty shall be determined 
+           by reference to subdivision (a)(1).
+
+(c) The landlord and tenant may agree in writing 
+    that the tenant perform specified repairs, maintenance tasks, 
+    alterations, and remodeling, but only if 
+    the transaction is entered into in good faith 
+    and not for the purpose of evading the obligations of the landlord.
+
+(d) The landlord may not treat performance 
+        of the separate agreement described in subsection (c) 
+    as a condition to any obligation or performance 
+    of any rental agreement.
+    
+#' Part 5 Enforcement and Remedies
+#' 66-28-502. Failure to supply essential services.
+
+(a)
+
+  (1) If the landlord 
+      deliberately or negligently fails to supply essential services, 
+      the tenant shall give written notice 
+      to the landlord specifying the breach 
+      and may do one (1) of the following:
+      (A) Procure essential services 
+          during the period of the landlord's noncompliance 
+          and deduct their actual and reasonable costs from the rent;
+      (B) Recover damages 
+          based upon the diminution in 
+          the fair rental value of the dwelling unit, 
+          provided tenant continues to occupy premises; or
+      (C) Procure reasonable substitute housing 
+          during the period of the landlord's noncompliance, 
+          in which case the tenant is excused from paying rent 
+          for the period of the landlord's noncompliance.
+  (2) In addition to the remedy provided in subdivision (a)(1)(C), 
+      the tenant may recover 
+      the actual and reasonable value of the substitute housing 
+                  and in any case under this subsection (a), 
+      reasonable attorney's fees.
+  (3) "Essential services" means utility services, 
+      including gas, heat, electricity, 
+      and any other obligations imposed upon the landlord 
+      which materially affect the health and safety of the tenant.
+
+(b) A tenant who proceeds under this section 
+    may not proceed under §66-28-501 or §66-28-503 as to that breach.
+
+(c) The rights under this section do not arise until 
+    the tenant has given written notice to the landlord 
+    and has shown that the condition was not caused by 
+    the deliberate or negligent act or omission of 
+    the tenant, a member of the tenant's family, or other person on 
+    the premises with the tenant's consent.
+```
