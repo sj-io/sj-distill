@@ -399,7 +399,7 @@ GRAPHItotal <- rbind(GRAPHIown, GRAPHIrent) %>%
          percentTot = 100 * (estimate / 251732))
 ```
 
-```{r CB1, fig.cap="Cost burden by tenure"}
+```{r CB1, fig.cap="Cost burden by tenure", preview=TRUE}
 ggplot(GRAPHItotal, aes(x = burden, y = estimate, fill = tenure)) +
   geom_col(position = "stack") +
   theme_minimal() +

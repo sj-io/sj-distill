@@ -1,4 +1,8 @@
 ---
 title: "Capstone"
-listing: capstone
+listing: 
+  capstone:
+    - 2021-11-02-health
+    - 2021-11-12-memphis-quant
+    - 2021-11-04-memphis-qual
 ---
