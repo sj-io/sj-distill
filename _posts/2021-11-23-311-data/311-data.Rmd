@@ -80,7 +80,7 @@ vHsg <- c(
 
 vNotHsg <- c(
   "VOYC", "VOAR", "CVOAR", "CVOAT", "CVOYC", "SHELBY", "COMMERCIAL", "STCLEANING",
-  "shelb(y|h)[\\s]{0,2}(c|cc)", "please contact mlgw", "mow"
+  "shelb(y|h)[\\s]{0,2}(c|cc)", "please contact mlgw", "mow", "commer[ci]*al"
 ) %>% 
   str_c(collapse = "|")
 
@@ -126,25 +126,26 @@ vInspectors <- c(
   "[s]?[ ]?burgess",
   "[d]?[ ]?burton",
   "[l]?[ ]?busby",
-  "[d]?[ ]?butler",
+  "[dr]?[ ]?butler",
   "ch[am]+?bers",
-  "[c]?[ ]?clausel",
+  "(c|cheryl)?[ ]?clausel",
   "[t]?[ ]?cobb",
   "[a]?[ ]?collins",
   "[j]?[ ]?cooper",
-  "[l]?[ ]?davis",
+  "[e]?[ ]?cooper",
+  "[al]?[ ]?davis",
   "[s]?[ ]?echols",
   "[v]?[ ]?ervin",
   "ferguson",
   "[t]?[ ]?fry",
   "funches",
-  "gaspar",
-  "[q]?[ ]?gilc[l]?hrest",
+  "[s]?[ ]?gaspar",
+  "(q|quatarious)?[ ]?gilc[l]?hrest",
   "[j]?[ ]?golden",
   "[d]?[ ]?grafton",
-  "[r]?[ ]?gray",
+  "(r|robert)?[ ]?gray",
   "griffin",
-  "[ar]?[ ]?hill",
+  "[ar]?( )*hill",
   "[c]?[ ]?higgenbottom",
   "[s]?[ ]?howell",
   "[j]?[ ]?hymon",
@@ -165,11 +166,11 @@ vInspectors <- c(
   "[v]?[ ]?moses",
   "[t]?[ ]?neff",
   "[r]?[ ]?nelson",
-  "[j]?[ ]?norman",
+  "(j|judith)?[ ]?norman",
   "[t]?[ ]?norwood",
   "[b]?[ ]?pat[t]?erson", 
   "[k]?[ ]?payne",
-  "[r]?[ ]?peete",
+  "[r]?[ ]?peete(e)?",
   "[t]?[ ]?pegues",
   "[a]?[ ]?powell",
   "[m]?[ ]?pruitt",
@@ -190,7 +191,7 @@ vInspectors <- c(
   "[j]?[ ]?walker",
   "[m]?[ ]?ward",
   "[k]?[ ]?washington",
-  "[a]?[ ]{0,2}?wi[l]+?[i]?ams",
+  "[a]?[ ]{0,2}?wi[l]+?[i]?am[s]?",
   "[c]?[ ]?wi[l]+?[i]?ams",
   "[rd]?[ ]?witter",
   "[b]?[ ]?woodland",
@@ -211,6 +212,17 @@ inspect <- inspect0 %>%
 
 ## Numbers
 
+### Separate
+
+```{r}
+rmNum <- inspect %>% 
+  mutate(number = str_extract_all(RESOLUTION_SUMMARY, "[:digit:]+"),
+         RESOLUTION_SUMMARY = str_remove_all(RESOLUTION_SUMMARY, "[:digit:]+"),
+         RESOLUTION_SUMMARY = trimws(RESOLUTION_SUMMARY)) %>% 
+  select(RESOLUTION_SUMMARY, everything()) %>% 
+  arrange(desc(RESOLUTION_SUMMARY))
+```
+
 ### Service Requests
 
 ```{r}
@@ -228,6 +240,153 @@ sr <- inspect %>%
 ```
 
 <!--# no new info in RS -->
+
+```{r}
+vExtra <- c(
+  "\\ba",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "been",
+  "but",
+  "for",
+  "from",
+  "has",
+  "have",
+  "in",
+  "is",
+  "nd",
+  "now",
+  "please",
+  "rd",
+  "see",
+  "sr",
+  "the",
+  "there",
+  "this",
+  "time of (re)?in[sp]*ection",
+  "to",
+  "on",
+  "was",
+  "were",
+  "who",
+  "will",
+  "with\\b"
+) %>% 
+  str_c(collapse = "\\b|\\b")
+
+hsg3 <- rmNum %>% 
+  mutate(RESOLUTION_SUMMARY = str_remove_all(RESOLUTION_SUMMARY, vExtra),
+         RESOLUTION_SUMMARY = trimws(RESOLUTION_SUMMARY)) %>% 
+  arrange(desc(RESOLUTION_SUMMARY))
+```
+
+```{r}
+vRes <- c(
+  "\\b(bs|c[dor]|cdo|cvoid|cvoar|fu|j[aer]|jwrh|ma|nj|noh|s r|uc|vo)\\b",
+  "act[io]ve",
+  "(made)?( )*a[t]*em[op][t]?(s)?",
+  "board(ed)?",
+  "close(d)?( )*(void|other)?",
+  "civil (matter|issue)",
+  "demolished( by)?( )*(owner)?",
+  "(left)?( )*(door)?( )*(tag|hanger)",
+  "(in)?compl[ia]*nce",
+  "justified active",
+  "no one home",
+  "(no )?f[io]llow up( date)?( given)?",
+  "no (answer|contact|response)( )*(tenant)?",
+  "not justified",
+  "occupied",
+  "file( )*(folder)?",
+  "\\bold( )*(data|file)?",
+  "hearing rescheduled",
+  "h(o)?use|home|lot|property|unit(s)?",
+  "insufficient( )*(address|information)?",
+  "issued",
+  "reboard(ed)?",
+  "rebuilt",
+  "recheck",
+  "recreated",
+  "refer",
+  "r[ae]hab(be[ds])?",
+  "re( )*is[su]ue(d)?",
+  "repair(ed)?(s)?( )*(completed|made)?",
+  "secure(d)?",
+  "(sold )?new owner",
+  "unative",
+  "vacant",
+  "((n)?o(t)?)?( )*(housing)?( )*(code)?( )*v( )*io(i)?(l)?a(l)?tio(n)?(s)?( )*((m)?(f)?oun[df])?",
+  "(c)?vo[bm](r)?",
+  "vo[nw]p",
+  "(c)?voyc",
+  "(wp[op]|work progress)",
+  "write( )*up",
+  "(incorrect|wrong) address"
+) %>% 
+  str_c(collapse = "|")
+
+fix <- hsg3 %>% 
+  mutate(RES_CODE = str_extract_all(RESOLUTION_SUMMARY, vRes),
+         RESOLUTION_SUMMARY = str_remove_all(RESOLUTION_SUMMARY, vRes),
+         RESOLUTION_SUMMARY = trimws(RESOLUTION_SUMMARY)) %>% 
+  select(RES_CODE, everything()) %>% 
+  arrange(desc(RESOLUTION_SUMMARY))
+```
+
+```{r}
+vRes <- c(
+  "at (the)?( )*time of inspection",
+  "cdo",
+  "close(d)?( )*(demolished|out|rehab(bed)?|violation|void|other)?",
+  "\\b(co|cr|ma)\\b",
+  "cvoid",
+  "(no)?( )*(\\bfu\\b|f[io]llow up)( )*(date)?( )*(given)?",
+  "hearing rescheduled",
+  "in( )*compl[ia]*nce",
+  "insufficient( )*(address|information)?",
+  "ja|justified active",
+  "jwrh",
+  "(\\bma\\b|made( )*attempt(s)?)",
+  "(nd|rd) (attem[op](t)?|visit)",
+  "(noh|no one home)",
+  "no (answer|call back|contact|response)",
+  "(not justified|nj)",
+  "old (data|file|sr)",
+  "(house|property) (has been|is)?( )*(now)*( )*(boarded( up?)|demo(d|lished)|occupied|r[ae]hab(bed)?|secure(d)?|vacant)?( )*(by)*( )*(the)*( )*(owner)*",
+  "recheck",
+  "recreated",
+  "rebuilt",
+  "reboard(ed)?",
+  "rehabbe[ds]",
+  "reissue(d)?( )*(to owner|for proper grading)?",
+  "repairs (have been|were)?( )*(made|completed)",
+  "sold new owner",
+  "(please )?(refer to|see) (file|sr)*( )*(folder)?",
+  "(see|sr)",
+  "uc",
+  "unative",
+  "vacant( )*(lot|property|unit)?",
+  "no( )*v( )*io(i)?(l)?a(l)?tio(n)?(s)?( )*((m)?(f)?oun[df])?",
+  "will reis[su]ue(d)?( )?(vo|violation)?",
+  "(c)?vo[abm](r)?( )*(fu|issued)?",
+  "vo[nw]p",
+  "(c)?voyc( )*",
+  "wpp",
+  "(incorrect|wrong) address"
+) %>% 
+  str_c(collapse = "|")
+
+fix <- rmNum %>% 
+  mutate(RES_CODE = str_extract_all(RESOLUTION_SUMMARY, vRes),
+         RESOLUTION_SUMMARY = str_remove_all(RESOLUTION_SUMMARY, vRes),
+         RESOLUTION_SUMMARY = trimws(RESOLUTION_SUMMARY),
+         RESOLUTION_SUMMARY = str_remove_all(RESOLUTION_SUMMARY, "^on$")) %>% 
+  select(RES_CODE, everything()) %>% 
+  arrange(desc(RESOLUTION_SUMMARY))
+```
 
 ```{r}
 vFix <- c(
@@ -498,7 +657,7 @@ phone <- regex("
 Below is a list of public/commercial numbers that have been mentioned in the dataset, excluding property management companies.
 
 ```{r}
-phc <- c(
+vPh <- c(
   "222[-]?2300", #Shelby County code
   "222[-]?2575", #Shelby County land bank
   "222[-]?7000", #property assessor
