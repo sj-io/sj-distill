@@ -24,13 +24,5 @@
       <pubDate>Fri, 22 Oct 2021 00:00:00 +0000</pubDate>
       <media:content url="https://sarahjohnson.io/posts/2021-10-22-boundaries/IMG_2501.png" medium="image" type="image/png" width="1280" height="960"/>
     </item>
-    <item>
-      <title>Welcome to my website</title>
-      <link>https://sarahjohnson.io/posts/welcome</link>
-      <description>How I created this site using Distill.</description>
-      <guid>https://sarahjohnson.io/posts/welcome</guid>
-      <pubDate>Thu, 14 Oct 2021 00:00:00 +0000</pubDate>
-      <media:content url="https://sarahjohnson.io/posts/welcome/PA120077.png" medium="image" type="image/png" width="1280" height="854"/>
-    </item>
   </channel>
 </rss>
