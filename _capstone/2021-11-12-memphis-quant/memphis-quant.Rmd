@@ -1,5 +1,5 @@
 ---
-title: "Memphis Rental Housing"
+title: "Part 2: Memphis Rental Housing"
 description: |
   Analyzing Census data and more to understand problems faced by renters in Memphis.
 author:

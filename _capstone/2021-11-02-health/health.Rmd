@@ -1,5 +1,5 @@
 ---
-title: "Health and Housing"
+title: "Part 1: Health and Housing"
 description: |
   Exploring the link between housing and health.
 author:
