@@ -105,6 +105,91 @@ hsg <- hsg %>% select(-REQUEST_TYPE)
 <!--# end hsg CE -->
 
 ```{r}
+tenant0 <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, "\\b(tob)?t[aent]*t(s|ed)?\\b|tenate"))
+
+vTenant <- c(
+  "\\b(tob)?t[aent]*t(s|ed)?",
+  "resident(s)?",
+  "tensnt(s)?",
+  "o[cu]+pant(s)?",
+  "tenate\\b"
+) %>% 
+  str_c(collapse = "\\b|\\b")
+
+tenant1 <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, vTenant))
+
+tenant10 <- tenant1 %>% 
+  anti_join(tenant0, by = "INCIDENT_NUMBER")
+```
+
+```{r}
+moved0 <- tenant0 %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, "\\bmoved|\\bmoving"))
+moved1 <- tenant1 %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, "\\bmoved|\\bmoving"))
+moved2 <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, "\\bmoved|\\bmoving"))
+
+movedNoTen1 <- moved2 %>% 
+  anti_join(tenant1, by = "INCIDENT_NUMBER")
+```
+
+```{r}
+mold <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, "\\bmold"))
+
+moldNoTen1 <- mold %>% 
+  anti_join(tenant1, by = "INCIDENT_NUMBER")
+```
+
+```{r}
+vApt <- c(
+  "\\bapartment",
+  "apt",
+  "unit\\b"
+) %>% 
+  str_c(collapse = "\\b|\\b")
+
+apt <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, vApt))
+
+aptNoTen1 <- apt %>% 
+  anti_join(tenant1, by = "INCIDENT_NUMBER")
+```
+
+```{r}
+vFurnish <- c(
+  "\\btoilet",
+  "tub",
+  "fridge",
+  "refrigerator",
+  "ceiling",
+  "sink",
+  "cabinets",
+  "heating",
+  "living( )?room",
+  "carpet",
+  "bed bug",
+  "kitchen",
+  "hallway",
+  "stove\\b"
+) %>% 
+  str_c(collapse = "\\b|\\b")
+
+furnish <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, vFurnish))
+
+furnishtNoTen1 <- furnish %>% 
+  anti_join(tenant1, by = "INCIDENT_NUMBER")
+furnishNoApt <- furnish %>% 
+  anti_join(apt, by = "INCIDENT_NUMBER")
+```
+
+<!--# remove symbols -->
+
+```{r}
 # clean-up resolution summary
 hsg2 <- hsg %>% 
   mutate(RESOLUTION_SUMMARY = str_remove_all(RESOLUTION_SUMMARY, "[:punct:]|[:symbol:]"))
@@ -530,7 +615,7 @@ stend <- c(" E", "A", "N", "S$") %>%
 ```
 
 ```{r}
-CE2 <- CE %>% 
+hsg2 <- hsg %>% 
   filter(!str_detect(ADDRESS1, "-|/|\\(|\\.\\s\\d")) %>% 
   mutate(STREET_NAME = str_replace_all(STREET_NAME, "[[:punct:]]", " ")) %>% 
   mutate(STREET_NAME = str_remove(STREET_NAME, "[:digit:]+")) %>% 
