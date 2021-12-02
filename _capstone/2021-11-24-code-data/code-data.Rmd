@@ -1,5 +1,5 @@
 ---
-title: "code-data"
+title: "Part 4: Code Enforcement Analysis"
 description: |
   A short description of the post.
 author:
@@ -15,92 +15,28 @@ draft: true
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## How to Report Maintenance Neglect in Memphis
+Memphians are able to report problems to code enforcement (CE) by calling 311 or submitting a request through an app called [SeeClickFix](https://seeclickfix.com/), used in hundreds of towns across the nation. The City of Memphis has made 311 data open through [Memphis Data Hub](https://data.memphistn.gov/dataset/Service-Requests-since-2016/hmd4-ddta), where anyone can download all service requests since 2016.
 
-To review, landlords in Shelby County are obligated to comply with "building and housing codes materially affecting health and safety."[^1] If the landlord deliberately or negligently fails to supply essential services, the tenant must first give written notice to the landlord. Then, tenants can move acquire essential services and deduct the cost from rent
+The dataset automatically updates daily and is quite large: as of November 9, 2021 the dataset contained 1,302,280 rows. However, only a portion of these requests are related to CE. After filtering by department, 164,481 requests remain that are categorized under CE, about 13% of the total dataset. Each row is a unique request, meaning updates do not create a new row.
 
-[^1]: [See TCA URLTA 66-28-304. Maintenance by Landlord](https://sarahjohnson.io/reference/2021-11-10-urlta/#maintenance-by-landlord.)
+My original goal for this paper was to analyze CE requests related to renter-occupied housing to see how often tenants reported problems and what types of problems they report. However, I found this analysis was not possible for multiple reasons.
 
-Moreover, how are tenants supposed to procure essential services? We've already learned that the highest proportion of renters in Shelby County are extremely cost burdened, paying over half of their income in rent. Here's the kicker: our eviction courts work extremely fast. Landlords can have renters evicted faster than landlords are required to complete repairs. Landlords are not supposed to retaliate, but they don't need a reason to evict renters in the first place if the lease is month-to-month.
+### No consistent housing category
 
-## Reference {.appendix}
+Whenever a citizen creates a 311 request, they must select a category. (In the dataset, this is shown under the `REQUEST_TYPE` column.) There are 14 unique CE categories, 12 of which are obviously not related to structural problems: 5 are related to yards or weeds, 3 are COVID-related, 2 are vehicle-related; and 2 are inactive categories. The remaining two categories are "Substandard, Derelict Struc" (shorted to "derelict" for remainder of this section) and "miscellaneous".
 
-``` {#TCA6628304}
-#' TCA Title 66 Property > 
-#' Chapter 28 Uniform Residential Landlord Tenant Act
-#' Part 3 Landlord Obligations
-#' 66-28-304. Maintenance by landlord.
+Originally I suspected "derelict" would contain all housing-related requests, yet this was far from the case. Completing a keyword search for "tenant" (and related misspellings) showed of 1,808 requests, 148 were classified under "derelict" and 1,660 under "miscellaneous". Analyzing individual cases showed many of the "miscellaneous" were obviously related to interior housing issues, such as problems with air conditioning units, refrigerators, toilets, etc.
 
-(a) The landlord shall:
+While 92% of requests containing "tenant" were classified under "miscellaneous," this category is a catch-all and contains many more types of cases than just renter-related issues. In fact, "miscellaneous" is the most used request type for CE data: 47,220 rows fall under this category, or 29% of all service requests.
 
-   (1) Comply with 
-       requirements of applicable building and housing codes 
-       materially affecting health and safety;
-   (2) Make all repairs 
-       and do whatever is necessary 
-       to put and keep the premises in a fit and habitable condition;
-   (3) Keep all common areas of the premises 
-       in a clean and safe condition; and
-   (4) In multi-unit complexes of four (4) or more units, 
-       provide and maintain appropriate receptacles and conveniences 
-       for the removal of ashes, garbage, rubbish and other waste 
-       from common points of collection subject to §66-28-401(3).
+Keyword searches are ineffective at creating a complete dataset of renter-related problems. Inspectors sometimes use the words "resident" or "occupant" to refer to a tenant, yet these words are sometimes used to describe owner-occupied properties as well. Other times, no keyword is used to mention the resident; for instance, there are 114 rows that mention "mold", but 80% of these cases do not contain the words "tenant", "resident" or "occupant". Another 524 rows do not mention a resident keyword but contain "apartment" or "unit"; these vary on relevancy but prove additional cases can easily be missed. Lastly, a search for indoor furnishings, like "stove", "sink", "toilet", revealed another 235 additional cases.
 
-(b) If the duty imposed by subdivision (a)(1) 
-       is greater than 
-       any duty imposed by any other paragraph of subsection (a), 
-    the landlord's duty shall be determined 
-           by reference to subdivision (a)(1).
+As there is no obvious way to filter for renter-related problems, it is not possible to accurately know how many renters have contacted CE. In total, keyword searched revealed 2,904 requests that were possibly related to renters, though this include some irrelevant cases and omits other relevant requests. Still, very few code enforcement requests appear to be placed by renters.
 
-(c) The landlord and tenant may agree in writing 
-    that the tenant perform specified repairs, maintenance tasks, 
-    alterations, and remodeling, but only if 
-    the transaction is entered into in good faith 
-    and not for the purpose of evading the obligations of the landlord.
+### No category for duplicates
 
-(d) The landlord may not treat performance 
-        of the separate agreement described in subsection (c) 
-    as a condition to any obligation or performance 
-    of any rental agreement.
-    
-#' Part 5 Enforcement and Remedies
-#' 66-28-502. Failure to supply essential services.
+Within the dataset, there are many instances of duplicate cases, yet no easy way to filter out such requests. Sometimes the `RESOLUTION_CODE` is used
 
-(a)
+124 requests at 45 Idlewild, 20 were placed one day in February 2019. Were these duplicate entries or a concerted effort by tenants to contact CE?
 
-  (1) If the landlord 
-      deliberately or negligently fails to supply essential services, 
-      the tenant shall give written notice 
-      to the landlord specifying the breach 
-      and may do one (1) of the following:
-      (A) Procure essential services 
-          during the period of the landlord's noncompliance 
-          and deduct their actual and reasonable costs from the rent;
-      (B) Recover damages 
-          based upon the diminution in 
-          the fair rental value of the dwelling unit, 
-          provided tenant continues to occupy premises; or
-      (C) Procure reasonable substitute housing 
-          during the period of the landlord's noncompliance, 
-          in which case the tenant is excused from paying rent 
-          for the period of the landlord's noncompliance.
-  (2) In addition to the remedy provided in subdivision (a)(1)(C), 
-      the tenant may recover 
-      the actual and reasonable value of the substitute housing 
-                  and in any case under this subsection (a), 
-      reasonable attorney's fees.
-  (3) "Essential services" means utility services, 
-      including gas, heat, electricity, 
-      and any other obligations imposed upon the landlord 
-      which materially affect the health and safety of the tenant.
-
-(b) A tenant who proceeds under this section 
-    may not proceed under §66-28-501 or §66-28-503 as to that breach.
-
-(c) The rights under this section do not arise until 
-    the tenant has given written notice to the landlord 
-    and has shown that the condition was not caused by 
-    the deliberate or negligent act or omission of 
-    the tenant, a member of the tenant's family, or other person on 
-    the premises with the tenant's consent.
-```
+### Incorrect location data
