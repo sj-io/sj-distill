@@ -1,0 +1,256 @@
+---
+title: "Code Enforcement Data, Part 1"
+description: |
+  Introducing the dataset and thoroughly explaining variables.
+author: 
+  - name: Sarah Johnson
+date: 2021-12-03
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+Memphis code enforcement (CE) data is available for anyone to download through [Memphis Data Hub](https://data.memphistn.gov/dataset/Service-Requests-since-2016/hmd4-ddta). However, the dataset is very large and I found it overwhelming when I first began analyzing it. This post is the first in a series to break down 311 data into manageable chunks. I hope by sharing my methods I can help others looking to analyze the data.
+
+# Understanding the Dataset
+
+The version of the dataset I download today contains 1,311,942 rows and 53 columns. This is a lot, but don't worry, much of it is duplicate information that can be cleared out. This post mostly walks through which columns are important and which we can omit. But first, let's touch on what information is within a row.
+
+## Rows
+
+Every 311 call made to the City opens up a "service request" (SR). Each row of this dataset is a unique SR. This means all information and updates for an SR is contained in a single row.
+
+The data set contains every SR since January 1, 2016. Most SRs are not related to CE, and the dataset will be significantly shorter after filtering by department.
+
+## Columns
+
+Columns are explained on the [dataset's download page](https://data.memphistn.gov/dataset/Service-Requests-since-2016/hmd4-ddta) (under "Columns in this Dataset"), but some definitions are missing or inadequate. Let's walk through all the columns and their purpose so we know which we can include, and which we can leave out.
+
+### Unique ID
+
+When an SR is created, it is given a unique key. There are two columns that contain unique numbers for each row:
+
+``` R
+"INCIDENT_NUMBER"     #' unique id
+"INCIDENT_ID"         #' unique id
+```
+
+Between these, `INCIDENT_NUMBER` is used by CE to identify/refer to a specific case. Anytime you see the phrase "sr #" mentioned in the dataset, it refers to this number.
+
+### Location
+
+Nearly half of the columns in the dataset tell us where the SR is located, 22 columns in total.
+
+The first group of location variables can be recognized by anyone:
+
+``` R
+"ADDRESS1"        #' street number, street name, and street suffix
+"STREET_NAME"     #' street name only
+"ADDRESS2"        #' APT or UNIT
+"ADDRESS3"        #' number/letter of apt or unit
+"CITY"            #' city (supposed to be Memphis for all SRs)
+"STATE"           #' state (supposed to be TN)
+"POSTAL_CODE"     #' ZIP code
+"FULL_ADDRESS"    #' address, city, state, zip
+"Location 1"      #' same as FULL_ADDRESS
+"location1"       #' geocoded location (latitude and longitute)
+```
+
+Note that some locations have the wrong address entered. For instance "746 CHAPEL ST" is a place in New Haven, CT. The version of the dataset I'm using has 2,137 entries at this location. Many have an incorrect `location1` as well. Over 79,000 SRs have the geocoordinates "POINT (-90.052136 35.143378)", which is the address for Rendezvous BBQ downtown.
+
+The second group of location variables require additional info to understand. These are mostly letters and numbers used to group together certain areas (except for `PARCEL_ID` which refers to a specific plot of land).
+
+``` R
+"PARCEL_ID"       #' tax assessor parcel
+"DISTRICT"        #' city council district number
+"SUB_DISTRICT"    #' city council sub-district number
+"TARGET_BLOCK"    #' number 
+"AREA"            #' letter or number
+"ZONE"            #' letter & number
+"MAP_PAGE"        #' number & letter
+
+#' auto-generated location variables not mentioned on dataset webpage
+"City Council Districts"          #' duplicate of DISTRICT
+"Shelby County Zip Codes"         #' number between 0-38
+"Memphis 3.0 Planning Districts"  #' planning district
+"South City"                      #' specific redevelopment program
+"SC Quarter Mile Buffer"          #' buffer surrounding South City area
+```
+
+Maps of target blocks, city council districts, and more are available on [this City webpage](https://mapgis.memphistn.gov/applications/iTracker/#/mapkey). Parcel numbers can be used to find more information about a plot of land using the assessor's database, accessible to the public through the [assessor's website](https://www.assessormelvinburgess.com/propertySearch). Maps for planning districts are available on the [Memphis 3.0 webpage](https://www.memphis3point0.com/plans-and-maps).
+
+There is no single location variable that reliably identifies all SRs in the dataset. In my analysis, I use a combination of `ADDRESS1`, `STREET_NAME`, `PARCEL_ID`, and `location1`.
+
+### Dates
+
+The next largest group of variables are related to dates, 8 in total.
+
+``` R
+"REPORTED_DATE"           #' date SR was created by user
+"CREATION_DATE"           #' date SR was submitted (auto-generated)
+"NEXT_OPEN_TASK_DATE"     #' date city employee is next available
+"FOLLOWUP_DATE"           #' date SR was/will be followed up        
+"LAST_MODIFIED_DATE"      #' date SR was last modified by city employee
+"LAST_UPDATE_DATE"        #' date SR was last updated in system
+"INCIDENT_RESOLVED_DATE"  #' date SR status changed to "Resolved"
+"CLOSE_DATE"              #' date SR status changed to "Closed"
+```
+
+Some of these columns have similar or confusing meanings. According to the dataset's page, there may be a delay between `REPORTED_DATE` and `CREATION_DATE` if someone began a SR and waited to submit it. The `UPDATED_DATE` is the same for thousands of SR's, and is most likely the last time a file was touched by a computer, rather than when it was last manually updated by a person. SRs are much more likely to be marked "Closed" than "Resolved," and these dates should be identical anyways.
+
+I use `REPORTED_DATE` over `CREATION_DATE`, `LAST_MODIFIED_DATE` over `LAST_UPDATE_DATE`, and `CLOSE_DATE` over `INCIDENT_RESOLVED_DATE`.
+
+### Categorization
+
+The following columns tell us how/by whom the SR was created:
+
+``` R
+"SR_CREATION_CHANNEL"   #' Was the SR created by "PHONE" or "WEB"?
+"CREATED_BY_USER"       #' Who created the SR
+```
+
+The `CREATED_BY_USER` field does not always tell the specific person who created the SR. "SCF", which stands for SeeClickFix (an app used to report 311 problems), is the most common entry under this column. Most of the actual people listed under this column seem to be employees for the City of Memphis.
+
+When someone creates an SR they must also pick a relevant category, such as "Vehicle Violations", "Junky Yard", etc. This information is provided by these columns:
+
+``` R
+"REQUEST_TYPE"        #' Type of request (14 types for CE)
+"INCIDENT_TYPE_ID"    #' A number, same info as REQUEST_TYPE
+```
+
+Based on the type of request, SRs are assigned to the relevant city department. These columns classify which city department is responsible for the SR:
+
+``` R
+"DIVISION"      #' One of 14 city divisions
+"DEPARTMENT"    #' One of 23 departments
+"GROUP_NAME"    #' One of 33 groups
+```
+
+`DEPARTMENT` is where we can filter for "Code Enforcement" to see all relevant CE SRs. CE falls under the "Public Works" `DIVISION` and most CE SRs are also listed under the "Community Enhancement" `GROUP_NAME`.
+
+The following columns are used by non-CE departments:
+
+``` R
+"COLLECTION_DAY"  #' garbage collection day
+"SWM_CODE"        #' solid waste management code
+```
+
+After the SR is created, it is assigned to someone within the city to address the issue.
+
+``` R
+"OWNER_NAME"      #' Name of person assigned SR
+"NUMBER_OF_TASKS" #' Number of tasks already assigned to owner
+```
+
+For CE, the `OWNER_NAME` typically refers to the inspector assigned the SR. The person in charge of the SR can then set the priority, adjust the status, and change the categories.
+
+``` R
+"REQUEST_PRIORITY"    #' low, medium, high, or emergency
+"REQUEST_STATUS"      #' closed, in progress, etc.
+"CATEGORY"            #' includes Miscellaneous, Inspection-Vehicle, etc.
+"CE_CATEGORY"         #' includes Violation (S), NA, Not-Categorized, etc.
+```
+
+Most of the time the `CATEGORY` data is the same or very similar to the original `REQUEST_TYPE`. The `CE_CATEGORY` field is specific to CE, though it is not always used; 50% of CE SRs are categorized as "NA" or "Not-Categorized". I'm also not sure of the difference between Violation (S) and Violation (NS). I've at least determined it doesn't seem to refer to "structure".
+
+When an SR is updated, CE will change the following columns:
+
+``` R
+"RESOLUTION_CODE"           #' Code used to classify resolution
+"RESOLUTION_CODE_MEANING"   #' Definition of above code
+"RESOLUTION_SUMMARY"        #' Any and all additional descriptive info
+```
+
+Despite the name `RESOLUTION_CODE`, this column includes codes for in-between phases of the CE process, such as if a form has been sent to the owner of a property but the case is not ready to be closed.
+
+The `RESOLUTION_SUMMARY` is one of the most important columns in the dataset. It is the only column with manual entry, meaning if inspectors write any notes, they will be in this column.
+
+### Erroneous Data
+
+The following columns do not seem to contain useful information:
+
+``` R
+"CREATED_BY"          #' one of three numbers: 3735, 460101, or -1
+"LAST_UPDATE_LOGIN"   #' one of three numbers: 3735, 460101, or -1
+"LAST_UPDATED_BY"     #' 460101 for all SRs
+```
+
+As such, I omit these columns from my analysis.
+
+# Summary
+
+To recap, these are columns which contain duplicate or unnecessary information:
+
+``` R
+"FULL_ADDRESS"              #' combines address, city, state, zip data
+"Location 1"                #' same as FULL_ADDRESS
+"City Council Districts"    #' duplicate of DISTRICT
+"CREATION_DATE"             #' mostly duplicates REPORTED_DATE
+"LAST_UPDATE_DATE"          #' misleading (use LAST_MODIFIED_DATE)
+"INCIDENT_RESOLVED_DATE"    #' mostly duplicates CLOSE_DATE
+"INCIDENT_TYPE_ID"          #' duplicates REQUEST_TYPE
+"CATEGORY"                  #' mostly duplicates REQUEST_TYPE
+"RESOLUTION_CODE_MEANING"   #' definition of RESOLUTION_CODE
+"INCIDENT_ID"               #' extra unique id
+"CREATED_BY"                #' 3735, 460101, or -1
+"LAST_UPDATE_LOGIN"         #' 3735, 460101, or -1
+"LAST_UPDATED_BY"           #' 460101 for all SRs
+```
+
+And these columns aren't relevant to the analysis I'll be completing:
+
+``` R
+"DISTRICT"                        #' city council district
+"SUB_DISTRICT"                    #' city council sub-district
+"TARGET_BLOCK"                    #' number 
+"AREA"                            #' letter or number
+"ZONE"                            #' letter & number
+"MAP_PAGE"                        #' number & letter
+"Shelby County Zip Codes"         #' number between 0-38
+"Memphis 3.0 Planning Districts"  #' planning district
+"South City"                      #' part of South City redevelopment program
+"SC Quarter Mile Buffer"          #' buffer surrounding the South City area
+"SR_CREATION_CHANNEL"             #' was the SRs created by "PHONE" or "WEB"?
+"DIVISION"                        #' one of 14 city divisions
+"COLLECTION_DAY"                  #' garbage collection day
+"SWM_CODE"                        #' solid waste management code
+"NUMBER_OF_TASKS"                 #' number of tasks already assigned to owner
+"NEXT_OPEN_TASK_DATE"             #' date city employee is next available
+```
+
+I personally have found these columns contain the most important info:
+
+``` R
+"INCIDENT_NUMBER"           #' unique id
+"REQUEST_TYPE"              #' category of request
+"DEPARTMENT"                #' one of 23 city departments
+"RESOLUTION_CODE"           #' code used to classify resolution
+"RESOLUTION_SUMMARY"        #' any descriptive info
+"REQUEST_STATUS"            #' closed, in progress, etc.
+"REPORTED_DATE"             #' date SR was created by user
+"LAST_MODIFIED_DATE"        #' date SR was last modified by city employee
+"CLOSE_DATE"                #' date SR status changed to "Closed"
+```
+
+And these columns may/may not contain useful info, depending on the SR:
+
+``` R
+"CE_CATEGORY"         #' includes Violation (S), NA, Not-Categorized, etc.
+"ADDRESS1"            #' street number, street name, and street suffix
+"location1"           #' geocoded location (latitude and longitute of point)
+"PARCEL_ID"           #' tax assessor parcel
+"CREATED_BY_USER"     #' who created the SR
+"OWNER_NAME"          #' name of person assigned SR
+"REQUEST_PRIORITY"    #' low, medium, high, or emergency
+"GROUP_NAME"          #' one of 33 city groups
+"FOLLOWUP_DATE"       #' date SR was/will be followed up  
+```
+
+There are a few extra columns containing additional location information that I did not relist but are useful (or just use `FULL_ADDRESS` and omit individual location columns). And even though `RESOLUTION_CODE_MEANING` contains duplicate info of `RESOLUTION_CODE`, I usually include to help remember code definitions
+
+I hope this post helps to clear up some confusion regarding the excessive number of columns. From here we are ready to narrow down our dataset into something more manageable.
