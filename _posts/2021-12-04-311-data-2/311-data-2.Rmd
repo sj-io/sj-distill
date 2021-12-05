@@ -217,8 +217,13 @@ Another common problem is an SR being closed due to having the wrong address. So
 
 ```{r}
 vErr <- c(
-  "(wrong|in[ ]?co[re]+ct|inaccurate|invalid|i[n]*suff[ic]*ent|bad|(could not|unable to|cant) (locate|find)|no such|not (a|an|the) (actual|valid|good|correct|physical))[ ]*(property|parcel)?[ ]*(a[d]+re[s]+|location)",
-  "a[d]+re[s]+[ ]*(was put in system wrong|does not ex[s]?ist|not valid(ated)?|(given|for this violation )?(is|was) incorrect)",
+  "(wrong|in[ ]?co[re]+ct|inaccurate|invalid|i[n]*suff[ic]*ent|
+  bad|(could not|unable to|cant) (locate|find)|no such|not 
+  (a|an|the) (actual|valid|good|correct|physical))
+  [ ]*(property|parcel)?[ ]*(a[d]+re[s]+|location)",
+  "a[d]+re[s]+[ ]*(was put in system wrong|
+  does not ex[s]?ist|not valid(ated)?|
+  (given|for this violation )?(is|was) incorrect)",
   "correct address (of violation )?is",
   "(no)?[ ]*address[ ]*(not)?[ ]*found"
 ) %>%

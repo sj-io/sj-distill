@@ -26,4 +26,3 @@ navbar:
       href: https://github.com/sj-io
 output: 
   distill::distill_article:
-    css: styles.css

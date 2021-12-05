@@ -1714,8 +1714,13 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vErr</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
-  <span class='st'>"(wrong|in[ ]?co[re]+ct|inaccurate|invalid|i[n]*suff[ic]*ent|bad|(could not|unable to|cant) (locate|find)|no such|not (a|an|the) (actual|valid|good|correct|physical))[ ]*(property|parcel)?[ ]*(a[d]+re[s]+|location)"</span>,
-  <span class='st'>"a[d]+re[s]+[ ]*(was put in system wrong|does not ex[s]?ist|not valid(ated)?|(given|for this violation )?(is|was) incorrect)"</span>,
+  <span class='st'>"(wrong|in[ ]?co[re]+ct|inaccurate|invalid|i[n]*suff[ic]*ent|
+  bad|(could not|unable to|cant) (locate|find)|no such|not 
+  (a|an|the) (actual|valid|good|correct|physical))
+  [ ]*(property|parcel)?[ ]*(a[d]+re[s]+|location)"</span>,
+  <span class='st'>"a[d]+re[s]+[ ]*(was put in system wrong|
+  does not ex[s]?ist|not valid(ated)?|
+  (given|for this violation )?(is|was) incorrect)"</span>,
   <span class='st'>"correct address (of violation )?is"</span>,
   <span class='st'>"(no)?[ ]*address[ ]*(not)?[ ]*found"</span>
 <span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1735,8 +1740,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <h2 id="summary">Summary</h2>
 <p>To recap, of 1.3 million service requests, 165,836 were for code enforcement. Of these, 111,455 were definitely not related to housing, leaving 54,381 SRs which may or may not be housing related. Another 1,073 were related to Shelby County property; 3,991 were obvious duplicates; 2,237 are likely duplicates; and 898 were SRs closed due to insufficient information. A total of 8,199 rows were removed in this post, which leaves us with 46,182 SRs. This information is summarized in the diagram below.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-9dd9e800fdf89d31c31f" style="width:624px;height:384px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-9dd9e800fdf89d31c31f">{"x":{"diagram":"digraph CE {\n\ngraph [rankdir = TB]\n\nnode [shape = box, fontname = Helvetica]\nCE0 [label = \"Service Requests since 2016\\n 1,311,942\"]\nCE1 [label = \"Code Enforcement\\n 165,836\"]\nCE2 [label = \"Not housing\\n 111,455\"]\nCE3 [label = \"Maybe housing\\n 54,381\"]\nCE4 [label = \"Shelby County\\n 1,073\"]\nCE5 [label = \"Duplicates and errors\\n 7,126\"]\nCE7 [label = \"Remaining\\n 46,182\"]\nCE8 [label = \"Filtered out\\n 8,199\"]\n\nedge [arrowtail = none]\nCE0 -> CE1\nCE1 -> {CE2 CE3}\nCE3 -> CE7\nCE5 -> CE8\n\nedge [arrowhead = none]\nCE3 -> CE4 -> CE5\n{rank=same; CE8; CE7}\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-ab52521f15daae04aab0" style="width:624px;height:384px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ab52521f15daae04aab0">{"x":{"diagram":"digraph CE {\n\ngraph [rankdir = TB]\n\nnode [shape = box, fontname = Helvetica]\nCE0 [label = \"Service Requests since 2016\\n 1,311,942\"]\nCE1 [label = \"Code Enforcement\\n 165,836\"]\nCE2 [label = \"Not housing\\n 111,455\"]\nCE3 [label = \"Maybe housing\\n 54,381\"]\nCE4 [label = \"Shelby County\\n 1,073\"]\nCE5 [label = \"Duplicates and errors\\n 7,126\"]\nCE7 [label = \"Remaining\\n 46,182\"]\nCE8 [label = \"Filtered out\\n 8,199\"]\n\nedge [arrowtail = none]\nCE0 -> CE1\nCE1 -> {CE2 CE3}\nCE3 -> CE7\nCE5 -> CE8\n\nedge [arrowhead = none]\nCE3 -> CE4 -> CE5\n{rank=same; CE8; CE7}\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <section class="footnotes" role="doc-endnotes">
