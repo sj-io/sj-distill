@@ -3,6 +3,7 @@ title: "SJ"
 description: |
   SJ
 output_dir: "_site"
+exclude: ["*.csv"]
 base_url: https://sarahjohnson.io
 collections:
   posts:

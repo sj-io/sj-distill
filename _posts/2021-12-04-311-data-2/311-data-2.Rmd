@@ -1,0 +1,245 @@
+---
+title: "Code Enforcement Data, Part 2"
+description: |
+  Importing the dataset, filtering for CE, and initial data cleaning.
+author:
+  - name: Sarah Johnson
+date: 2021-12-04
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  R.options = list(width = 70))
+```
+
+In my [previous post](https://sarahjohnson.io/posts/2021-12-03-311-data/) I introduced the [Service Requests since 2016](https://data.memphistn.gov/dataset/Service-Requests-since-2016/hmd4-ddta) dataset, which contains all 311 requests to the City of Memphis over the past five years. The dataset is very large, with 53 columns and over a million rows, but many of the rows and columns contain duplicate information, and whittling out this will make the dataset more manageable. My last post walked through all of the columns and explained the purpose of each so we know which variables can be omitted.
+
+In this post I will begin tidying the dataset in preparation for data analysis. I use R/RStudio for my data work, and any code in this post is written in R. This post is not meant to teach people R, but I try to explain what I'm doing in each step. My code is meant to be reproducible, so anyone can download the most recent version of the dataset, run the code, and see the same results.
+
+## Getting Started
+
+To begin, download a CSV of the most recent version of the dataset. The file may take a few minutes to download if you have slow internet; the version I'm working with was downloaded December 3, 2021 and is 739MB.
+
+In RStudio, load the tidyverse package. This is the package I'll be using to "wrangle" the data into a more approachable format. If you've never used the tidyverse before, you'll need to run `install.packages("tidyverse")` first.
+
+```{r library, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+Next we'll import the .csv file. Move your copy of the dataset into your project folder, or adjust the file path in the code below accordingly. Some of the columns do not format correctly on import, so I manually set them with the `col_types` argument.
+
+```{r SRs16}
+Service_Requests_since_2016 <-
+  read_csv(
+    "Service_Requests_since_2016.csv",
+    col_types = cols(
+      ADDRESS2 = "c",
+      ADDRESS3 = "c",
+      COLLECTION_DAY = "c",
+      CLOSE_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      CREATION_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      FOLLOWUP_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      INCIDENT_RESOLVED_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      LAST_MODIFIED_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      LAST_UPDATE_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      NEXT_OPEN_TASK_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p"),
+      REPORTED_DATE = col_datetime(format = "%m/%d/%Y %I:%M:%S %p")
+    )
+  )
+```
+
+As of December 3, 2021, the dataset contains 53 columns and 1,311,942 rows.
+
+### Code Enforcement
+
+My research is solely focused on code enforcement data, which is only a subset of all service requests. Using the `DEPARTMENT` column, we can filter for "Code Enforcement". I also selected only the columns relevant to my analysis (see my [previous post](https://sarahjohnson.io/posts/2021-12-03-311-data/) for a thorough explanation) and rearrange them for easier reading. The `mutate()` function is used to change some columns to all upper/lower case, making future filtering easier.
+
+```{r CE}
+CE <- Service_Requests_since_2016 %>% 
+  filter(DEPARTMENT == "Code Enforcement") %>%
+  select(
+    INCIDENT_NUMBER,
+    GROUP_NAME,
+    REQUEST_TYPE,
+    CE_CATEGORY,
+    RESOLUTION_CODE:RESOLUTION_SUMMARY,
+    REQUEST_STATUS,
+    ADDRESS1,
+    STREET_NAME,
+    PARCEL_ID,
+    REPORTED_DATE,
+    FOLLOWUP_DATE,
+    LAST_MODIFIED_DATE,
+    CLOSE_DATE,
+    OWNER_NAME,
+    CREATED_BY_USER,
+    REQUEST_PRIORITY,
+    location1
+  ) %>% 
+  mutate(RESOLUTION_SUMMARY = str_to_lower(RESOLUTION_SUMMARY),
+         STREET_NAME = str_to_upper(STREET_NAME),
+         REQUEST_TYPE = str_to_lower(REQUEST_TYPE)
+         )
+```
+
+I selected 19 columns, and filtering for "Code Enforcement" narrowed the dataset to 165,836 rows.
+
+## Data Cleaning
+
+I have found largest hurdle to analyzing this dataset is inconsistent use of the `RESOLUTION_CODE` and `RESOLUTION_SUMMARY` fields. For instance, "INSUF" is a code used to indicate that a citizen provided insufficient information to 311, such as a wrong address, that makes inspection impossible. However, sometimes an inspector will close the SR using a different code and simply type "wrong address" in the summary field. I have run across many variations of this problem.
+
+There are three main ways I begin tidying this dataset.
+
+1.  Filter out SRs obviously not related to housing.
+2.  Remove SRs outside the City of Memphis' jurisdiction.
+3.  Remove duplicates SRs and those closed due to errors such as incorrect addresses.
+
+My typical workflow is to find relevant keywords I want to filter out, create a table containing those keywords, check that table to verify I'm not removing relevant data, and then remove those rows from the main dataset. You will also see many parenthesis, brackets, slashes, question marks, and apostrophes; these are used to catch typos, which are very common in the `RESOLUTION_SUMMARY` field. To see a list of what these symbols mean, check out the [cheatsheet for the stringr package](https://raw.githubusercontent.com/rstudio/cheatsheets/main/strings.pdf).
+
+### Filter for housing
+
+My research is centered around interior housing violations, but CE also deals with non-structural violations. By using the `count()` function on the `REQUEST_TYPE` column, we can see the most common requests to CE.
+
+```{r}
+CE %>% count(REQUEST_TYPE) %>% arrange(desc(n))
+```
+
+There are 14 CE request types, and the top five are miscellaneous, vehicle violations, weeds, junky yard, and substandard, derelict structures.
+
+Unfortunately, there is no code that contains all structural violations. While "substandard, derelict struc" may seem like the obvious category for these problems, my prior analysis has found that many, if not most, structural problems fall under "miscellaneous".[^1] The good news is that housing violations only fit into these two categories; the other request types are obviously not related to structural violations.
+
+[^1]: It's worth mentioning that if citizens routinely select "miscellaneous" instead of "substandard, derelict struc", the problem likely lies with the confusing phrasing of "substandard, derelict struc".
+
+```{r}
+vHsg <- c("misc", "derelict") %>% str_c(collapse = "|")
+```
+
+We can also use the `RESOLUTION_CODE` and `RESOLUTION_SUMMARY` fields to filter out requests. If a resolution mentions "yard" or "vehicle", that case won't be relevant to interior housing problems.
+
+```{r}
+vNotHsg <- c(
+  "VOYC", "VOAR", "CVOAR", "CVOAT", "CVOYC", "COMMERCIAL", "STCLEANING",
+  "mow", "commer[ci]*al", "vacant lot"
+  ) %>% 
+  str_c(collapse = "|")
+```
+
+A full list of code definitions is [available from the City of Memphis](https://data.memphistn.gov/stories/s/cgbv-n5mp#glossary), or from the `RESOLUTION_CODE_MEANING` column of this dataset.
+
+Now that we've collected relevant keywords, let's separate non-housing requests into their own table and create a new table specifically for housing. Note that because we're using miscellaneous requests, some SRs will inevitably not be related to housing.
+
+```{r}
+notHsg <- CE %>%
+  filter(
+    str_detect(RESOLUTION_CODE, vNotHsg) |
+      str_detect(RESOLUTION_SUMMARY, vNotHsg) |
+      !str_detect(REQUEST_TYPE, vHsg)
+  )
+
+hsg <- CE %>% 
+  anti_join(notHsg, by = "INCIDENT_NUMBER")
+```
+
+Of the 165,836 CE requests, there were 111,455 definitely not related to housing. The new housing table is 54,381 rows.
+
+This is the last time I'll be using the `REQUEST_TYPE` field, so let's count how many rows fall under each request type and remove that column.
+
+```{r}
+hsg %>% count(REQUEST_TYPE) %>% arrange(desc(n))
+
+hsg <- hsg %>% select(-REQUEST_TYPE)
+```
+
+Just over a quarter of requests were labeled as "substandard, derelict struc", and the remainder are tagged miscellaneous.
+
+### Filter for county
+
+Memphis CE is unauthorized to work in Shelby County outside the city limits or on county-owned property. Let's filter out these rows.
+
+```{r}
+vShelby <- c("SHELBY", "shelb[yh][ ]+c", "county", "limits") %>%
+  str_c(collapse = "|")
+
+shelby <- hsg %>%
+  filter(str_detect(RESOLUTION_CODE, vShelby) |
+           str_detect(RESOLUTION_SUMMARY, vShelby))
+
+hsg <- hsg %>%
+  anti_join(shelby, by = "INCIDENT_NUMBER")
+```
+
+This removed 1,073 rows, leaving us with 53,308 rows.
+
+### Filter for duplicates and errors
+
+Lastly, let's filter out duplicates and errors. Some duplicates are correctly coded and easy to remove, but thousands are not. I found that rows containing "MCSC"[^2] under `GROUP_NAME` are duplicates or errors. We can also add rows with the `RESOLUTION_CODE` "JA", which stands for "Justified, Active already file", indicating a duplicate.
+
+[^2]: MCSC stands for "[Mayor's Citizen Service Center](https://www.memphistn.gov/government/mayor-jim-strickland/mayors-citizen-service-center-311/)", another name for 311.
+
+This is the only instance I use the `GROUP_NAME` column, so I removed it afterwards.
+
+```{r}
+vDupe <- c(
+  "MCSC", "JA", "dup[li]*cate", "this a dup "
+  ) %>% 
+  str_c(collapse = "|")
+
+dupes <- hsg %>% 
+  filter(str_detect(GROUP_NAME, vDupe) |
+           str_detect(RESOLUTION_CODE, vDupe) |
+           str_detect(RESOLUTION_SUMMARY, vDupe))
+
+hsg <- hsg %>% 
+  anti_join(dupes, by = "INCIDENT_NUMBER") %>% 
+  select(-GROUP_NAME)
+```
+
+This removed 3,991 rows, with 49,317 remaining.
+
+There's a second category of duplicates where it is less clear if the SR is a duplicate or a legitimate SR that was closed and reopened for some reason. Sometimes these rows will have valuable information that we don't want to lose. These rows will typically have "see sr #" (or something similar) written in the `RESOLUTION_SUMMARY`.
+
+```{r}
+dupes2 <- hsg %>% 
+  filter(str_detect(RESOLUTION_SUMMARY, "\\b[sr #]*\\d{7,8}\\b"))
+
+hsg <- hsg %>% 
+  anti_join(dupes2, by = "INCIDENT_NUMBER")
+```
+
+There are 2,237 rows that mention another SR. These have been separated out, leaving us with 47,080 rows.
+
+Another common problem is an SR being closed due to having the wrong address. Some of these are closed using the "INSUF" (insufficient information) `RESOLUTION_CODE`; others simply mention it in the `RESOLUTION_SUMMARY`. Unfortunately, there are many slightly-different wordings for how an inspector identifies wrong addresses, so the code looks messy.
+
+```{r}
+vErr <- c(
+  "(wrong|in[ ]?co[re]+ct|inaccurate|invalid|i[n]*suff[ic]*ent|bad|(could not|unable to|cant) (locate|find)|no such|not (a|an|the) (actual|valid|good|correct|physical))[ ]*(property|parcel)?[ ]*(a[d]+re[s]+|location)",
+  "a[d]+re[s]+[ ]*(was put in system wrong|does not ex[s]?ist|not valid(ated)?|(given|for this violation )?(is|was) incorrect)",
+  "correct address (of violation )?is",
+  "(no)?[ ]*address[ ]*(not)?[ ]*found"
+) %>%
+  str_c(collapse = "|")
+
+err <- hsg %>%
+  filter(str_detect(RESOLUTION_SUMMARY, vErr) |
+           RESOLUTION_CODE == "INSUF" |
+           REQUEST_STATUS == "Back to Department")
+
+hsg <- hsg %>% 
+  anti_join(err, by = "INCIDENT_NUMBER")
+```
+
+This removed another 898 rows; there are 46,182 remaining.
+
+## Summary
+
+To recap, of 1.3 million service requests, 165,836 were for code enforcement. Of these, 111,455 were definitely not related to housing, leaving 54,381 SRs which may or may not be housing related. Another 1,073 were related to Shelby County property; 3,991 were obvious duplicates; 2,237 are likely duplicates; and 898 were SRs closed due to insufficient information. A total of 8,199 rows were removed in this post, which leaves us with 46,182 SRs. This information is summarized in the diagram below.
+
+```{r echo=FALSE}
+library(DiagrammeR)
+grViz("CE.gv")
+```

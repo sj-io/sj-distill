@@ -1,0 +1,24 @@
+digraph CE {
+
+graph [rankdir = TB]
+
+node [shape = box, fontname = Helvetica]
+CE0 [label = 'Service Requests since 2016\n 1,311,942']
+CE1 [label = 'Code Enforcement\n 165,836']
+CE2 [label = 'Not housing\n 111,455']
+CE3 [label = 'Maybe housing\n 54,381']
+CE4 [label = 'Shelby County\n 1,073']
+CE5 [label = 'Duplicates and errors\n 7,126']
+CE7 [label = 'Remaining\n 46,182']
+CE8 [label = 'Filtered out\n 8,199']
+
+edge [arrowtail = none]
+CE0 -> CE1
+CE1 -> {CE2 CE3}
+CE3 -> CE7
+CE5 -> CE8
+
+edge [arrowhead = none]
+CE3 -> CE4 -> CE5
+{rank=same; CE8; CE7}
+}
