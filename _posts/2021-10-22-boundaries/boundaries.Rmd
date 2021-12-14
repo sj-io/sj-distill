@@ -4,6 +4,10 @@ description: |
   Let's set some boundaries. Using the R packages tigris, sf, tidyverse, and leaflet, I created an interactive map of Memphis Census boundaries.
 date: 2021-10-22
 preview: IMG_2501.png
+author:
+  - name: Sarah Johnson
+categories:
+  - census
 output:
   distill::distill_article:
     self_contained: false

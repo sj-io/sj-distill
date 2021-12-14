@@ -3,6 +3,10 @@ title: "Housing Units"
 description: |
   Exploring and visualizing the number of housing units in the Memphis metro area.
 date: 2021-10-27
+author:
+  - name: Sarah Johnson
+categories:
+  - census
 output:
   distill::distill_article:
     self_contained: false

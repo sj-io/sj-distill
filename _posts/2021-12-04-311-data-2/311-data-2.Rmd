@@ -1,10 +1,12 @@
 ---
-title: "Code Enforcement Data, Part 2"
+title: "CE2: Searching for housing code enforcement requests"
 description: |
-  Importing the dataset, filtering for CE, and initial data cleaning.
+  How to import the dataset, filter for CE, and begin searching for housing violations.
 author:
   - name: Sarah Johnson
 date: 2021-12-04
+categories:
+  - code enforcement
 output:
   distill::distill_article:
     self_contained: false
@@ -36,7 +38,7 @@ Next we'll import the .csv file. Move your copy of the dataset into your project
 ```{r SRs16}
 Service_Requests_since_2016 <-
   read_csv(
-    "Service_Requests_since_2016.csv",
+    "../_data/Service_Requests_since_2016.csv",
     col_types = cols(
       ADDRESS2 = "c",
       ADDRESS3 = "c",

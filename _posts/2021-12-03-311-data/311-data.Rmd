@@ -1,10 +1,12 @@
 ---
-title: "Code Enforcement Data, Part 1"
+title: "CE1: Intro to Memphis' 311 dataset"
 description: |
-  Introducing the dataset and thoroughly explaining variables.
+  Introducing the public dataset containing all 311 service requests since 2016.
 author: 
   - name: Sarah Johnson
 date: 2021-12-03
+categories:
+  - code enforcement
 output:
   distill::distill_article:
     self_contained: false
@@ -35,7 +37,7 @@ Columns are explained on the [dataset's download page](https://data.memphistn.go
 
 When an SR is created, it is given a unique key. There are two columns that contain unique numbers for each row:
 
-``` R
+``` r
 "INCIDENT_NUMBER"     #' unique id
 "INCIDENT_ID"         #' unique id
 ```
@@ -48,7 +50,7 @@ Nearly half of the columns in the dataset tell us where the SR is located, 22 co
 
 The first group of location variables can be recognized by anyone:
 
-``` R
+``` r
 "ADDRESS1"        #' street number, street name, and street suffix
 "STREET_NAME"     #' street name only
 "ADDRESS2"        #' APT or UNIT
@@ -65,7 +67,7 @@ Note that some locations have the wrong address entered. For instance "746 CHAPE
 
 The second group of location variables require additional info to understand. These are mostly letters and numbers used to group together certain areas (except for `PARCEL_ID` which refers to a specific plot of land).
 
-``` R
+``` r
 "PARCEL_ID"       #' tax assessor parcel
 "DISTRICT"        #' city council district number
 "SUB_DISTRICT"    #' city council sub-district number
@@ -90,7 +92,7 @@ There is no single location variable that reliably identifies all SRs in the dat
 
 The next largest group of variables are related to dates, 8 in total.
 
-``` R
+``` r
 "REPORTED_DATE"           #' date SR was created by user
 "CREATION_DATE"           #' date SR was submitted (auto-generated)
 "NEXT_OPEN_TASK_DATE"     #' date city employee is next available
@@ -109,7 +111,7 @@ I use `REPORTED_DATE` over `CREATION_DATE`, `LAST_MODIFIED_DATE` over `LAST_UPDA
 
 The following columns tell us how/by whom the SR was created:
 
-``` R
+``` r
 "SR_CREATION_CHANNEL"   #' Was the SR created by "PHONE" or "WEB"?
 "CREATED_BY_USER"       #' Who created the SR
 ```
@@ -118,14 +120,14 @@ The `CREATED_BY_USER` field does not always tell the specific person who created
 
 When someone creates an SR they must also pick a relevant category, such as "Vehicle Violations", "Junky Yard", etc. This information is provided by these columns:
 
-``` R
+``` r
 "REQUEST_TYPE"        #' Type of request (14 types for CE)
 "INCIDENT_TYPE_ID"    #' A number, same info as REQUEST_TYPE
 ```
 
 Based on the type of request, SRs are assigned to the relevant city department. These columns classify which city department is responsible for the SR:
 
-``` R
+``` r
 "DIVISION"      #' One of 14 city divisions
 "DEPARTMENT"    #' One of 23 departments
 "GROUP_NAME"    #' One of 33 groups
@@ -135,21 +137,21 @@ Based on the type of request, SRs are assigned to the relevant city department. 
 
 The following columns are used by non-CE departments:
 
-``` R
+``` r
 "COLLECTION_DAY"  #' garbage collection day
 "SWM_CODE"        #' solid waste management code
 ```
 
 After the SR is created, it is assigned to someone within the city to address the issue.
 
-``` R
+``` r
 "OWNER_NAME"      #' Name of person assigned SR
 "NUMBER_OF_TASKS" #' Number of tasks already assigned to owner
 ```
 
 For CE, the `OWNER_NAME` typically refers to the inspector assigned the SR. The person in charge of the SR can then set the priority, adjust the status, and change the categories.
 
-``` R
+``` r
 "REQUEST_PRIORITY"    #' low, medium, high, or emergency
 "REQUEST_STATUS"      #' closed, in progress, etc.
 "CATEGORY"            #' includes Miscellaneous, Inspection-Vehicle, etc.
@@ -160,7 +162,7 @@ Most of the time the `CATEGORY` data is the same or very similar to the original
 
 When an SR is updated, CE will change the following columns:
 
-``` R
+``` r
 "RESOLUTION_CODE"           #' Code used to classify resolution
 "RESOLUTION_CODE_MEANING"   #' Definition of above code
 "RESOLUTION_SUMMARY"        #' Any and all additional descriptive info
@@ -174,7 +176,7 @@ The `RESOLUTION_SUMMARY` is one of the most important columns in the dataset. It
 
 The following columns do not seem to contain useful information:
 
-``` R
+``` r
 "CREATED_BY"          #' one of three numbers: 3735, 460101, or -1
 "LAST_UPDATE_LOGIN"   #' one of three numbers: 3735, 460101, or -1
 "LAST_UPDATED_BY"     #' 460101 for all SRs
@@ -186,7 +188,7 @@ As such, I omit these columns from my analysis.
 
 To recap, these are columns which contain duplicate or unnecessary information:
 
-``` R
+``` r
 "FULL_ADDRESS"              #' combines address, city, state, zip data
 "Location 1"                #' same as FULL_ADDRESS
 "City Council Districts"    #' duplicate of DISTRICT
@@ -204,7 +206,7 @@ To recap, these are columns which contain duplicate or unnecessary information:
 
 And these columns aren't relevant to the analysis I'll be completing:
 
-``` R
+``` r
 "DISTRICT"                        #' city council district
 "SUB_DISTRICT"                    #' city council sub-district
 "TARGET_BLOCK"                    #' number 
@@ -225,7 +227,7 @@ And these columns aren't relevant to the analysis I'll be completing:
 
 I personally have found these columns contain the most important info:
 
-``` R
+``` r
 "INCIDENT_NUMBER"           #' unique id
 "REQUEST_TYPE"              #' category of request
 "DEPARTMENT"                #' one of 23 city departments
@@ -239,7 +241,7 @@ I personally have found these columns contain the most important info:
 
 And these columns may/may not contain useful info, depending on the SR:
 
-``` R
+``` r
 "CE_CATEGORY"         #' includes Violation (S), NA, Not-Categorized, etc.
 "ADDRESS1"            #' street number, street name, and street suffix
 "location1"           #' geocoded location (latitude and longitute of point)

@@ -1,17 +1,16 @@
 ---
-title: "Code Enforcement Data, Part 3"
+title: "CE3: Finding and fixing duplicates"
 description: |
-  Identifying and fixing the duplicate problem.
+  How to identify and fix related service requests.
 author:
   - name: Sarah Johnson
 date: 2021-12-07
+categories:
+  - code enforcement
 output:
   distill::distill_article:
     self_contained: false
 draft: true
-resources:
-  exclude:
-    *.csv 
 ---
 
 ```{r setup, include=FALSE}
@@ -24,21 +23,21 @@ knitr::opts_chunk$set(
 
 ### Example
 
-Here we see five unique service requests, four of which redirect users to a different service request. However, if we were to only refer to the "final" service request, we would not know that there was once a tenant who vacated the property.
+Below are five unique service requests, four of which redirect users to a different service request. However, if we were to only refer to the "final" service request, we would not know that there was once a tenant who vacated the property.
 
-+-----------------+-----------------------------------------------------------+
-| Service Request | Resolution Summary                                        |
-+=================+===========================================================+
-| 4452866         | closed void tenant vacated property written up sr 4482990 |
-+-----------------+-----------------------------------------------------------+
-| 4455128         | closed void tenant vacated property written up sr 4482990 |
-+-----------------+-----------------------------------------------------------+
-| 4482990         | see sr 3734488                                            |
-+-----------------+-----------------------------------------------------------+
-| 3734488         | see sr 5057460                                            |
-+-----------------+-----------------------------------------------------------+
-| 5057460         | closed violation in compliance                            |
-+-----------------+-----------------------------------------------------------+
++---+-----------------+-----------------------------------------------------------+
+|   | Service Request | Resolution Summary                                        |
++===+=================+===========================================================+
+| 1 | 4452866         | closed void tenant vacated property written up sr 4482990 |
++---+-----------------+-----------------------------------------------------------+
+| 2 | 4455128         | closed void tenant vacated property written up sr 4482990 |
++---+-----------------+-----------------------------------------------------------+
+| 3 | 4482990         | see sr 3734488                                            |
++---+-----------------+-----------------------------------------------------------+
+| 4 | 3734488         | see sr 5057460                                            |
++---+-----------------+-----------------------------------------------------------+
+| 5 | 5057460         | closed violation in compliance                            |
++---+-----------------+-----------------------------------------------------------+
 
 : Example of the duplicate problem
 
@@ -55,7 +54,7 @@ Full table
 ```{r}
 Service_Requests_since_2016 <-
   read_csv(
-    "Service_Requests_since_2016.csv",
+    "../_data/Service_Requests_since_2016.csv",
     col_types = cols(
       ADDRESS2 = "c",
       ADDRESS3 = "c",
