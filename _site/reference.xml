@@ -7,7 +7,16 @@
     <description>SJ
 </description>
     <generator>Distill</generator>
-    <lastBuildDate>Wed, 10 Nov 2021 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 24 Dec 2021 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>How to create a tree of Census variables</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/reference/2021-12-24-census-tree</link>
+      <description>Visualizing Census variables using R and the Terminal.</description>
+      <category>census</category>
+      <guid>https://sarahjohnson.io/reference/2021-12-24-census-tree</guid>
+      <pubDate>Fri, 24 Dec 2021 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>URLTA</title>
       <link>https://sarahjohnson.io/reference/2021-11-10-urlta</link>
