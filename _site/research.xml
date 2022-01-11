@@ -7,7 +7,16 @@
     <description>SJ
 </description>
     <generator>Distill</generator>
-    <lastBuildDate>Sat, 04 Dec 2021 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 10 Jan 2022 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>CE3: The quest for tidy data</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/posts/2022-01-10-311-data-3</link>
+      <description>How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.</description>
+      <category>code enforcement</category>
+      <guid>https://sarahjohnson.io/posts/2022-01-10-311-data-3</guid>
+      <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>CE2: Searching for housing code enforcement requests</title>
       <dc:creator>Sarah Johnson</dc:creator>

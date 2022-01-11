@@ -1,0 +1,280 @@
+---
+title: "CE3: The quest for tidy data"
+description: |
+  How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.
+author:
+  - name: Sarah Johnson
+date: 2022-01-10
+categories:
+  - code enforcement
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+repository_url: https://github.com/sj-io/sj-distill
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Happy new year! It's been about a month since my [last post](https://sarahjohnson.io/posts/2021-12-04-311-data-2) analyzing Memphis code enforcement data, but I have been making steady progress at developing a way to tidy the dataset. Before getting into the code, I'd like to take a step back and explain my goals and plan.
+
+## The Goal: Tidy data
+
+Currently I cannot answer basic questions I need to finish my capstone to my satisfaction. How many code enforcement requests are for structural violations? How many of those are for renter-occupied units/How often do renters contact code enforcement? What are the most common requests renters report? How are these requests resolved and how long does the process take?
+
+My overall goal is to convert Memphis's code enforcement data into a tidy dataset. **Tidy data** is a standardized way to organize data that makes it easy for analysts to quickly find the information they're looking for. In tidy data:
+
+1\. Each variable has its own column.
+
+2\. Each observation has its own row.
+
+3\. Each value has its own cell.
+
+![Three rules make a dataset tidy: variables are in columns, observations are in rows, and values are in cells ([Wickham & Grolemund](https://r4ds.had.co.nz/tidy-data.html#introduction-6)).](https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png)
+
+The answer to my questions are mostly available in the dataset, but there is no easy way to find them. By writing R code, I plan to create a reproducible way to restructure this dataset to quickly and easily find the answer to these questions.
+
+## Outlining the Problem
+
+I've [previously discussed](https://sarahjohnson.io/posts/2021-12-03-311-data/) how this dataset is overwhelming, with 53 columns and 1,311,942 rows as of December 3, 2021. In that post I briefly explained all the columns included in this dataset. Much of the bulk in columns are from various ways locations and dates and entered.
+
+The columns I have used most often are the `INCIDENT_NUMBER`, a seven-digit number for each service request that acts as a key to the dataset, the `REQUEST_TYPE`, which generally categorizes what the request is about, the `RESOLUTION_CODE`, where inspectors select a code to classify how the request has been updated or resolved, and the `RESOLUTION_SUMMARY`, where inspectors type in any and all descriptive info regarding the request.
+
+As I mentioned [in my second post](https://sarahjohnson.io/posts/2021-12-04-311-data-2/#filter-for-housing) regarding this dataset, there is no category under `REQUEST_TYPE` that contains all structural violations; many if not most fall under the "Miscellaneous" category, but not all miscellaneous requests are related to structural violations. However, the `RESOLUTION_CODE` and `RESOLUTION_SUMMARY` fields can sometimes tell us this information. Unfortunately, `RESOLUTION_CODES` are not always used consistently across inspectors, adding an additional hurdle.
+
+The `RESOLUTION_SUMMARY` contains a lot of valuable information, and extracting data from this column will prove key to answering my questions. However, because all the information is manually entered, there is less consistency and frequent typos, which make data analysis harder. Still, inspectors mostly have a standard way of entering information, so I believe I can find a way (while also improving my R skills).
+
+## The Plan
+
+To make the dataset tidy, I plan to:
+
+-   Eliminate the need for the `RESOLUTION_SUMMARY` column
+
+-   Collapse **date** and **location** columns
+
+-   Recode the `RESOLUTION_CODE` column to be more consistent
+
+-   Create new categories under `REQUEST_TYPE` for structural violations
+
+These goals often overlap. Dates, locations, and resolution codes are frequently mentioned in the `RESOLUTION_SUMMARY` column. Sometimes the only way to determine whether a request is related to a rental unit is to search that column for keywords like "tenant". Cleaning up this column and extracting useful information is the largest obstacle to tidying the dataset.
+
+If I want to make regular posts/updates, I'll need to break down this plan into smaller pieces. For this post I will begin to extract numerical information from the `RESOLUTION_SUMMARY` column. I am beginning with this step because identifying and extracting numbers in R is easier than filtering for words (which often contain typos).
+
+I will mainly be extracting three types of numbers from the `RESOLUTION_SUMMARY` column into new columns:
+
+1.  References to other service requests → `ref`
+
+2.  Dates → `date`
+
+3.  Phone numbers → `ph`
+
+Clearing out these numbers will greatly narrow down the amount of information in the `RESOLUTION_SUMMARY`.
+
+## Step-By-Step Code
+
+Since I'm breaking down my coding progress, I'm going to limit my columns to only the ones I need for this post. To get started, import the dataset.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+zService_Requests_since_2016 <-
+  read_csv("../_data/Service_Requests_since_2016.csv") %>% 
+  mutate(RESOLUTION_SUMMARY = str_to_lower(RESOLUTION_SUMMARY))
+```
+
+Filter the `DEPARTMENT` for "code enforcement". I also filtered `REQUEST_TYPE` for "derelict" and "miscellaneous", the two request types that contain rental housing requests.
+
+For this post I am only working with the `RESOLUTION_SUMMARY` column (renamed `rs`), plus the `INCIDENT_NUMBER` (renamed `sr`) as a key. The last filter omits rows where the resolution summary is *NA*.
+
+```{r}
+zCE <- zService_Requests_since_2016 %>%
+  filter(DEPARTMENT == "Code Enforcement" &
+           str_detect(REQUEST_TYPE, "Misc|Derelict")) %>%
+  select(sr = INCIDENT_NUMBER,
+         rs = RESOLUTION_SUMMARY) %>%
+  filter(!is.na(rs))
+```
+
+Of the 1.3 million rows in this dataset, 165,836 fall under Code Enforcement, and 62,470 of those are listed as "Miscellaneous" or "Substandard, Derelict Struc", the two categories which contain rental housing requests. There were 14,902 rows omitted because there was nothing entered into the `RESOLUTION_SUMMARY`.
+
+The table we're starting with has 2 columns, `sr` (for service request) and `rs` (for resolution summary), and 47,568 rows.
+
+### References to other service requests (SRs)
+
+Sometimes a service request will be closed because there is already an active SR for the address, or an SR will be closed in order to create a new one. Service requests are the easiest numbers to remove because they are all seven digits with no special characters, as opposed to dates and phone numbers which vary in length and format. The SRs are usually surrounded by some variation of the phrase "please refer to sr #xxxxxxx".
+
+Here is an example of five SRs that relate to each other, with four referencing another SR:
+
++------------+-----------------+-----------------------------------------------------------+
+|            | Service Request | Resolution Summary                                        |
++============+=================+===========================================================+
+| 1          | 4452866         | closed void tenant vacated property written up sr 4482990 |
++------------+-----------------+-----------------------------------------------------------+
+| 2          | 4455128         | closed void tenant vacated property written up sr 4482990 |
++------------+-----------------+-----------------------------------------------------------+
+| 3          | 4482990         | see sr 3734488                                            |
++------------+-----------------+-----------------------------------------------------------+
+| 4          | 3734488         | see sr 5057460                                            |
++------------+-----------------+-----------------------------------------------------------+
+| 5          | 5057460         | closed violation in compliance                            |
++------------+-----------------+-----------------------------------------------------------+
+
+My goal is to separate the referenced SRs into a new column and clean up extra words. To do this I'll be using the **stringr** package, part of the **tidyverse** package loaded above. In each section of code for this post, I start by creating a (very ugly) string that matches the pattern of the number I'm trying to find and select surrounding words. Then I extract the information into a new column and remove it from the resolution summary.
+
+I use `str_extract_all()` to pull SRs from the resolution summary into a new column, `ref`. I try to identify surrounding phrases by creating `vSR` and then replace them with a space. Then I clean up the resolution summary by using `str_remove_all()`, then `str_squish()` to omit extra whitespaces.
+
+```{r}
+vSR <- c(
+  "\\b(sr)?\\d{7}\\b",
+  "(please )?(see|(ref|refer|reference)\\b( to)?)?( )?(\\b(see)?s[/ \\.]*r\\b|service request|ticket)( )?(#)?( )?(\\.)?",
+  "(please )?(see|(ref|refer|reference)\\b( to)?|reference)( )?(#)?( )?(\\.)?"
+) %>% 
+  str_c(collapse = "|")
+
+refSR <- zCE %>%
+  mutate(
+    ref = str_extract_all(rs, "\\b(sr)?\\d{7}\\b"),
+    rs = case_when(
+      str_detect(rs, "\\b(sr)?\\d{7}\\b") ~ str_replace_all(rs, vSR, " "),
+      TRUE ~ rs
+    ),
+    rs = case_when(
+      str_starts(rs, "\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  ) 
+```
+
+In the CE dataset, there were 4,422 references to one or more SRs.
+
+Using the SRs mentioned above, let's see a sample of the results.
+
+```{r}
+refSR %>% 
+  filter(str_detect(sr, "4452866|4455128|4482990|3734488")) %>%
+  unnest_longer(ref) %>%
+  mutate(ref = str_remove_all(ref, "\\D"),
+         ref = as.numeric(ref))
+```
+
+Looks good so far! The referenced SRs are now cleanly in their own column and related words were removed from the resolution summary, completely clearing out two of the summaries.
+
+There were about 32 SRs I found that were not captured because they were mistyped, usually with too few or too many digits. I also found one row where a phone number with no area code or punctuation was mistakenly marked as an SR. I could not find any other instances where this occurred and until I figure out a way to account for this, it may be best to manually fix that one row.
+
+### Dates
+
+Each row in the dataset contains all the information for one SR. Inspectors will often enter dates in the resolution summary to keep track of updates or enter hearing dates for cases going through court.
+
+Dates mentioned in the resolution summary are usually formatted month/day/year. The punctuation used to divide dates varies from row to row, but `\\W` catches all non-word characters. I extract dates into a new `date` column and remove their mention from the resolution summary.
+
+I found that tax sale numbers (present in about 26 requests) are formatted similar to dates, so I went ahead and created a column to host these numbers so they wouldn't be accidentally pulled into the dates column.
+
+```{r}
+vMonths <-
+  c("january", "february", "march", "april", 
+    "may", "june", "july", "august", 
+    "september", "october", "november", "december",
+    str_c("\\b",
+      c("jan", "feb", "mar", "apr", "jun", "jul", 
+        "aug", "sept", "oct", "nov", "dec"),
+      "(\\.)?\\b"
+      )
+    )
+
+vDate <- c(
+  "\\b\\d{1,2}(:\\d{2})?(:\\d{2})?( )?(a(\\.)?m(\\.)?|p(\\.)?m(\\.)?)",
+  str_c(vMonths, "( )?", "\\d{1,2}", "(nd|th|rd)?", "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "(nd|th|rd)? ", vMonths, "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "\\W", vMonths, "\\W", "\\d{2,4}"),
+  str_c("\\d{1,2}", "(nd|th|rd)?", " of ", vMonths),
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W{1,2}\\d{1,2}( )?\\W( )?\\d{2}(?=\\b|\\D)",
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W\\d{1,2}\\W( )?\\d{4}",
+  "\\b\\d{1,2}\\W{1,2}\\d{1,2}\\b",
+  "\\b\\d{1,2}\\W\\d{4}\\b"
+  ) %>%
+  str_c(collapse = "|")
+
+vTax <- "(?<=tax sale( (number|2019))? )\\d{2}(\\.)?\\d{2}(?!(\\W)?\\d)"
+```
+
+```{r}
+dates <- refSR %>%
+  mutate(
+    taxSale = str_extract(rs, vTax),
+    rs = str_remove(rs, vTax),
+    date = str_extract_all(rs, vDate),
+    rs = str_remove_all(rs, vDate),
+    rs = case_when(
+      str_starts(rs, "\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+Currently, all the dates are nested together in one row. This is intentional as I plan to return to the dates column soon to link events that dates reference. But I unnested a few SRs below to show an example of the results.
+
+```{r}
+dates %>% 
+  filter(str_detect(sr, "5201038|3951530|2634410|2973268")) %>% 
+  unnest_longer(date) %>% 
+  select(sr, rs, date, taxSale)
+```
+
+Clearly there is still work to be done, but the first step of extracting dates from the resolution summary is complete. The code captured the overwhelming majority of dates mentioned. The few that slipped through are mistyped in a way where they could easily be mistaken for another type of number. I plan to return to these rows later. In the future I also will clean up the new `date` column to standardize dates into one format. In rows with multiple dates, I also need to find an easy way to link which events go with which dates (probably using punctuation).
+
+### Phone Numbers
+
+Lastly I will extract phone numbers mentioned in the dataset. Sometimes a phone number is entered to refer a citizen to another government department. However, there are hundreds of instances where the phone number listed is for a private citizen with whom an inspector plans to follow up. As this dataset is open, this can be considered a privacy violation. As such, I will not be making the code to extract these number visible on this blog.
+
+```{r include=FALSE}
+vPH <- "(ph)?[# ]*(\\d{3}\\W)?\\b\\d{3}\\b\\W\\d{4}"
+
+ph <- dates %>% 
+  mutate(ph = str_extract_all(rs, vPH),
+         rs = str_remove_all(rs, vPH),
+         rs = str_squish(rs),
+         rs = na_if(rs, ""))
+```
+
+Currently I can accurately extract phone numbers, but there is no easy way to capture citizen names.
+
+## Final Code
+
+Let's put all the code together in one executable chunk.
+
+```{r}
+numbers <- zCE %>%
+  mutate(
+    ref = str_extract_all(rs, "\\b(sr)?\\d{7}\\b"),
+    rs = case_when(
+      str_detect(rs, "\\b(sr)?\\d{7}\\b") ~ str_replace_all(rs, vSR, " "),
+      TRUE ~ rs
+    ),
+    taxSale = str_extract(rs, vTax),
+    rs = str_remove(rs, vTax),
+    date = str_extract_all(rs, vDate),
+    rs = str_remove_all(rs, vDate),
+    rs = str_remove_all(rs, vPH),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  ) 
+```
+
+Altogether this code extracted information 13,362 rows and fully cleaned out the resolution summary of 2,221 rows, or 4.7% of code enforcement service requests that were not *NA* to start. That may not seem like a lot, but this exercise will make future steps much easier.
+
+Next I plan to further clean up the resolution summary by removing text that is identical to information already found in the `RESOLUTION_CODE` field.
+
+If you know ways to improve this code, please let me know on Github (linked below)!
