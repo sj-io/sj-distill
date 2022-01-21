@@ -30,6 +30,8 @@
       <title>URLTA</title>
       <link>https://sarahjohnson.io/reference/2021-11-10-urlta</link>
       <description>Tennessee's Uniform Residential Landlord Tenant Act.</description>
+      <category>law</category>
+      <category>TCA</category>
       <guid>https://sarahjohnson.io/reference/2021-11-10-urlta</guid>
       <pubDate>Wed, 10 Nov 2021 00:00:00 +0000</pubDate>
     </item>
@@ -38,6 +40,7 @@
       <dc:creator>Sarah Johnson</dc:creator>
       <link>https://sarahjohnson.io/reference/2021-11-07-housing-acts</link>
       <description>A (mostly) comprehensive list of federal housing legislation.</description>
+      <category>law</category>
       <guid>https://sarahjohnson.io/reference/2021-11-07-housing-acts</guid>
       <pubDate>Sun, 07 Nov 2021 00:00:00 +0000</pubDate>
     </item>

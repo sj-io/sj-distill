@@ -3,6 +3,9 @@ title: "URLTA"
 description: |
   Tennessee's Uniform Residential Landlord Tenant Act.
 date: 2021-11-10
+categories:
+  - law
+  - TCA
 output:
   distill::distill_article:
     self_contained: false

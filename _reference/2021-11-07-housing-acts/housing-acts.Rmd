@@ -5,6 +5,8 @@ description: |
 author:
   - name: Sarah Johnson
 date: 2021-11-07
+categories:
+  - law
 output:
   distill::distill_article:
     self_contained: false
