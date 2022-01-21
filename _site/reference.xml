@@ -7,7 +7,16 @@
     <description>SJ
 </description>
     <generator>Distill</generator>
-    <lastBuildDate>Fri, 24 Dec 2021 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 21 Jan 2022 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>NPA</title>
+      <link>https://sarahjohnson.io/reference/2022-01-21-npa</link>
+      <description>Tennessee's Neighborhood Preservation Act</description>
+      <category>law</category>
+      <category>TCA</category>
+      <guid>https://sarahjohnson.io/reference/2022-01-21-npa</guid>
+      <pubDate>Fri, 21 Jan 2022 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>How to create a tree of Census variables</title>
       <dc:creator>Sarah Johnson</dc:creator>
