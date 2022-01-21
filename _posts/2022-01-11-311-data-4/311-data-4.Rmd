@@ -1,0 +1,449 @@
+---
+title: "CE4: Extracting resolution codes"
+description: |
+  In this post I continue to clean up Memphis's code enforcement dataset by removing certain codes from the resolution summary.
+author:
+  - name: Sarah Johnson
+date: 2022-01-21
+categories:
+  - code enforcement
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+repository_url: https://github.com/sj-io/sj-distill
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This post is part of a series breaking down Memphis code enforcement data. [Part one](https://sarahjohnson.io/posts/2021-12-03-311-data/) introduced the dataset and briefly explained the purpose of all 53 columns. [Part two](https://sarahjohnson.io/posts/2021-12-04-311-data-2/) looked at how to import the dataset in R and do basic filtering to try and find housing-related requests. Since that post I have decided to take a different approach to tidying the dataset, but there's still useful information, such as [the frequency of each request type for the service requests](https://sarahjohnson.io/posts/2021-12-04-311-data-2/#filter-for-housing).
+
+In [part three](https://sarahjohnson.io/posts/2022-01-10-311-data-3/) I clarified my goal and laid out plans for how I will tidy this dataset moving forward. Currently I am trying to extract important information from the `RESOLUTION_SUMMARY` variable, a catch-all, manually-entered column. Previously, I extracted dates, phone numbers, and references to other service requests into new columns. In this post I will remove instances where the `RESOLUTION_SUMMARY` duplicates information found in the `RESOLUTION_CODE` column.
+
+## Starting Code
+
+This section uses code from the [second](https://sarahjohnson.io/posts/2021-12-04-311-data-2/) and [third](https://sarahjohnson.io/posts/2022-01-10-311-data-3/) posts to get started. Please refer to those posts for more in-depth explanations of what I'm doing, or you can [skip ahead](https://sarahjohnson.io/posts/2022-01-11-311-data-4/#omit-resolution-codes) to the new code.
+
+### Import dataset
+
+To start, import the dataset. I'm still working with a version downloaded December 3, 2021, which is 53 columns and 1,311,942 rows. I'm altering some columns to all lower case, because it makes future data matching easier.
+
+```{r}
+library(tidyverse)
+
+zService_Requests_since_2016 <-
+  read_csv("../_data/Service_Requests_since_2016.csv") %>% 
+  mutate(RESOLUTION_SUMMARY = str_to_lower(RESOLUTION_SUMMARY),
+         RESOLUTION_CODE = str_to_lower(RESOLUTION_CODE),
+         RESOLUTION_CODE_MEANING = str_to_lower(RESOLUTION_CODE_MEANING))
+```
+
+### Filter for CE data, omit NAs
+
+Narrow the dataset for Code Enforcement. I also filtered `REQUEST_TYPE` for "derelict" and "miscellaneous", the two request types relevant to rental housing.
+
+For this post I'll be working with three columns related to the resolution, and the `INCIDENT_NUMBER` (AKA service request number) as a key. I renamed the columns to make work faster.
+
+```{r}
+zCE <- zService_Requests_since_2016 %>%
+  filter(DEPARTMENT == "Code Enforcement" &
+           str_detect(REQUEST_TYPE, "Misc|Derelict")) %>%
+  select(sr = INCIDENT_NUMBER,
+         rc = RESOLUTION_CODE,
+         rcm = RESOLUTION_CODE_MEANING,
+         rs = RESOLUTION_SUMMARY) %>%
+  filter(!is.na(rs))
+```
+
+Of the 1.3 million rows in this dataset, 165,836 fall under Code Enforcement, and 62,470 of those are listed as "Miscellaneous" or "Substandard, Derelict Struc". There were 14,902 rows omitted because they had an empty `RESOLUTION_SUMMARY`.
+
+The `zCE` table has 4 columns and 47,568 rows.
+
+### Extract numbers
+
+Next I use the code from my last post to clean up the resolution summary. I remove instances of service request numbers, dates, tax sale numbers, and phone numbers and separate that information into separate columns.
+
+```{r}
+vSR <- c(
+  "\\b(sr)?\\d{7}\\b",
+  "(please )?(see|(ref|refer|reference)\\b( to)?)?( )?(\\b(see)?s[/ \\.]*r\\b|service request|ticket)( )?(#)?( )?(\\.)?",
+  "(please )?(see|(ref|refer|reference)\\b( to)?|reference)( )?(#)?( )?(\\.)?"
+) %>% 
+  str_c(collapse = "|")
+
+vMonths <-
+  c("january", "february", "march", "april", 
+    "may", "june", "july", "august", 
+    "september", "october", "november", "december",
+    str_c("\\b",
+      c("jan", "feb", "mar", "apr", "jun", "jul", 
+        "aug", "sept", "oct", "nov", "dec"),
+      "(\\.)?\\b"
+      )
+    )
+
+vDate <- c(
+  "\\b\\d{1,2}(:\\d{2})?(:\\d{2})?( )?(a(\\.)?m(\\.)?|p(\\.)?m(\\.)?)",
+  str_c(vMonths, "( )?", "\\d{1,2}", "(nd|th|rd)?", "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "(nd|th|rd)? ", vMonths, "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "\\W", vMonths, "\\W", "\\d{2,4}"),
+  str_c("\\d{1,2}", "(nd|th|rd)?", " of ", vMonths),
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W{1,2}\\d{1,2}( )?\\W( )?\\d{2}(?=\\b|\\D)",
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W\\d{1,2}\\W( )?\\d{4}",
+  "\\b\\d{1,2}\\W{1,2}\\d{1,2}\\b",
+  "\\b\\d{1,2}\\W\\d{4}\\b"
+  ) %>%
+  str_c(collapse = "|")
+
+vTax <- "(?<=tax sale( (number|2019))? )\\d{2}(\\.)?\\d{2}(?!(\\W)?\\d)"
+```
+
+As mentioned in the last post, I am hiding the code used to extract phone numbers from blog posts due to privacy concerns.
+
+```{r include=FALSE}
+vPH <- "(ph)?[# ]*(\\d{3}\\W)?\\b\\d{3}\\b\\W\\d{4}"
+```
+
+```{r}
+numbers <- zCE %>%
+  mutate(
+    ref = str_extract_all(rs, "\\b(sr)?\\d{7}\\b"),
+    rs = case_when(
+      str_detect(rs, "\\b(sr)?\\d{7}\\b") ~ str_replace_all(rs, vSR, " "),
+      TRUE ~ rs
+    ),
+    taxSale = str_extract(rs, vTax),
+    rs = str_remove(rs, vTax),
+    date = str_extract_all(rs, vDate),
+    rs = str_remove_all(rs, vDate),
+    rs = str_remove_all(rs, vPH),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+Since I'm cleaning up the resolution summary and resolution codes, I can remove rows where these columns are *NA*.
+
+```{r}
+num <- numbers %>% 
+  filter(!is.na(rs) & !is.na(rc))
+```
+
+In the last post I did not work with the resolution code column. Removing rows where this column was *NA* omitted an additional 14 rows.
+
+The starting dataset is 45,333 rows and seven columns.
+
+## Omit Resolution Codes
+
+While perusing the data, I noticed that frequently the only information entered in the resolution summary is the resolution code. To see this, compare the most common resolution codes and summaries.
+
+```{r}
+num %>% count(rcm) %>% arrange(desc(n))
+
+num %>% count(rs) %>% arrange(desc(n))
+```
+
+Since this information is already in its own column, we don't need it duplicated.
+
+### Attempt 1
+
+My first attempt was straightforward: if the resolution summary contained the same words found in the resolution code or code meaning, remove it from the summary. I use `str_remove()` to remove instances where this info is repeated.
+
+```{r}
+dupCode <- num %>%
+  mutate(
+    rs = str_remove(rs, rcm),
+    rs = str_remove(rs, rc),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+newNA <- dupCode %>% 
+  filter(is.na(rs)) %>% 
+  left_join(num, by = "sr") %>% 
+  select(sr, rc.x, rcm.x, rs.x, rs.y)
+```
+
+Removing instances where the resolution summary restated the resolution code or resolution code meaning cleared out the resolution summary of 11,106 rows, 23% of the starting `zCE` dataset.
+
+The `newNA` dataset was created to double check my results to make sure I didn't erroneously clear out any resolution summaries. The dataset takes rows where the new output is *NA* and joins in the original resolution summary (`rs.y`). I use the `count()` function to compact the 11,106 rows to show unique summaries.
+
+```{r}
+newNA %>% count(rs.y) %>% arrange(n)
+```
+
+Of the 11K+ rows that are now *NA,* there are only 51 unique resolution summaries, and it appears most of those variations are from punctuation and symbols. Only a snippet of the old resolution summaries are shown here, but I can verify on the back-end that there were no rows with other information that were accidentally removed.
+
+Now let's see what remains in the 34,486 rows that still contain information in the resolution summary.
+
+```{r}
+todo <- dupCode %>% filter(!is.na(rs))
+
+todo %>% count(rs) %>% arrange(desc(n))
+```
+
+It looks like there's still plenty of rows that closely, but don't exactly, match resolution codes. Rows that said "case not justified" were removed, but not rows that only said "not justified".
+
+For other rows, we might need to create a new resolution code. There is no resolution code for "in compliance" or "resolved"; these are often coded "closed, miscellaneous". However, I think it would be useful to know if a request was closed because it was brought into compliance.
+
+I also found that my code messed up some resolution summaries. The `str_remove()` removed partial word matches of codes found in the summary. So if a resolution code was "co", it changed the word "in**co**rrect" to "inrrect" and "**co**unty" to "unty".
+
+```{r}
+todo %>% filter(str_detect(rs, "inrrect")) %>% select(rs)
+```
+
+Let's find a way to rewrite this code and fix these problems.
+
+### Attempt 2
+
+First, I will make sure that resolution codes and meanings do not partially match with words. Then, I will create an additional list of codes to add to the ones we are removing.
+
+#### No partial word matches
+
+In an [earlier section](https://sarahjohnson.io/posts/2022-01-11-311-data-4/#extract-numbers), I used `\\b` around the beginning and ends of words, which tells R to look for **word boundaries** and prevent partial matches. However, there's no easy way (as far as I know) to include this in the `str_remove()` function. Instead, the easiest method is likely to create a list of all the resolution codes and meanings and add a `\\b` to the starts and ends of each.
+
+To do this, I first create a table with only the resolution code and meaning columns. I pivot these into one column, and keep only uniques. I also omit the word "shelby" because it is frequently used outside of the codes and can cause problems later on.
+
+```{r}
+RC <- num %>% 
+  select(rc, rcm) %>% 
+  pivot_longer(cols = c(rcm, rc), names_to = "remo", values_to = "rcs") %>% 
+  select(rcs) %>% 
+  filter(rcs != "shelby") %>% 
+  distinct()
+```
+
+There are 136 unique resolution codes and meanings. Next I convert the column to a list of values.
+
+```{r}
+vRC <- RC$rcs
+```
+
+Now I can add `//b` to the beginning and end of each value with `str_c()`.
+
+```{r}
+vRC1 <- str_c("\\b", vRC, "\\b") %>% str_c(collapse = "|")
+```
+
+To see if this worked, I run my code again and use my new list of values with `str_remove()`.
+
+```{r}
+dupCode2 <- num %>%
+  mutate(
+    rs = str_remove(rs, vRC1),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+dupCode2 %>% filter(str_detect(rs, "incorrect")) %>% select(rs)
+```
+
+It worked! No more partial word matches.
+
+Running the new code converted an additional 163 rows to NA. This is because some rows contained a resolution code different from the one entered in the `rc` or `rcm` column.
+
+```{r}
+newNA2 <- dupCode2 %>% 
+  filter(is.na(rs)) %>% 
+  left_join(num, by = "sr") %>% 
+  select(sr, rc.x, rcm.x, rs.y, rs.x)
+
+newNA2 %>% anti_join(newNA, by = "sr")
+```
+
+For this reason, in future instances I will use `str_extract()` to create a new resolution code column before using `str_remove()`.
+
+However, I'm not finished; I still need to catch partial code matches like "not justified" from the resolution summary.
+
+#### Manual resolution codes
+
+The easiest method to remove these additional matches (as far as I know) is to create my own list of codes and add it to the list of values to be extracted. The first portion of the list is existing codes that have been slightly reworded; the second half is new resolution codes I've created.
+
+```{r}
+vNewRC <- c(
+  #' existing code, minor changes
+  "active npa case",
+  "npa active",
+  "(complaint )?not justified",
+  "please contact the (shelby )?county land bank at for further information",
+  "please contact (shelby )?county for additional assistance",
+  "(shelby )?county (owned )?property",
+  "scop",
+  "justified active",
+  "dismissed",
+  "no cooperation",
+  "(property )?demolish(ed)?( by owner)?",
+  "rehabilitation by the owner",
+  "(property )?rehab(ilitat|b)ed",
+  "npa court order demo",
+  "jwdm",
+  #' new codes
+  "(the|all)?( )?violation(s)? ((has|have) been )?corrected",
+  "(yard|property)?( )?(was )?(not )?in[ -]?compliance",
+  "no(t a)? (code|grass|yard|vehicle) violation",
+  "no(t in)? violation(s)?",
+  "(all issues have been )?resolved",
+  "repaired",
+  "repairs (have been|were)?( )?made",
+  "corrected",
+  "all is ok",
+  "mowed",
+  "grass (has been )?cut",
+  "yard (was )?clean(ed)?",
+  "(the )?vehicle(s)? (was)?removed",
+  "created in error",
+  "training",
+  "wrong address",
+  "duplicate",
+  "reissued",
+  "condemnation hearing",
+  "move to condemnation department",
+  "administrative referral",
+  "commercial( property)?",
+  "(shelby county )?tax sale",
+  "could not access the property",
+  "no access to property",
+  "tenant moved"
+  )
+
+vRC2 <- str_c("\\b", c(vRC, vNewRC), "\\b") %>% str_c(collapse = "|")
+```
+
+This list is by no means comprehensive or perfect, but it's a good start. We can further refine it later. Now let's rerun our code one last time using our new list of values.
+
+```{r}
+dupCode3 <- num %>%
+  mutate(
+    rc2 = str_extract_all(rs, vRC2),
+    rs = str_remove_all(rs, vRC2),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+Let's see how many new rows are *NA*, meaning all information has been extracted from the resolution summary.
+
+```{r}
+newNA3 <- dupCode3 %>% 
+  filter(is.na(rs)) %>% 
+  left_join(num, by = "sr") %>% 
+  select(sr, rc.x, rcm.x, rs.y, rs.x)
+
+newNA3 %>% anti_join(newNA2, by = "sr")
+```
+
+The custom list of resolution codes converted another 5,815 rows to *NA* since the last run, bringing our total to 17,081 for this post.
+
+Let's see the most common information that remains in the resolution summary.
+
+```{r}
+todo3 <- dupCode3 %>% filter(!is.na(rs))
+
+todo3 %>% count(rs) %>% arrange(desc(n))
+```
+
+The most common resolution summaries remaining largely fall into two categories: indication that a property was inspected or rechecked; or the name of the inspector who updated the service request. I plan to address these issues in the next post. This will further heavily cut down on the amount of information remaining in the resolution summary.
+
+## Final Code
+
+To finish out, I'll combine all the relevant steps from above so I can easily copy and paste this code for future use. The first step is to create my list of resolution codes to extract.
+
+```{r}
+RC <- num %>% 
+  select(rc, rcm) %>% 
+  pivot_longer(cols = c(rcm, rc), names_to = "remo", values_to = "rcs") %>% 
+  select(rcs) %>% 
+  filter(rcs != "shelby") %>% 
+  distinct()
+
+vRC0 <- RC$rcs
+
+vNewRC <- c(
+  #' existing code, minor changes
+  "active npa case",
+  "npa active",
+  "(complaint )?not justified",
+  "please contact the (shelby )?county land bank at for further information",
+  "please contact (shelby )?county for additional assistance",
+  "(shelby )?county (owned )?property",
+  "scop",
+  "justified active",
+  "dismissed",
+  "no cooperation",
+  "(property )?demolish(ed)?( by owner)?",
+  "rehabilitation by the owner",
+  "(property )?rehab(ilitat|b)ed",
+  "npa court order demo",
+  "jwdm",
+  #' new codes
+  "(the|all)?( )?violation(s)? ((has|have) been )?corrected",
+  "(yard|property)?( )?(was )?(not )?in[ -]?compliance",
+  "no(t a)? (code|grass|yard|vehicle) violation",
+  "no(t in)? violation(s)?",
+  "(all issues have been )?resolved",
+  "repaired",
+  "repairs (have been|were)?( )?made",
+  "corrected",
+  "all is ok",
+  "mowed",
+  "grass (has been )?cut",
+  "yard (was )?clean(ed)?",
+  "(the )?vehicle(s)? (was)?removed",
+  "created in error",
+  "training",
+  "wrong address",
+  "duplicate",
+  "reissued",
+  "condemnation hearing",
+  "move to condemnation department",
+  "administrative referral",
+  "commercial( property)?",
+  "(shelby county )?tax sale",
+  "could not access the property",
+  "no access to property",
+  "tenant moved"
+  )
+
+vRC <- str_c("\\b", c(vRC0, vNewRC), "\\b") %>% str_c(collapse = "|")
+```
+
+Step two is to extract this list of codes into their own column and remove them from the resolution summary.
+
+```{r}
+newRC <- num %>%
+  mutate(
+    rc2 = str_extract_all(rs, vRC),
+    rs = str_remove_all(rs, vRC),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+All done! As I said above, this is not a comprehensive or final list of resolution codes, but it does clean out over 17,000 rows, approximately 36% of the original `zCE` dataset. Recall that the last post cleared out nearly 5% of resolution summaries. In total, nearly 41% of all rows in the `zCE` dataset have had all information extracted from the resolution summary. This is a major step towards having a tidy dataset that will be much easier to analyze and work with.
