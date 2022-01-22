@@ -1,0 +1,341 @@
+---
+title: "311-data-5"
+description: |
+  A short description of the post.
+author:
+  - name: Sarah Johnson
+    url: {}
+date: 2022-01-22
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web.
+
+Learn more about using Distill at <https://rstudio.github.io/distill>.
+
+## Starting Code
+
+Import dataset
+
+```{r}
+library(tidyverse)
+
+zService_Requests_since_2016 <-
+  read_csv("../_data/Service_Requests_since_2016.csv") %>% 
+  mutate(RESOLUTION_SUMMARY = str_to_lower(RESOLUTION_SUMMARY),
+         RESOLUTION_CODE = str_to_lower(RESOLUTION_CODE),
+         RESOLUTION_CODE_MEANING = str_to_lower(RESOLUTION_CODE_MEANING))
+```
+
+Filter for CE
+
+```{r}
+zCE <- zService_Requests_since_2016 %>%
+  filter(DEPARTMENT == "Code Enforcement" &
+           str_detect(REQUEST_TYPE, "Misc|Derelict")) %>%
+  select(sr = INCIDENT_NUMBER,
+         rc = RESOLUTION_CODE,
+         rcm = RESOLUTION_CODE_MEANING,
+         rs = RESOLUTION_SUMMARY) %>%
+  filter(!is.na(rs))
+```
+
+Extract numbers
+
+```{r}
+vSR <- c(
+  "\\b(sr)?\\d{7}\\b",
+  "(please )?(see|(ref|refer|reference)\\b( to)?)?( )?(\\b(see)?s[/ \\.]*r\\b|service request|ticket)( )?(#)?( )?(\\.)?",
+  "(please )?(see|(ref|refer|reference)\\b( to)?|reference)( )?(#)?( )?(\\.)?"
+) %>% 
+  str_c(collapse = "|")
+
+vMonths <-
+  c("january", "february", "march", "april", 
+    "may", "june", "july", "august", 
+    "september", "october", "november", "december",
+    str_c("\\b",
+      c("jan", "feb", "mar", "apr", "jun", "jul", 
+        "aug", "sept", "oct", "nov", "dec"),
+      "(\\.)?\\b"
+      )
+    )
+
+vDate <- c(
+  "\\b\\d{1,2}(:\\d{2})?(:\\d{2})?( )?(a(\\.)?m(\\.)?|p(\\.)?m(\\.)?)",
+  str_c(vMonths, "( )?", "\\d{1,2}", "(nd|th|rd)?", "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "(nd|th|rd)? ", vMonths, "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "\\W", vMonths, "\\W", "\\d{2,4}"),
+  str_c("\\d{1,2}", "(nd|th|rd)?", " of ", vMonths),
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W{1,2}\\d{1,2}( )?\\W( )?\\d{2}(?=\\b|\\D)",
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W\\d{1,2}\\W( )?\\d{4}",
+  "\\b\\d{1,2}\\W{1,2}\\d{1,2}\\b",
+  "\\b\\d{1,2}\\W\\d{4}\\b"
+  ) %>%
+  str_c(collapse = "|")
+
+vTax <- "(?<=tax sale( (number|2019))? )\\d{2}(\\.)?\\d{2}(?!(\\W)?\\d)"
+```
+
+As mentioned in the last post, I am hiding the code used to extract phone numbers from blog posts due to privacy concerns.
+
+```{r include=FALSE}
+vPH <- "(ph)?[# ]*(\\d{3}\\W)?\\b\\d{3}\\b\\W\\d{4}"
+```
+
+```{r}
+numbers <- zCE %>%
+  mutate(
+    ref = str_extract_all(rs, "\\b(sr)?\\d{7}\\b"),
+    rs = case_when(
+      str_detect(rs, "\\b(sr)?\\d{7}\\b") ~ str_replace_all(rs, vSR, " "),
+      TRUE ~ rs
+    ),
+    taxSale = str_extract(rs, vTax),
+    rs = str_remove(rs, vTax),
+    date = str_extract_all(rs, vDate),
+    rs = str_remove_all(rs, vDate),
+    rs = str_remove_all(rs, vPH),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+Since I'm cleaning up the resolution summary and resolution codes, I can remove rows where these columns are *NA*.
+
+```{r}
+num <- numbers %>% 
+  filter(!is.na(rs) & !is.na(rc))
+```
+
+```{r}
+RC <- num %>% 
+  select(rc, rcm) %>% 
+  pivot_longer(cols = c(rcm, rc), names_to = "remo", values_to = "rcs") %>% 
+  select(rcs) %>% 
+  filter(rcs != "shelby") %>% 
+  distinct()
+
+vRC0 <- RC$rcs
+
+vNewRC <- c(
+  #' existing code, minor changes
+  "active npa case",
+  "npa active",
+  "(complaint )?not justified",
+  "please contact the (shelby )?county land bank at for further information",
+  "please contact (shelby )?county for additional assistance",
+  "(shelby )?county (owned )?property",
+  "scop",
+  "justified active",
+  "dismissed",
+  "no cooperation",
+  "(property )?demolish(ed)?( by owner)?",
+  "rehabilitation by the owner",
+  "(property )?rehab(ilitat|b)ed",
+  "npa court order demo",
+  "jwdm",
+  #' new codes
+  "(the|all)?( )?violation(s)? ((has|have) been )?corrected",
+  "(yard|property)?( )?(was )?(not )?in[ -]?compliance",
+  "no(t a)? (code|grass|yard|vehicle) violation",
+  "no(t in)? violation(s)?",
+  "(all issues have been )?resolved",
+  "repaired",
+  "repairs (have been|were)?( )?made",
+  "corrected",
+  "all is ok",
+  "mowed",
+  "grass (has been )?cut",
+  "yard (was )?clean(ed)?",
+  "(the )?vehicle(s)? (was)?removed",
+  "created in error",
+  "training",
+  "wrong address",
+  "duplicate",
+  "reissued",
+  "condemnation hearing",
+  "move to condemnation department",
+  "administrative referral",
+  "commercial( property)?",
+  "(shelby county )?tax sale",
+  "could not access the property",
+  "no access to property",
+  "tenant moved"
+  )
+
+vRC <- str_c("\\b", c(vRC0, vNewRC), "\\b") %>% str_c(collapse = "|")
+```
+
+and then
+
+```{r}
+newRC <- num %>%
+  mutate(
+    rc2 = str_extract_all(rs, vRC),
+    rs = str_remove_all(rs, vRC),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+```{r}
+todo <- newRC %>% filter(!is.na(rs))
+```
+
+## Events and Inspectors
+
+```{r}
+todo %>% count(rs) %>% arrange(desc(n))
+```
+
+```{r}
+vEve <- c(
+  "at (the )?time of (the )?((re)?[ -]*inspection|recheck)",
+  "per inspection",
+  "3rd attempt"
+) %>% str_c(collapse = "|")
+
+eve <- todo %>% 
+  mutate(
+    event = str_extract_all(rs, vEve),
+    rs = str_remove_all(rs, vEve),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+eve2 <- eve %>% 
+  filter(!is.na(rs))
+```
+
+```{r}
+eve2 %>% count(rs) %>% arrange(desc(n))
+```
+
+```{r}
+vInspectors <- str_c("\\b", c(
+  "(c|cheryl)?[\\. ]*clausel",
+  "(q|quatarious)?[\\. ]*gilc[l]?hrest",
+  "(r|robert)?[\\. ]*gray",
+  "(j|judith)?[\\. ]*norman",
+  "[amw]?[\\. ]*lewis( nickson)?",
+  "[arc]?[\\. ]*hill",
+  "[dr]?[\\. ]*butler",
+  "[ej]?[\\. ]*cooper",
+  "[al]?[\\. ]*davis",
+  "[ja]*[\\. ]*irwin",
+  "[ce]?[\\. ]*jones",
+  "[rn]?[\\. ]*rashada",
+  "[rd]?[\\. ]*witter",
+  "[ac]?[\\. ]*wi[li]*am(s)?",
+  "[e]?[\\. ]*blow",
+  "[k]?[\\. ]*boone",
+  "[c]?[\\. ]*boykins",
+  "[b]?[\\. ]*bratten",
+  "[r]?[\\. ]*brown",
+  "[c]?[\\. ]*bryant",
+  "[s]?[\\. ]*burgess",
+  "[d]?[\\. ]*burton",
+  "[l]?[\\. ]*busby",
+  "[t]?[\\. ]*cobb",
+  "[a]?[\\. ]*collins",
+  "[s]?[\\. ]*echols",
+  "[v]?[\\. ]*ervin",
+  "[t]?[\\. ]*fry",
+  "[s]?[\\. ]*gaspar",
+  "[j]?[\\. ]*golden",
+  "[d]?[\\. ]*grafton",
+  "[c]?[\\. ]*higgenbottom",
+  "[s]?[\\. ]*howell",
+  "[j]?[\\. ]*hymon",
+  "[j]?[\\. ]*jackson",
+  "[m]?[\\. ]*james",
+  "[r]?[\\. ]*lake",
+  "[d]?[\\. ]*massey",
+  "[m]?[\\. ]*middlebrooks",
+  "[s]?[\\. ]*milan",
+  "[d]?[\\. ]*mi(t)?chell",
+  "[j]?[\\. ]*mos[lbe]*y",
+  "[v]?[\\. ]*moses",
+  "[t]?[\\. ]*neff",
+  "[r]?[\\. ]*nelson",
+  "[t]?[\\. ]*norwood",
+  "[b]?[\\. ]*pa(t)+erson", 
+  "[k]?[\\. ]*payne",
+  "[r]?[\\. ]*peete(e)?",
+  "[t]?[\\. ]*pegues",
+  "[a]?[\\. ]*powell",
+  "[m]?[\\. ]*pruitt",
+  "[s]?[\\. ]*rice",
+  "[t]?[\\. ]*richardson",
+  "[c]?[\\. ]*sager",
+  "[r]?[\\. ]*sherrell",
+  "[b]?[\\. ]*smith",
+  "[t]?[\\. ]*strong",
+  "[m]?[\\. ]*tay(h)?lor",
+  "[c]?[\\. ]*thom(a)?s",
+  "[j]?[\\. ]*tumbrink",
+  "[p]?[\\. ]*tyler",
+  "[j]?[\\. ]*walker",
+  "[m]?[\\. ]*ward",
+  "[k]?[\\. ]*washington",
+  "[b]?[\\. ]*woodland",
+  "[v]?[\\. ]*woods",
+  "ch[am]*bers",
+  "ferguson",
+  "funches",
+  "griffin",
+  "johnson",
+  "judy",
+  "lynum",
+  "rimmer",
+  "tidwell",
+  "tyrone",
+  "waler"
+))
+
+vPerInsp <- str_c("(per )?(inspector|sup)?( )?", vInspectors) %>% 
+  str_c(collapse = "|")
+```
+
+```{r}
+pers <- eve2 %>% 
+  mutate(
+    person = str_extract_all(rs, vPerInsp),
+    rs = str_remove_all(rs, vPerInsp),
+    rs = case_when(
+      str_starts(rs, "( )*\\$|\\(") ~ rs,
+      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
+      TRUE ~ rs
+    ),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+pers2 <- pers %>% 
+  filter(!is.na(rs))
+
+pers2 %>% count(rs) %>% arrange(desc(n))
+```
