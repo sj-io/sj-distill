@@ -90,8 +90,10 @@ As mentioned in the last post, I am hiding the code used to extract phone number
 vPH <- "(ph)?[# ]*(\\d{3}\\W)?\\b\\d{3}\\b\\W\\d{4}"
 ```
 
+<!--# talk about removing non-word characters -->
+
 ```{r}
-numbers <- zCE %>%
+zNumbers <- zCE %>%
   mutate(
     ref = str_extract_all(rs, "\\b(sr)?\\d{7}\\b"),
     rs = case_when(
@@ -103,12 +105,12 @@ numbers <- zCE %>%
     date = str_extract_all(rs, vDate),
     rs = str_remove_all(rs, vDate),
     rs = str_remove_all(rs, vPH),
-    rs = case_when(
-      str_starts(rs, "( )*\\$|\\(") ~ rs,
-      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
-      TRUE ~ rs
-    ),
+    rs = str_replace_all(rs, "\\W", " "),
+    rc = str_replace_all(rc, "\\W", " "),
+    rcm = str_replace_all(rcm, "\\W", " "),
     rs = str_squish(rs),
+    rc = str_squish(rc),
+    rcm = str_squish(rcm),
     rs = na_if(rs, "")
   )
 ```
@@ -116,88 +118,84 @@ numbers <- zCE %>%
 Since I'm cleaning up the resolution summary and resolution codes, I can remove rows where these columns are *NA*.
 
 ```{r}
-num <- numbers %>% 
+zNum <- zNumbers %>% 
   filter(!is.na(rs) & !is.na(rc))
 ```
 
+<!--# clean up RC -->
+
 ```{r}
-RC <- num %>% 
+zRC0 <- zNum %>% 
   select(rc, rcm) %>% 
   pivot_longer(cols = c(rcm, rc), names_to = "remo", values_to = "rcs") %>% 
   select(rcs) %>% 
   filter(rcs != "shelby") %>% 
   distinct()
 
-vRC0 <- RC$rcs
+vRC0 <- zRC0$rcs
 
-vNewRC <- c(
+vRC1 <- c(
   #' existing code, minor changes
   "active npa case",
   "npa active",
   "(complaint )?not justified",
-  "please contact the (shelby )?county land bank at for further information",
-  "please contact (shelby )?county for additional assistance",
-  "(shelby )?county (owned )?property",
+  "please contact (the )?(shelby )?county (land bank )?(at )?for (further information|additional assistance)",
+  "(shelby )?county (own(ed)? )?property",
   "scop",
   "justified active",
   "dismissed",
   "no cooperation",
-  "(property )?demolish(ed)?( by owner)?",
-  "rehabilitation by the owner",
-  "(property )?rehab(ilitat|b)ed",
+  "(property )?(demolish(ed)?|rehab(ilitat|b)(ed|ion)|boarded)( by (the )?owner)?( and occupied)?",
   "npa court order demo",
-  "jwdm",
+  "jw(dm|rh)",
+  "\\b(cvob|vo)\\b",
   #' new codes
-  "(the|all)?( )?violation(s)? ((has|have) been )?corrected",
-  "(yard|property)?( )?(was )?(not )?in[ -]?compliance",
-  "no(t a)? (code|grass|yard|vehicle) violation",
-  "no(t in)? violation(s)?",
-  "(all issues have been )?resolved",
-  "repaired",
+  "(the|all)?( )?(code )?(violation(s)?|issues) ((has|have) been )?(corrected|resolved|repaired|removed)",
   "repairs (have been|were)?( )?made",
-  "corrected",
+  "(the)?( )?(yard|property)?( )?(was )?(not )?(in)?( )?compl(ia|ai)n(ce|t)",
+  "(there (were|was))?( )?no(t in)? (code )?violation(s)?( )?(were|was)?( )?(present|found|observed)?",
+  "no(t a)? (housing )?(code|grass|yard|vehicle) violation",
+  "(property )?(is|has been)?( )?(occupied|secured|vacant)( lot)?",
+  "(corrected|resolved|repaired|removed)",
   "all is ok",
   "mowed",
-  "grass (has been )?cut",
-  "yard (was )?clean(ed)?",
+  "(property|grass|yard) (has been|was)?( )?(cut|clean(ed)?)( up)?",
   "(the )?vehicle(s)? (was)?removed",
   "created in error",
   "training",
   "wrong address",
   "duplicate",
-  "reissued",
+  "(will )?(be )?(re)?(issue|create)(d)?( new sr)?(if required)?",
   "condemnation hearing",
   "move to condemnation department",
+  "(property )?written up for demolition",
   "administrative referral",
   "commercial( property)?",
   "(shelby county )?tax sale",
-  "could not access the property",
-  "no access to property",
-  "tenant moved"
+  "(could not|no) access (to )?(the )?property",
+  "no response",
+  "tenant(s)? (has )?moved",
+  "new owner(ship)?",
+  "closed( violation)?( out)?"
   )
 
-vRC <- str_c("\\b", c(vRC0, vNewRC), "\\b") %>% str_c(collapse = "|")
+vRC <- str_c("\\b", c(vRC0, vRC1), "\\b") %>% str_c(collapse = "|")
 ```
 
 and then
 
 ```{r}
-newRC <- num %>%
+zRC <- zNum %>%
   mutate(
     rc2 = str_extract_all(rs, vRC),
     rs = str_remove_all(rs, vRC),
-    rs = case_when(
-      str_starts(rs, "( )*\\$|\\(") ~ rs,
-      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
-      TRUE ~ rs
-    ),
     rs = str_squish(rs),
     rs = na_if(rs, "")
   )
 ```
 
 ```{r}
-todo <- newRC %>% filter(!is.na(rs))
+todo <- zRC %>% filter(!is.na(rs))
 ```
 
 ## Events and Inspectors
@@ -208,20 +206,16 @@ todo %>% count(rs) %>% arrange(desc(n))
 
 ```{r}
 vEve <- c(
-  "at (the )?time of (the )?((re)?[ -]*inspection|recheck)",
-  "per inspection",
-  "3rd attempt"
+  "at (the )?time of (the|this)?( )?((re)?( )?insp(ection)?|recheck)",
+  "(per|upon|during|prior to) inspection",
+  "[1-3](st|nd|rd)? attempt(s)?",
+  "\\bf( )?u\\b( inspection)?"
 ) %>% str_c(collapse = "|")
 
 eve <- todo %>% 
   mutate(
     event = str_extract_all(rs, vEve),
     rs = str_remove_all(rs, vEve),
-    rs = case_when(
-      str_starts(rs, "( )*\\$|\\(") ~ rs,
-      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
-      TRUE ~ rs
-    ),
     rs = str_squish(rs),
     rs = na_if(rs, "")
   )
@@ -235,74 +229,92 @@ eve2 %>% count(rs) %>% arrange(desc(n))
 ```
 
 ```{r}
-vInspectors <- str_c("\\b", c(
-  "(c|cheryl)?[\\. ]*clausel",
-  "(q|quatarious)?[\\. ]*gilc[l]?hrest",
-  "(r|robert)?[\\. ]*gray",
-  "(j|judith)?[\\. ]*norman",
-  "[amw]?[\\. ]*lewis( nickson)?",
-  "[arc]?[\\. ]*hill",
-  "[dr]?[\\. ]*butler",
-  "[ej]?[\\. ]*cooper",
-  "[al]?[\\. ]*davis",
-  "[ja]*[\\. ]*irwin",
-  "[ce]?[\\. ]*jones",
-  "[rn]?[\\. ]*rashada",
-  "[rd]?[\\. ]*witter",
-  "[ac]?[\\. ]*wi[li]*am(s)?",
-  "[e]?[\\. ]*blow",
-  "[k]?[\\. ]*boone",
-  "[c]?[\\. ]*boykins",
-  "[b]?[\\. ]*bratten",
-  "[r]?[\\. ]*brown",
-  "[c]?[\\. ]*bryant",
-  "[s]?[\\. ]*burgess",
-  "[d]?[\\. ]*burton",
-  "[l]?[\\. ]*busby",
-  "[t]?[\\. ]*cobb",
-  "[a]?[\\. ]*collins",
-  "[s]?[\\. ]*echols",
-  "[v]?[\\. ]*ervin",
-  "[t]?[\\. ]*fry",
-  "[s]?[\\. ]*gaspar",
-  "[j]?[\\. ]*golden",
-  "[d]?[\\. ]*grafton",
-  "[c]?[\\. ]*higgenbottom",
-  "[s]?[\\. ]*howell",
-  "[j]?[\\. ]*hymon",
-  "[j]?[\\. ]*jackson",
-  "[m]?[\\. ]*james",
-  "[r]?[\\. ]*lake",
-  "[d]?[\\. ]*massey",
-  "[m]?[\\. ]*middlebrooks",
-  "[s]?[\\. ]*milan",
-  "[d]?[\\. ]*mi(t)?chell",
-  "[j]?[\\. ]*mos[lbe]*y",
-  "[v]?[\\. ]*moses",
-  "[t]?[\\. ]*neff",
-  "[r]?[\\. ]*nelson",
-  "[t]?[\\. ]*norwood",
-  "[b]?[\\. ]*pa(t)+erson", 
-  "[k]?[\\. ]*payne",
-  "[r]?[\\. ]*peete(e)?",
-  "[t]?[\\. ]*pegues",
-  "[a]?[\\. ]*powell",
-  "[m]?[\\. ]*pruitt",
-  "[s]?[\\. ]*rice",
-  "[t]?[\\. ]*richardson",
-  "[c]?[\\. ]*sager",
-  "[r]?[\\. ]*sherrell",
-  "[b]?[\\. ]*smith",
-  "[t]?[\\. ]*strong",
-  "[m]?[\\. ]*tay(h)?lor",
-  "[c]?[\\. ]*thom(a)?s",
-  "[j]?[\\. ]*tumbrink",
-  "[p]?[\\. ]*tyler",
-  "[j]?[\\. ]*walker",
-  "[m]?[\\. ]*ward",
-  "[k]?[\\. ]*washington",
-  "[b]?[\\. ]*woodland",
-  "[v]?[\\. ]*woods",
+vRoles <- c(
+  "tenant stated that",
+  "from tenant",
+  "per (insp(ector)?|sup(ervisor)?|tenant|mr(s)?|ms|citizen)",
+  "inspector"
+) %>% 
+  str_c(collapse = "|")
+
+roles <- eve2 %>% 
+  mutate(
+    role = str_extract_all(rs, vRoles),
+    rs = str_remove_all(rs, vRoles),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+```{r}
+vInspectors <- str_c("(per )?", "\\b", c(
+  "(c|cheryl)?( )?clausel",
+  "(q|quatarious)?( )?gilc(l)?hrest",
+  "(r|robert)?( )?gray",
+  "(j|judith)?( )?norman",
+  "[amw]?( )?lewis( nickson)?",
+  "[arc]?( )?hill",
+  "[dr]?( )?butler",
+  "[ej]?( )?cooper",
+  "[al]?( )?davis",
+  "[ja]*( )?irwin",
+  "[ce]?( )?jones",
+  "[rn]?( )?rashada",
+  "[rd]?( )?witter",
+  "[ac]?( )?wi[li]*am(s)?",
+  "(e)?( )?blow",
+  "(k)?( )?boone",
+  "(c)?( )?boykins",
+  "(b)?( )?bratten",
+  "(r)?( )?brown",
+  "(c)?( )?bryant",
+  "(s)?( )?burgess",
+  "(d)?( )?burton",
+  "(l)?( )?busby",
+  "(t)?( )?cobb",
+  "(a)?( )?collins",
+  "(s)?( )?echols",
+  "(v)?( )?ervin",
+  "(t)?( )?fry",
+  "(s)?( )?gaspar",
+  "(j)?( )?golden",
+  "(d)?( )?grafton",
+  "(c)?( )?higgenbottom",
+  "(s)?( )?howell",
+  "(j)?( )?hymon",
+  "(j)?( )?jackson",
+  "(m)?( )?james",
+  "(r)?( )?lake",
+  "(d)?( )?massey",
+  "(m)?( )?middlebrooks",
+  "(s)?( )?milan",
+  "(d)?( )?mi(t)?chell",
+  "(j)?( )?mos[lbe]*y",
+  "(v)?( )?moses",
+  "(t)?( )?neff",
+  "(r)?( )?nelson",
+  "(t)?( )?norwood",
+  "(b)?( )?pa(t)+erson", 
+  "(k)?( )?payne",
+  "(r)?( )?peete(e)?",
+  "(t)?( )?pegues",
+  "(a)?( )?powell",
+  "(m)?( )?pruitt",
+  "(s)?( )?rice",
+  "(t)?( )?richardson",
+  "(c)?( )?sager",
+  "(r)?( )?sherrell",
+  "(b)?( )?smith",
+  "(t)?( )?strong",
+  "(m)?( )?tay(h)?lor",
+  "(c)?( )?thom(a)?s",
+  "(j)?( )?tumbrink",
+  "(p)?( )?tyler",
+  "(j)?( )?walker",
+  "(m)?( )?ward",
+  "(k)?( )?washington",
+  "(b)?( )?woodland",
+  "(v)?( )?woods",
   "ch[am]*bers",
   "ferguson",
   "funches",
@@ -313,23 +325,19 @@ vInspectors <- str_c("\\b", c(
   "rimmer",
   "tidwell",
   "tyrone",
-  "waler"
-))
-
-vPerInsp <- str_c("(per )?(inspector|sup)?( )?", vInspectors) %>% 
+  "waler",
+  "jn",
+  "ma",
+  "sh(?! e )"
+), "\\b") %>% 
   str_c(collapse = "|")
 ```
 
 ```{r}
-pers <- eve2 %>% 
+pers <- roles %>% 
   mutate(
-    person = str_extract_all(rs, vPerInsp),
-    rs = str_remove_all(rs, vPerInsp),
-    rs = case_when(
-      str_starts(rs, "( )*\\$|\\(") ~ rs,
-      str_starts(rs, "^\\W+") ~ str_remove_all(rs, "^\\W+"),
-      TRUE ~ rs
-    ),
+    person = str_extract_all(rs, vInspectors),
+    rs = str_remove_all(rs, vInspectors),
     rs = str_squish(rs),
     rs = na_if(rs, "")
   )
@@ -338,4 +346,8 @@ pers2 <- pers %>%
   filter(!is.na(rs))
 
 pers2 %>% count(rs) %>% arrange(desc(n))
+```
+
+```{r}
+td <- pers2 %>% count(rs) %>% arrange(desc(n))
 ```
