@@ -104,6 +104,7 @@ zNumbers <- zCE %>%
     rs = str_remove(rs, vTax),
     date = str_extract_all(rs, vDate),
     rs = str_remove_all(rs, vDate),
+    ph = str_extract_all(rs, vPH),
     rs = str_remove_all(rs, vPH),
     rs = str_replace_all(rs, "\\W", " "),
     rc = str_replace_all(rc, "\\W", " "),
@@ -326,7 +327,7 @@ vInspectors <- str_c("(per )?", "\\b", c(
   "tidwell",
   "tyrone",
   "waler",
-  "jn",
+  "jn", #' judith norman
   "ma",
   "sh(?! e )"
 ), "\\b") %>% 
