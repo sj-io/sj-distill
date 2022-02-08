@@ -123,6 +123,10 @@ zNum <- zNumbers %>%
   filter(!is.na(rs) & !is.na(rc))
 ```
 
+```{r}
+zNum %>% count(rs) %>% arrange(desc(n))
+```
+
 <!--# clean up RC -->
 
 ```{r}
@@ -206,45 +210,27 @@ todo %>% count(rs) %>% arrange(desc(n))
 ```
 
 ```{r}
-vEve <- c(
-  "at (the )?time of (the|this)?( )?((re)?( )?insp(ection)?|recheck)",
-  "(per|upon|during|prior to) inspection",
-  "[1-3](st|nd|rd)? attempt(s)?",
-  "\\bf( )?u\\b( inspection)?"
-) %>% str_c(collapse = "|")
-
-eve <- todo %>% 
-  mutate(
-    event = str_extract_all(rs, vEve),
-    rs = str_remove_all(rs, vEve),
-    rs = str_squish(rs),
-    rs = na_if(rs, "")
-  )
-
-eve2 <- eve %>% 
-  filter(!is.na(rs))
+vRoles <- str_c("(per )?", c("insp(ector)?(?!ection)",
+                          "sup(ervisor)?",
+                          "tenant",
+                          "citizen")) %>% str_c(collapse = "|")
+  
 ```
 
 ```{r}
-eve2 %>% count(rs) %>% arrange(desc(n))
+todo %>% filter(str_detect(rs, vRoles)) %>% count(rs) %>% arrange(desc(n))
 ```
 
 ```{r}
-vRoles <- c(
-  "tenant stated that",
-  "from tenant",
-  "per (insp(ector)?|sup(ervisor)?|tenant|mr(s)?|ms|citizen)",
-  "inspector"
-) %>% 
-  str_c(collapse = "|")
-
-roles <- eve2 %>% 
+roles <- todo %>% 
   mutate(
     role = str_extract_all(rs, vRoles),
     rs = str_remove_all(rs, vRoles),
     rs = str_squish(rs),
     rs = na_if(rs, "")
   )
+
+roles %>% count(rs) %>% arrange(desc(n))
 ```
 
 ```{r}
@@ -329,9 +315,68 @@ vInspectors <- str_c("(per )?", "\\b", c(
   "waler",
   "jn", #' judith norman
   "ma",
-  "sh(?! e )"
+  "sh(?! e )" #' s howell
 ), "\\b") %>% 
   str_c(collapse = "|")
+
+```
+
+```{r}
+insp <- roles %>% 
+  mutate(
+    role = str_extract_all(rs, vInspectors),
+    rs = str_remove_all(rs, vInspectors),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+```
+
+```{r}
+todo2 <- insp %>% 
+  filter(!is.na(rs))
+
+todo2 %>% count(rs) %>% arrange(desc(n))
+```
+
+## TO DO
+
+```{r}
+vEve <- c(
+  "at (the )?time of (the|this)?( )?((re)?( )?insp(ection)?|recheck)",
+  "(per|upon|during|prior to) inspection",
+  "[1-3](st|nd|rd)? attempt(s)?",
+  "\\bf( )?u\\b( inspection)?"
+) %>% str_c(collapse = "|")
+
+eve <- todo %>% 
+  mutate(
+    event = str_extract_all(rs, vEve),
+    rs = str_remove_all(rs, vEve),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+eve2 <- eve %>% 
+  filter(!is.na(rs))
+```
+
+```{r}
+eve2 %>% count(rs) %>% arrange(desc(n))
+```
+
+```{r}
+pers <- zNum %>% 
+  mutate(
+    person = str_extract_all(rs, vInspectors),
+    rs = str_remove_all(rs, vInspectors),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+pers2 <- pers %>% 
+  filter(!is.na(rs))
+
+pers2 %>% count(rs) %>% arrange(desc(n))
 ```
 
 ```{r}
