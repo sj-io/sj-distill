@@ -1,0 +1,38 @@
+---
+title: "CE1-5 Recap"
+description: |
+  A summary of my progress wrangling Memphis code enforcement data.
+author:
+  - name: Sarah Johnson
+date: 2022-02-19
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Purpose
+
+When a renter encounters a home maintenance problem, they rely on their landlord to complete the repairs. In Tennessee, landlords who do not complete repairs in a timely manner are in breach of the Uniform Residential Landlord-Tenant Act (URLTA). Renters who wish to remain in their home and seek remedies under URLTA are expected to report problems to their city's code enforcement. However, tenants may choose not to report problems due to fears of retaliation; while URLTA is supposed to protect against retaliation, landlords are also allowed to evict tenants without cause.
+
+For my capstone, I wanted to analyze Memphis's code enforcement dataset to answer a few key questions:
+
+-   How often do renters report problems to code enforcement?
+
+-   What are the most common problems renters report?
+
+-   How are these requests resolved?
+
+-   How long does the process take?
+
+Memphis code enforcement data is publicly available through the Memphis Data Hub. The dataset includes all 311 service requests since 2016, it is updated daily, and contains over 1.3 million rows at the time of this posting.
+
+However, despite the vastness of the dataset, there was way no way to easily answer my questions. There is no way to easily filter for structural problems, much less renter-related problems. Many rental-related problems are categorized under the "Miscellaneous" category, and useful, relevant information is primarily contained in a single, manually-entered, catch-all column that makes data analysis difficult.
+
+The purpose of this CE series has been to develop a method to extract useful information from this dataset to find the answers to my questions.
+
+## CE1: Introduction
