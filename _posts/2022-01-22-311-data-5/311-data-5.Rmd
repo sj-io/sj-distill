@@ -16,9 +16,13 @@ draft: true
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Distill is a publication format for scientific and technical writing, native to the web.
+This post is part of a series breaking down Memphis code enforcement data. I am currently working with a version of the dataset downloaded December 3, 2021 that contains 53 columns and 1.3 million rows.
 
-Learn more about using Distill at <https://rstudio.github.io/distill>.
+[Part one](https://sarahjohnson.io/posts/2021-12-03-311-data/) introduced the dataset identified the most useful columns for my research. [Part two](https://sarahjohnson.io/posts/2021-12-04-311-data-2/) looked at how to import the dataset in R and do basic filtering to try and find housing-related requests. In [part three](https://sarahjohnson.io/posts/2022-01-10-311-data-3/) I clarified my goal and laid out plans for how to tidy the dataset. Currently I am trying to extract important information from the `RESOLUTION_SUMMARY`, a catch-all, manually-entered column.
+
+In part three I extracted numerical information into new columns, including dates, phone numbers, and references to other service requests. In [part four](https://sarahjohnson.io/posts/2022-01-11-311-data-4/) I removed instances where the `RESOLUTION_SUMMARY` duplicated information found in the `RESOLUTION_CODE` column, which code inspectors use to categorize how a request was resolved. I also manually created a list of resolutions not currently included in the `RESOLUTION_CODE` column.
+
+In this post I will continue to clean up the `RESOLUTION_SUMMARY` column by extracting mentions of code inspectors and creating a new column to include specific events related to a service request.
 
 ## Starting Code
 
