@@ -4,24 +4,27 @@ description: |
   In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.
 author:
   - name: Sarah Johnson
-date: 2022-01-22
+date: 2022-02-19
+categories:
+  - code enforcement
 output:
   distill::distill_article:
     self_contained: false
-draft: true
+    toc: true
+repository_url: https://github.com/sj-io/sj-distill
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 This post is part of a series breaking down Memphis code enforcement data to find information relevant to renter-occupied housing. I am currently working with a version of the dataset downloaded December 3, 2021 that contains 53 columns and 1.3 million rows.
 
-[Part one](https://sarahjohnson.io/posts/2021-12-03-311-data/) introduced the dataset identified the most useful columns for my research. [Part two](https://sarahjohnson.io/posts/2021-12-04-311-data-2/) looked at how to import the dataset in R and do basic filtering to try and find housing-related requests. In [part three](https://sarahjohnson.io/posts/2022-01-10-311-data-3/) I clarified my goal and laid out plans for how to tidy the dataset. Currently I am trying to extract important information from the `RESOLUTION_SUMMARY`, a catch-all, manually-entered column.
+[Part one](https://sarahjohnson.io/posts/2021-12-03-311-data/) introduced the dataset and identified the most useful columns for my research. [Part two](https://sarahjohnson.io/posts/2021-12-04-311-data-2/) looked at how to import the dataset in R and do basic filtering to try and find housing-related requests. In [part three](https://sarahjohnson.io/posts/2022-01-10-311-data-3/) I clarified my goal and laid out plans for how to tidy the dataset. Currently I am trying to extract important information from the `RESOLUTION_SUMMARY`, a catch-all, manually-entered column.
 
-In part three I extracted numerical information into new columns, including dates, phone numbers, and references to other service requests. In [part four](https://sarahjohnson.io/posts/2022-01-11-311-data-4/) I removed instances where the `RESOLUTION_SUMMARY` duplicated information found in the `RESOLUTION_CODE` column, which code inspectors use to categorize how a request was resolved. I also manually created a list of resolutions not currently included in the `RESOLUTION_CODE` column.
+In part three I moved numerical information into new columns, including dates, phone numbers, and references to other service requests. In [part four](https://sarahjohnson.io/posts/2022-01-11-311-data-4/) I removed instances where the `RESOLUTION_SUMMARY` duplicated information found in the `RESOLUTION_CODE` column, which code inspectors use to categorize how a request was resolved. I also manually created a list of resolutions not currently included in the `RESOLUTION_CODE` column.
 
-In this post I will continue to clean up the `RESOLUTION_SUMMARY` column by extracting mentions of code inspectors and creating a new column to include specific events related to a service request.
+In this post I will continue to clean up the `RESOLUTION_SUMMARY` column by extracting mentions of code inspectors and creating a new column to include updates related to a service request.
 
 ## Starting Code
 
@@ -113,7 +116,6 @@ zNumbers <- zCE %>%
     rs = str_remove(rs, vTax),
     date = str_extract_all(rs, vDate),
     rs = str_remove_all(rs, vDate),
-    ph = str_extract_all(rs, vPH),
     rs = str_remove_all(rs, vPH),
     rs = str_replace_all(rs, "\\W", " "),
     rc = str_replace_all(rc, "\\W", " "),
@@ -138,7 +140,7 @@ There are 45,333 rows that still contain information in the resolution summary o
 
 Using the code from [CE4](https://sarahjohnson.io/posts/2022-01-11-311-data-4/), identify instances where the resolution summary contains duplicate information found in the resolution code. I also created an incomplete list of other resolutions commonly mentioned but not included in the resolution code column.
 
-```{r}
+```{r, code_folding=TRUE}
 zRC0 <- zNum %>% 
   select(rc, rcm) %>% 
   pivot_longer(cols = c(rcm, rc), names_to = "remo", values_to = "rcs") %>% 
@@ -218,15 +220,15 @@ There are 27,149 rows that still need to be cleaned up.
 
 ## Code Inspectors
 
-First, let's see the most common information that remains in the resolution summary.
+To begin writing new code, let's find the most common information that remains in the resolution summary.
 
 ```{r}
 todo %>% count(rs) %>% arrange(desc(n))
 ```
 
-Mentions of inspections are by far the most common entry. We can also see frequent mention of code inspectors assigned to the case (per inspector james, walker, burton, etc). I have broken down cleanup into many small parts.
+Mentions of inspections are by far the most common entry. We can also see frequent mention of code inspectors assigned to the case (per inspector james, walker, burton, etc).
 
-First, I identify mentions of certain people, including inspectors and tenants.
+To organize this data, I first identify mentions of certain people, including inspectors and tenants.
 
 ```{r}
 vRoles <- str_c("(per )?", c("insp(ector)?(?!ection)",
@@ -236,7 +238,7 @@ vRoles <- str_c("(per )?", c("insp(ector)?(?!ection)",
   
 ```
 
-This information is separated into a new column to identify the role of the person mentioned in the request.
+This information is separated into a new column and the dataset is again tidied up.
 
 ```{r}
 roles <- todo %>% 
@@ -250,7 +252,7 @@ roles <- todo %>%
 roles %>% count(rs) %>% arrange(desc(n))
 ```
 
-Next, I created a list of names of code inspectors. I did this by filtering the `roles` column for mentions of "inspector", and manually building a list. This code chunk has been folded, due to the long list of names.
+Next, I created a list of names of code inspectors. I did this by filtering the `roles` column for mentions of "inspector", and manually building a list.
 
 ```{r, code_folding=TRUE}
 vInspectors <- str_c("(per )?", "\\b", c(
@@ -340,7 +342,7 @@ vInspectors <- str_c("(per )?", "\\b", c(
 
 ```
 
-I then extracted inspector names into a separate column.
+I then extracted inspector names into a separate column titled `person`.
 
 ```{r}
 insp <- roles %>% 
@@ -365,7 +367,7 @@ There are 23,618 rows that still contain information in the resolution summary. 
 
 ## Status Updates
 
-Ideally, rather than an inspector manually typing "at the time of inspection", there would be a column identifying common events or updates to service requests. Using the above table, I have created an incomplete list of some of the most common updates to service requests.
+Rather than an inspector manually typing "at the time of inspection", there would ideally be a column for common updates to service requests. Using the above table, I have created an incomplete list of some of the most common updates.
 
 ```{r}
 vStatus <- c(
@@ -434,12 +436,14 @@ td3 <- stat %>%
 td3 %>% count(rs) %>% arrange(desc(n))
 ```
 
-There are a few main takeaways I want to discuss from this final table.
+There are a few main takeaways from this final table.
 
 First, we can see how the "miscellaneous" request type is a catch all and not exclusive to housing requests, as seen by mention of a tire ordinance.
 
-Second, there are multiple rows that *should have* been captured by the resolution code section, but were missed due to typos ("uncopperative" and "violation resloved"). From my experience working with this dataset, typos are very common and will pose a difficult barrier to extracting all relevant and useful information from this dataset. For this reason, I heavily emphasized in the original version of my capstone that more standardization in the code enforcement data entry process would greatly improve the amount of information researchers could gather from this dataset.
+Second, there are multiple rows that *should have* been captured by the resolution code section, but were missed due to typos ("uncopperative" and "violation resloved"). From my experience working with this dataset, typos are very common and will pose a difficult barrier to extracting all relevant and useful information. For this reason, I heavily emphasized in the original version of my capstone that more standardization in the code enforcement data entry process would greatly improve the amount of information researchers could gather.
 
-Finally, many requests that have been closed out do not have a clear resolution. For instance, there are 55 service requests that were closed because an apartment complex sweep was cancelled--not because the property was repaired. There is no indication of when the apartment sweep has been rescheduled. Similarly, there are many rows where requests have been closed because the property transferred ownership (again, not because the property was repaired). These instances show the need for a place for inspectors to log updates, rather than erroneously entering resolutions for properties still in disrepair.
+Third, many requests that have been closed out do not have a clear resolution. For instance, there are 55 service requests that were closed because an apartment complex sweep was cancelled--not because the property was repaired. There is no indication of when the apartment sweep has been rescheduled. Similarly, there are many rows where requests have been closed because the property transferred ownership (again, not because the property was repaired). These instances show the need for a place for inspectors to log updates, rather than erroneously closing and entering resolutions for properties still in disrepair.
+
+Finally, it is becoming harder to clean up large chunks of the resolution summary. The most common resolution summary that remains was only mentioned in 58 rows. While the code used so far has been able to clean up around 70% of the rows included in the original zCE dataset, it will be increasingly hard to extract data from the remaining 30% of rows.
 
 For my next post, I plan to recap the steps taken so far, clean up certain sections of code, and clear up confusion on any steps I have changed over the course of these posts.

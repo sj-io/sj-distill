@@ -7,7 +7,16 @@
     <description>SJ
 </description>
     <generator>Distill</generator>
-    <lastBuildDate>Fri, 21 Jan 2022 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 19 Feb 2022 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>CE5: Inspectors and Updates</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/posts/2022-01-22-311-data-5</link>
+      <description>In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.</description>
+      <category>code enforcement</category>
+      <guid>https://sarahjohnson.io/posts/2022-01-22-311-data-5</guid>
+      <pubDate>Sat, 19 Feb 2022 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>CE4: Extracting resolution codes</title>
       <dc:creator>Sarah Johnson</dc:creator>
