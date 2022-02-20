@@ -6,12 +6,14 @@ links:
     url: "mailto:sarahviamemphis@gmail.com"
   - label: Github
     url: "https://github.com/sj-io"
+  - label: LinkedIn
+    url: "www.linkedin.com/in/sj-io"
 output:
   postcards::trestles
 site: distill::distill_website
 ---
 
-Hello 👋 I'm a recent graduate from the University of Memphis where I received my master's in urban planning. I am currently seeking a career in the Memphis area related to housing research.
+Hello 👋 I'm a graduate from the University of Memphis where I received my master's in urban planning and bachelor's in economics. I am currently seeking a career in the Memphis area related to housing research.
 
 ------------------------------------------------------------------------
 
