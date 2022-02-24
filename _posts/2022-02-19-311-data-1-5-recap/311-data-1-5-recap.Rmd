@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Purpose
 
-When a renter encounters a home maintenance problem, they rely on their landlord to complete the repairs. In Tennessee, landlords who do not complete repairs in a timely manner are in breach of the Uniform Residential Landlord-Tenant Act (URLTA). Renters who wish to remain in their home and seek remedies under URLTA are expected to report problems to their city's code enforcement. However, tenants may choose not to report problems due to fears of retaliation; while URLTA is supposed to protect against retaliation, landlords are also allowed to evict tenants without cause.
+When a renter encounters a home maintenance problem, they rely on their landlord to complete the repairs. In Tennessee, landlords who do not complete repairs in a timely manner are in breach of the Uniform Residential Landlord-Tenant Act (URLTA). Renters who wish to remain in their home and seek remedies under URLTA are expected to report problems to their city's code enforcement (CE). However, tenants may choose not to report problems due to fears of retaliation; while URLTA is supposed to protect against retaliation, landlords are also allowed to evict tenants without cause.
 
 For my capstone, I wanted to analyze Memphis's code enforcement dataset to answer a few key questions:
 
@@ -31,8 +31,81 @@ For my capstone, I wanted to analyze Memphis's code enforcement dataset to answe
 
 Memphis code enforcement data is publicly available through the Memphis Data Hub. The dataset includes all 311 service requests since 2016, it is updated daily, and contains over 1.3 million rows at the time of this posting.
 
-However, despite the vastness of the dataset, there was way no way to easily answer my questions. There is no way to easily filter for structural problems, much less renter-related problems. Many rental-related problems are categorized under the "Miscellaneous" category, and useful, relevant information is primarily contained in a single, manually-entered, catch-all column that makes data analysis difficult.
+However, despite the vastness of the dataset, there was way no way to easily answer my questions. There is no way to filter for structural problems, much less renter-related problems. Many rental-related problems are categorized under "Miscellaneous", and useful, relevant information is primarily contained in a single, manually-entered, catch-all column that makes data analysis difficult.
 
 The purpose of this CE series has been to develop a method to extract useful information from this dataset to find the answers to my questions.
 
-## CE1: Introduction
+## Introducing the Dataset
+
+For my analysis, I have been using a version of the dataset downloaded on December 3, 2021 that contains 1,311,942 rows and 53 columns. Despite the large size of the dataset, only a portion of the information is relevant to my research.
+
+Every 311 call made to the city opens a service request (SR), and each row of the dataset is a unique SR. Not all SRs are related to code enforcement (for instance, citizens can report potholes to 311 but they are not under CE's purview). After filtering for CE, there are 165,836 rows that remain.
+
+In [CE1](https://sarahjohnson.io/posts/2021-12-03-311-data/) I walk through all columns included in the dataset, briefly explaining the purpose of each, which contain duplicate information, and which are most useful to my research. Most of the columns are related to location or date data and only a handful contain more pertinent information. The below table lists the columns I most frequently use, how I abbreviate them in my code, and a brief summary of their purpose. I also use the `DEPARTMENT` category at the beginning of each post to filter the data for code enforcement requests.
+
++-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Column Name             | Abbr.   | Summary                                                                                                                                                |
++=========================+=========+========================================================================================================================================================+
+| INCIDENT_NUMBER         | sr      | A unique number for each service request; the dataset's key.                                                                                           |
++-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| REQUEST_TYPE            | \-      | An SR can be classified under one of 14 request types. Rental-related SRs are categorized under "Substandard, Derelict Struc" or "Code Miscellaneous". |
++-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| RESOLUTION_CODE         | rc      | A category for inspectors to select how the SR was resolved. This column is abbreviated.                                                               |
++-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| RESOLUTION_CODE_MEANING | rcm     | Contains the same information as the above column, but in non-abbreviated form.                                                                        |
++-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| RESOLUTION_SUMMARY      | rs      | A catch-all column to contain any notes and updates related to the SR.                                                                                 |
++-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Of the 53 columns in the dataset, only the `RESOLUTION_CODE` and the `RESOLUTION_SUMMARY` provide particularly useful qualitative information for each service request. The lack of a `REQUEST_TYPE` specifically geared towards rental requests makes analysis particularly hard, because these SRs are often categorized under "Miscellaneous" with no easy way to identify if they are related to structural problems.
+
+While the `RESOLUTION_SUMMARY` contains a lot of valuable information, extracting information for analysis has proven difficult. Because all summaries are manually entered, there are inconsistent data entry methods and frequent typos. Still, there are repeated patterns to how inspectors enter information that makes some data extraction possible.
+
+## The Goal: Tidy Data
+
+My overall goal is to convert Memphis's code enforcement data into a tidy dataset. **Tidy data** is a standardized way to organize data that makes it easy for analysts to quickly find the information they're looking for. In tidy data:
+
+1\. Each variable has its own column.
+
+2\. Each observation has its own row.
+
+3\. Each value has its own cell.
+
+![Three rules make a dataset tidy: variables are in columns, observations are in rows, and values are in cells ([Wickham & Grolemund](https://r4ds.had.co.nz/tidy-data.html#introduction-6)).](https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png)
+
+To make the dataset tidy, I plan to:
+
+-   Eliminate the need for the `RESOLUTION_SUMMARY` column
+
+-   Collapse **date** and **location** columns
+
+-   Recode the `RESOLUTION_CODE` column to be more consistent
+
+-   Create new categories under `REQUEST_TYPE` for structural violations
+
+These goals often overlap. Dates, locations, and resolution codes are frequently mentioned in the `RESOLUTION_SUMMARY` column. Sometimes the only way to determine whether a request is related to a rental unit is to search that column for keywords like "tenant". Cleaning up this column and extracting useful information is the largest obstacle to tidying the dataset.
+
+## Progress on Resolution Summary
+
+In CE3-5, I have worked to develop a way to extract data from the `RESOLUTION_SUMMARY` column. To do this, I have created a pattern in my code:
+
+1.  Identify the information I wish to extract.
+2.  Extract the data from the `RESOLUTION_SUMMARY` into a new column.
+3.  Remove the information from the `RESOLUTION_SUMMARY`.
+4.  Filter the dataset to only show rows that still contain information in the `RESOLUTION_SUMMARY`.
+
+I focused on numerical data in [CE3](https://sarahjohnson.io/posts/2022-01-10-311-data-3/), including dates, references to other service requests, and phone numbers. In [CE4](https://sarahjohnson.io/posts/2022-01-11-311-data-4/) I identified which resolution summaries duplicated the `RESOLUTION_CODE` field, and created a list of additional ways service requests were resolved that were not previously coded. In [CE5](https://sarahjohnson.io/posts/2022-01-22-311-data-5/) I noted that inspectors would often sign off on service requests by entering their name, so I created a list of inspectors mentioned in the dataset. In that post I also created a new column to contain updates to requests, similar to the resolution codes, but not resolutions.
+
+## The Code
+
+First, import the dataset. I alter some columns to all lowercase to make data matching easier.
+
+```{r}
+library(tidyverse)
+
+zService_Requests_since_2016 <-
+  read_csv("../_data/Service_Requests_since_2016.csv") %>% 
+  mutate(RESOLUTION_SUMMARY = str_to_lower(RESOLUTION_SUMMARY),
+         RESOLUTION_CODE = str_to_lower(RESOLUTION_CODE),
+         RESOLUTION_CODE_MEANING = str_to_lower(RESOLUTION_CODE_MEANING))
+```
