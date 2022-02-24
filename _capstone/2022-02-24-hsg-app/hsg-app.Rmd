@@ -1,0 +1,55 @@
+---
+title: "hsg-app"
+description: |
+  A short description of the post.
+author:
+  - name: Sarah Johnson
+    url: {}
+date: 2022-02-24
+output:
+  distill::distill_article:
+    self_contained: false
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Landlord profits are determined by rents collected minus expenses related to the home. If a landlord wishes to increase profits, they can either increase rents or decrease expenses. Increasing profits at the expense of decreasing maintenance, to the extent that landlords force renters to live without minimum standards of habitation, is exploitation of the renter's health in exchange for monetary profit.
+
+How rampant is this problem? I don't know. As far as I know, no one knows. There is a lack of data and transparency. Therefore, it is hard to make conclusions on how many landlords are neglectful. It may be a very small percentage, or it might be a hidden plague faced by renters, particularly low-income renters who pay a low rent, thus leaving smaller profit margins available to landlords. The first step to solving the issue of neglect of rental housing is to collect data on rental housing maintenance and determine the scope of the problem.
+
+But we do know rental housing neglect is a problem. There is a reason the term *slumlord* exists.
+
+In Memphis, a rental registry was proposed as a way to help address the problem. When a rental home is reported to code enforcement, a major barrier to local officials is the lack of a clear owner to whom they can issue a citation. The property may be held by an LLC in another state, or divided between multiple owners. A rental registry would require a definitive name and address tied to each rental property. However, the State of Tennessee has intervened to block this registry.
+
+There is another approach: provide renters with a way to document and report home maintenance problems.
+
+While the existing code enforcement process may seem to be this solution, it is inadequate. For one, Memphis's code enforcement data does not acknowledge the existence of rental housing problems. This is why most rental requests are categorized under "Miscellaneous". Secondly, even if code enforcement was improved to better accommodate renters, there is still no guarantee that renters would feel confident enough to report maintenance problems for fear of retaliation. As long as renters can be evicted without cause, they are at risk of retaliation. There needs to be a way to document maintenance problems and collect this data without igniting a legal battle that might displace renters. At the very least, allow renters to document problems, provide this data to researchers, and give renters the option to report to code enforcement.
+
+Many renters, particularly those in multifamily units or in properties owned by a corporation, already use an app or website to report maintenance problems. However, the data is owned and managed by the landlord. If a problem is marked "resolved" and yet the tenants dispute this resolution, the data concerning the problem is owned and managed by the landlord, and likely will not be easily made available to researchers. Tenants need a way to document their problems and choose how they manage their data.
+
+My proposal for a solution to the missing data on rental maintenance is rather simple. Create an app that would allow renters to document home maintenance problems and share this information with researchers.
+
+The ideal solution would be an app that is impartial to all sides, with the sole goal of collecting data on maintenance problems. It would improve communication and clarity between renters, landlords, and maintenance workers. Even if a landlord chose not to use the app, the tenant could use it to document problems and store texts or emails to their landlord. It would allow renters to share this data with researchers, code enforcement, or legal representatives.
+
+In my mockups, renters could create a timeline of the problem, adding photos, copies of texts, and any other relevant information.
+
+![](images/Screen%20Shot%202022-02-24%20at%204.32.10%20AM.png){width="50%"}
+
+![](images/Screen%20Shot%202022-02-24%20at%204.32.55%20AM.png){width="50%"} 
+
+![](images/Screen%20Shot%202022-02-24%20at%204.33.17%20AM.png){width="50%"}
+
+Tenants in the same structure would also be able to communicate their problems with other tenants. They could verify the existence of problems and add in their own information.
+
+![](images/Screen%20Shot%202022-02-24%20at%204.33.39%20AM.png)
+
+Visits could be scheduled in clear terms, eliminating unannounced visits or ambiguous repair dates, and setting clear boundaries on if the tenant consents to someone entering the home while they are away.
+
+![](images/Screen%20Shot%202022-02-24%20at%204.34.23%20AM.png){width="50%"}
+
+And rather than a focus on complex building codes, the priority would be on healthy home violations that directly effect the health and safety of the tenants involved. Since the Healthy Homes Rating System is centered around the concept of risk, it provides an opportunity to keep problems open but inactive, such as if a temporary repair is made to a housing problem that still leaves the tenant's health and safety at risk.
+
+![](images/Screen%20Shot%202022-02-24%20at%204.35.00%20AM.png)
