@@ -7,7 +7,7 @@ links:
   - label: Github
     url: "https://github.com/sj-io"
   - label: LinkedIn
-    url: "www.linkedin.com/in/sj-io"
+    url: "https://linkedin.com/in/sj-io"
 output:
   postcards::trestles
 site: distill::distill_website
