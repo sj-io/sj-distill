@@ -12,7 +12,8 @@ draft: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      code_folding=TRUE)
 ```
 
 ## Purpose
@@ -43,19 +44,13 @@ Every 311 call made to the city opens a service request (SR), and each row of th
 
 In [CE1](https://sarahjohnson.io/posts/2021-12-03-311-data/) I walk through all columns included in the dataset, briefly explaining the purpose of each, which contain duplicate information, and which are most useful to my research. Most of the columns are related to location or date data and only a handful contain more pertinent information. The below table lists the columns I most frequently use, how I abbreviate them in my code, and a brief summary of their purpose. I also use the `DEPARTMENT` category at the beginning of each post to filter the data for code enforcement requests.
 
-+-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Column Name             | Abbr.   | Summary                                                                                                                                                |
-+=========================+=========+========================================================================================================================================================+
-| INCIDENT_NUMBER         | sr      | A unique number for each service request; the dataset's key.                                                                                           |
-+-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| REQUEST_TYPE            | \-      | An SR can be classified under one of 14 request types. Rental-related SRs are categorized under "Substandard, Derelict Struc" or "Code Miscellaneous". |
-+-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| RESOLUTION_CODE         | rc      | A category for inspectors to select how the SR was resolved. This column is abbreviated.                                                               |
-+-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| RESOLUTION_CODE_MEANING | rcm     | Contains the same information as the above column, but in non-abbreviated form.                                                                        |
-+-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| RESOLUTION_SUMMARY      | rs      | A catch-all column to contain any notes and updates related to the SR.                                                                                 |
-+-------------------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Column Name             | Abbr. | Summary                                                                                                                                                |
+|------------------|------------------|-------------------------------------|
+| INCIDENT_NUMBER         | sr    | A unique number for each service request; the dataset's key.                                                                                           |
+| REQUEST_TYPE            | \-    | An SR can be classified under one of 14 request types. Rental-related SRs are categorized under "Substandard, Derelict Struc" or "Code Miscellaneous". |
+| RESOLUTION_CODE         | rc    | A category for inspectors to select how the SR was resolved. This column is abbreviated.                                                               |
+| RESOLUTION_CODE_MEANING | rcm   | Contains the same information as the above column, but in non-abbreviated form.                                                                        |
+| RESOLUTION_SUMMARY      | rs    | A catch-all column to contain any notes and updates related to the SR.                                                                                 |
 
 Of the 53 columns in the dataset, only the `RESOLUTION_CODE` and the `RESOLUTION_SUMMARY` provide particularly useful qualitative information for each service request. The lack of a `REQUEST_TYPE` specifically geared towards rental requests makes analysis particularly hard, because these SRs are often categorized under "Miscellaneous" with no easy way to identify if they are related to structural problems.
 
@@ -109,3 +104,552 @@ zService_Requests_since_2016 <-
          RESOLUTION_CODE = str_to_lower(RESOLUTION_CODE),
          RESOLUTION_CODE_MEANING = str_to_lower(RESOLUTION_CODE_MEANING))
 ```
+
+Filter the `DEPARTMENT` for code enforcement data and the `REQUEST_TYPE` for "derelict" and "miscellaneous", the two request types relevant to rental housing. I further narrowed my focus to four columns: the `INCIDENT_NUMBER`, or service request (SR) number, to use as a key, and three columns related to the request's resolution.
+
+```{r}
+zCE <- zService_Requests_since_2016 %>%
+  filter(DEPARTMENT == "Code Enforcement" &
+           str_detect(REQUEST_TYPE, "Misc|Derelict")) %>%
+  select(sr = INCIDENT_NUMBER,
+         rc = RESOLUTION_CODE,
+         rcm = RESOLUTION_CODE_MEANING,
+         rs = RESOLUTION_SUMMARY) %>%
+  filter(!is.na(rs))
+```
+
+### Extract numbers
+
+Using the code from [CE3](https://sarahjohnson.io/posts/2022-01-10-311-data-3/), separate numerical data into new columns. The following code will be used to find mentions of service request numbers, dates, and tax sale numbers.
+
+```{r}
+vSR <- c(
+  "\\b(sr)?\\d{7}\\b",
+  "(please )?(see|(ref(er)?(ence)?)\\b( to)?)?( )?(\\b(see)?s[/ \\.]*r\\b|service request|ticket)( )?(#)?( )?(\\.)?",
+  "(please )?(see|(ref(er)?(ence)?)\\b( to)?)( )?(#)?( )?(\\.)?"
+) %>% 
+  str_c(collapse = "|")
+
+vMonths <-
+  c("january", "february", "march", "april", 
+    "may", "june", "july", "august", 
+    "september", "october", "november", "december",
+    str_c("\\b",
+      c("jan", "feb", "mar", "apr", "jun", "jul", 
+        "aug", "sept", "oct", "nov", "dec"),
+      "(\\.)?\\b"
+      )
+    )
+
+vDate <- c(
+  "\\b\\d{1,2}(:\\d{2})?(:\\d{2})?( )?(a(\\.)?m(\\.)?|p(\\.)?m(\\.)?)",
+  str_c(vMonths, "( )?", "\\d{1,2}", "(nd|th|rd)?", "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "(nd|th|rd)? ", vMonths, "((,)?( )?\\d{2,4})?"),
+  str_c("\\d{1,2}", "\\W", vMonths, "\\W", "\\d{2,4}"),
+  str_c("\\d{1,2}", "(nd|th|rd)?", " of ", vMonths),
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W{1,2}\\d{1,2}( )?\\W( )?\\d{2}(?=\\b|\\D)",
+  "(?<=(\\b|\\D))\\d{1,2}( )?\\W\\d{1,2}\\W( )?\\d{4}",
+  "\\b\\d{1,2}\\W{1,2}\\d{1,2}\\b",
+  "\\b\\d{1,2}\\W\\d{4}\\b"
+  ) %>%
+  str_c(collapse = "|")
+
+vTax <- "(?<=tax sale( (number|2019))? )\\d{2}(\\.)?\\d{2}(?!(\\W)?\\d)"
+```
+
+I am hiding the code used to identify phone numbers from these blog posts due to privacy concerns.
+
+```{r include=FALSE}
+vPH <- "(ph)?[# ]*(\\d{3}\\W)?\\b\\d{3}\\b\\W\\d{4}"
+```
+
+Use the above code to extract this information from the resolution summary into new columns. I also added a section of code (containing `"\\W"`) to remove non-alphanumeric characters, due to punctuation and symbols complicating future code.
+
+```{r}
+zNumbers <- zCE %>%
+  mutate(
+    #' create new columns & remove extracted data from rs
+    ref = str_extract_all(rs, "\\b(sr)?\\d{7}\\b"),
+    rs = case_when(
+      str_detect(rs, "\\b(sr)?\\d{7}\\b") ~ str_replace_all(rs, vSR, " "),
+      TRUE ~ rs
+    ),
+    taxSale = str_extract(rs, vTax),
+    rs = str_remove(rs, vTax),
+    date = str_extract_all(rs, vDate),
+    rs = str_remove_all(rs, vDate),
+    rs = str_remove_all(rs, vPH),
+    #' clean up rs, rc, rcm
+    rs = str_replace_all(rs, "\\W", " "),
+    rc = str_replace_all(rc, "\\W", " "),
+    rcm = str_replace_all(rcm, "\\W", " "),
+    rs = str_squish(rs),
+    rc = str_squish(rc),
+    rcm = str_squish(rcm),
+    rs = na_if(rs, "")
+  )
+```
+
+I remove rows where the resolution summary and resolution code columns are empty, to see which rows still need to be cleaned up.
+
+```{r}
+zNum <- zNumbers %>% 
+  filter(!is.na(rs) & !is.na(rc))
+
+zNum %>% count(rs) %>% arrange(desc(n))
+```
+
+There are 45,333 rows that still contain information in the resolution summary or resolution code.
+
+### Extract Resolution Codes
+
+Using the code from [CE4](https://sarahjohnson.io/posts/2022-01-11-311-data-4/), identify instances where the resolution summary contains duplicate information found in the resolution code. I also created an incomplete list of other resolutions commonly mentioned but not included in the resolution code column.
+
+```{r, code_folding=TRUE}
+vErr <- str_c("^", c("shelby", "board and secure", "hold", "other"), "$") %>% str_c(collapse = "|")
+
+zRCs <- zNum %>% 
+  select(rc, rcm) %>% 
+  pivot_longer(cols = c(rcm, rc), names_to = "remo", values_to = "rcs") %>% 
+  select(rcs) %>% 
+  mutate(rcs = str_remove(rcs, vErr),
+         rcs = na_if(rcs, "")) %>%
+  filter(!is.na(rcs)) %>% 
+  distinct()
+
+vRCs <- zRCs$rcs
+
+vRCm <- c(
+  "((shelby )?county|city).*property",
+  "scop",
+  "justified active",
+  "dismissed",
+  "(complaint.*)?not justified",
+  "no cooperation",
+  "jw(dm|rh)",
+  "cvob", "fm11",
+  "vobr", "vobd", "voar(s)?",
+  "rvso",
+  "npfm11",
+  "v( )?o",
+  "rdw",
+  "noh3",
+  "^closed( violation)?( out)?",
+  "^hold$",
+  "close other"
+  )
+
+vRC <- str_c("\\b", c(vRCs, vRCm), "\\b") %>% str_c(collapse = "|")
+```
+
+I extracted this information into a new column, `rc2`, a temporary secondary resolution code column.
+
+```{r}
+vInspectors <- str_c("\\b", c(
+  "(c|cheryl)?( )?clausel",
+  "(q|quatarious)?( )?gilc(l)?hrest",
+  "(r|robert)?( )?gray",
+  "(j|judith)?( )?norman",
+  "[amw]?( )?lewis( nickson)?",
+  "[arc]?( )?hill",
+  "[dr]?( )?butler",
+  "[ej]?( )?cooper",
+  "[al]?( )?davis",
+  "[ja]*( )?irwin",
+  "[ce]?( )?jones",
+  "[rn]?( )?rashada",
+  "[rd]?( )?witter",
+  "[ac]?( )?wi[li]*am(s)?",
+  "(e)?( )?blow",
+  "(k)?( )?boone",
+  "(c)?( )?boykins",
+  "(b)?( )?bratten",
+  "(r)?( )?brown",
+  "(c)?( )?bryant",
+  "(s)?( )?burgess",
+  "(d)?( )?burton",
+  "(l)?( )?busby",
+  "(t)?( )?cobb",
+  "(p)?( )?cook",
+  "(a)?( )?collins",
+  "(s)?( )?echols",
+  "(v)?( )?ervin",
+  "(t)?( )?fry",
+  "(s)?( )?gaspar",
+  "(j)?( )?golden",
+  "(d)?( )?grafton",
+  "(c)?( )?higgenbottom",
+  "(s)?( )?howell",
+  "(j)?( )?hymon",
+  "(j)?( )?jackson",
+  "(m)?( )?james",
+  "(r)?( )?lake",
+  "(d)?( )?massey",
+  "(m)?( )?middlebrooks",
+  "(s)?( )?milan",
+  "(d)?( )?mi(t)?chell",
+  "(j)?( )?mos[lbe]*y",
+  "(v)?( )?moses",
+  "(t)?( )?neff",
+  "(r)?( )?nelson",
+  "(t)?( )?norwood",
+  "(b)?( )?pa(t)+erson", 
+  "(k)?( )?payne",
+  "(r)?( )?peete(e)?",
+  "(t)?( )?pegues",
+  "(a)?( )?powell",
+  "(m)?( )?pruitt",
+  "(s)?( )?rice",
+  "(t)?( )?richardson",
+  "(c)?( )?sager",
+  "(r)?( )?sherrell",
+  "(b)?( )?smith",
+  "(t)?( )?strong",
+  "(m)?( )?tay(h)?lor",
+  "(c)?( )?thom(a)?s",
+  "(j)?( )?tumbrink",
+  "(p)?( )?tyler",
+  "(j)?( )?walker",
+  "(m)?( )?ward",
+  "(k)?( )?washington",
+  "(b)?( )?woodland",
+  "(v)?( )?woods",
+  "ch[am]*bers",
+  "ferguson",
+  "funches",
+  "griffin",
+  "johnson",
+  "judy",
+  "lynum",
+  "rimmer",
+  "tidwell",
+  "tyrone",
+  "waler",
+  "hokes",
+  "eddie",
+  "muhammad",
+  "jn", #' judith norman
+  "ma",
+  "mc", "otis",
+  "sh(?! e )" #' s howell
+), "\\b") %>% 
+  str_c(collapse = "|")
+```
+
+
+```{r}
+resCode <- zNum %>%
+  mutate(
+    rc2 = str_extract_all(rs, vRC),
+    person = str_extract_all(rs, vInspectors),
+    rs = str_remove_all(rs, vRC),
+    rs = str_remove_all(rs, vInspectors),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+RC <- resCode %>% filter(!is.na(rs))
+```
+
+
+### Code Inspectors
+
+There is frequent mention of code inspectors assigned to the case (per inspector james, walker, burton, etc).
+
+To organize this data, I first identify mentions of certain people, including inspectors and tenants.
+
+```{r}
+vLV <- str_c("\\b", c("per", "by", "from", "(?<!due )to"), "\\b") %>% 
+  str_c(collapse = "|")
+
+vAdj <- str_c("\\b", c(
+  "new", "old", "active", "prior", "final", "wrong", "incorrect", "insuf[fic]+ent", "inaccurate", "inadequate", "hazardous", "error", "all", "duplicate", 
+  "no[tn]?", "[1-4](st|nd|rd|th)?", "one", "two", "three", "third", "second", "four", "dead", "further", "a[dit]+onal", "another", "also", "high",
+  "hot", "derelict", "junky", "interior", "exterior", "(in)?valid", "void", "good", "great", "minor", "major", "adjacent", "under",
+  "substandard", "rear", "still", "raw", "multiple", "st[ru]+ctural", "back", "front", "commer[cia]+l", "administrative",
+  "overgrown", "official", "public", "broken", "bad", "around", "environmental(?! enforcement)", "inside", "large",
+  "stagnant", "tall", "under", "behind", "excessive", "central", "original", "between", "same", "different", "black", "empty", "done", "cold", "green",
+  "through(out)?", "rotten", "nice", "very", "above", "accessory", "other", "anti", "hard", "loose", "near", "across", "unsafe", "various", "below",
+  "unknown", "missing", "pre", "well", "torn", "local", "loud"
+  ), "\\b") %>% 
+  str_c(collapse = "|")
+
+vRoles <- str_c(
+  "\\b",
+  c(
+    "in[sp]+([ector]+)?(?!ect(ion|ed))",
+    "sup(ervisor)?(v)?", 
+    "ten[nate]+t(ed)?",
+    "occupant", "neighbor", "daughter", "son", "family", "community",
+    "resident", "caregiver",
+    "land(l)?ord",
+    "(home)?owner(ship)?",
+    "manage(r|ment)", "mgr",
+    "company", "agent",
+    "employee",
+    "mgm(n)?t",
+    "courts",
+    "citizen", "people",
+    "(grounds|health) dep(artmen)?t",
+    "ground(s)? services",
+    "condemnation",
+    "(vector|animal|pest) control",
+    "animal shelter",
+    "sanitation",
+    "solid waste",
+    "environmental enforcement",
+    "police", "ems",
+    "(dep(artmen)?t)",
+    "code enforcement",
+    "(shelby )?county( (land bank|code))?",
+    "city(of memphis)?",
+    "maintenance", "contractor", "electrician", "a(r)?bor(t)?ist",
+    "vend[eo]r",
+    "(s)?he", "they", "their", "them", "m[rs]+", "noone", "my", "me", "we", "his", "her", "us",
+    "nobody", "anyone", "man", "someone( else)?", "you", "i(?!(s| nsp))", "husband", "him",
+    "mpd", "mlg( )?w", "individual",
+    "memphis", "shelby", "u s coast guard",
+    "mcsc", "mscs", "itd",
+    "e[sz]ri",
+    "csa", "wooddale", "foxhall", "fox hollow", "crestcore", "reedy", "revid", "barbara estate"
+  ), "(( )?(s|es))?", "\\b"
+) %>% str_c(collapse = "|")
+  
+vArticles <- str_c("\\b", c("(th|ht)e", "and", "a(?! c\\b)(n)?", "that", "this", "of", "where", "who", "with", "but", "or", "as", "fu(r)?thermore"), "\\b") %>% 
+  str_c(collapse = "|")
+
+```
+
+This information is separated into a new column and the dataset is again tidied up.
+
+```{r}
+people <- RC %>% 
+  mutate(
+    LVppl = str_extract_all(rs, vLV),
+    role = str_extract_all(rs, vRoles),
+    adj = str_extract_all(rs, vAdj),
+    rs = str_remove_all(rs, vAdj),
+    rs = str_remove_all(rs, vArticles),
+    rs = str_remove_all(rs, vRoles),
+    rs = str_remove_all(rs, vLV),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+ppl <- people %>% 
+  filter(!is.na(rs))
+```
+
+Next, I created a list of names of code inspectors. I did this by filtering the `roles` column for mentions of "inspector", and manually building a list.
+
+I then extracted inspector names into a separate column titled `person`.
+
+
+Once again, filter out rows that are now empty and count the most common entries that remain in the resolution summary.
+
+There are XXXXX rows that still contain information in the resolution summary.
+
+
+### Status Updates
+
+Rather than an inspector manually typing "at the time of inspection", there would ideally be a column for common updates to service requests. Using the above table, I have created an incomplete list of some of the most common updates.
+
+```{r}
+vAdv <- str_c(
+  "\\b",
+  c(
+    "for",
+    "already",
+    "longer",
+    "(?<!follow )up",
+    "out", "new",
+    "over", "into",
+    "down", "full", "apparent",
+    "off", "actual",
+    "(in)?operable", "according",
+    "please",
+    "proper", "inadvertant",
+    "previous", "former", "retaliatory",
+    "casual", "everything",
+    "adequate", "enough", "more", "any", "several", "only",
+    "complete", "entire", "few", "nothing", "both", "none",
+    "manual", "immediate", "some", "improper", "illegal",
+    "total", "present", "possibl[le]*", "partial", "severe", "neat"
+  ),
+  "(ly)?",
+  "\\b"
+) %>%
+  str_c(collapse = "|")
+
+vProcess <- str_c(
+  "\\b", "(re( )?)?",
+  c(
+    "case", "file", "npa", "court order", "\\bsr\\b",
+    "notice", "court", "tax sale", "tire ordinance 5334",
+    "(housing )?(code )?violation", "(?<!no )problem", 
+    "civil( (matter|issue))", "hearing", "order",
+    "(re)?inspection", "recheck", "apartment complex sweep", "investigation",
+    "pic(ture)?", "photo", "repairs", "info(rmation)?", "assistance",
+    "ph", "location", "junk", "door", "street", "truck", "cornice",
+    "pro(p)?ert( )?(y|i)?", "(town)?house", "home", "structur(e|al)", "unit", 
+    "apar(t)?ment", "address(?!ed)", "roof", "shed", "chatt[el]+", "sh(r)?ub(bery)?", "bush", "hedge",
+    "grass", "vehicle", "car(d)?", "yard", "tree", "limb", "fenc(e|ing)", "branch", "leaves",
+    "trash", "debris", "weed", "pool", "ticket", "(service )?request",
+    "plumbing", "water", "leak", "light(ing)?", "stove", "toilet", "walkway",
+    "a( )?c\\b", "air( condition(er|in))?", "window", "(re)?fri(d)?ge(rator)?",
+    "trailer", "dumpster", "sidewalk", "garage", "furniture", "lot",
+    "summon", "(out)?building", "ceiling", "attachment", "sewage",
+    "electric(ity)?", "referral", "apt", "condos", "mo[lo]d(( )?like)?", "curb(side)?",
+    "backyard", "tires", "furnace", "gas", "complex", "heat(er|ing)?", "driveway", "carport",
+    "utilit(i|y)", "lawn", "fire", "rent", "residence", "bed( )?b[eu]g", "rodent", "rat", "mice", "pest", "roach",
+    "number", "code", "l[ei]tigation", "invoice", "feces", "emergency", "mosquito", "spiders",
+    "hvac", "gutter", "ramp", "proof", "couch", "faucet", "tub", "floor(ing)?", "it",
+    "storage", "residential", "outside", "limit", "overgrowth", "parcel( id)?", "duplex",
+    "tag", "fine", "gate", "sign", "office", "hanger", "bag", "basketball goal", "trampoline",
+    "business", "customer", "wall", "garbage", "vegetation", "church", "triplex",
+    "appliance", "camper", "alleyway", "dishwasher", "graffiti", "rooster", "chigger",
+    "bathroom", "(tele)?phone", "porch", "evidence", "siding", "infestation",
+    "pallet", "elevator", "concrete", "dog", "cabinet", "chicken", "hole",
+    "pipe", "sink", "trim", "substance", "letter", "(bench )?warrant", "tarp",
+    "project", "wood", "patio", "premise", "stair", "sweep", "facility", "stain",
+    "odor", "smell", "school", "tax", "step", "side", "trap", "shower",
+    "stump", "tire", "permit", "mildew", "condition", "district", "document",
+    "auto", "shop", "plant", "bamboo", "occupancy", "item", "housing", "leasing",
+    "area", "place", "process", "system", "lock", "socket", "class", "kitchen",
+    "storm", "egress", "outlet", "program", "boat", "arrival", "glass", "generator",
+    "job", "note", "handle", "paperwork", "sewer", "party", "cart", "breaker box", "citation",
+    "weather", "hallway", "spore", "ipmc", "outdoor", "carpet", "knob", "voicemail",
+    "restroom", "mistake", "involvement", "ground", "caller", "matter", "health", "safety", "construction", "test",
+    "contract", "criteria", "judgement", "form", "hotel", "power", "vent(ilation)?", "vine",
+    "status", "brick", "roofing", "room", "screen", "surface", "vinyl", "waste",
+    "container", "service", "pothole", "pile", "survey", "legal hold", "ordinance",
+    "proceeding", "noise", "bath", "box", "docket", "hazard", "mattress", "wire",
+    "saw", "traffic", "acid", "bug powder", "situation", "action", "oracle", "dirt",
+    "food", "vagrant", "dwelling", "washer", "dryer", "311", "site", "covid( 19)?", "cable",
+    "litter", "roadside", "pesticide", "mask", "table", "task"
+    ), "(( )?(es|s|(i?)al))?", "\\b"
+) %>% str_c(collapse = "|")
+
+vLV2 <- str_c("\\b", c("has(n t)?", "had", "have", "been", "was", "there", "what", "were", "will", "would", "is(n t)?", "(c|sh)ould(n t)?", "be", "because", "about", "being", "cannot", "do(n t)?", "did(n t)?", "does(n t)?", "are"), "\\b") %>% 
+  str_c(collapse = "|")
+
+vStatus <- str_c(
+  "\\b", "(re( )?)?",
+  c("ma[dk](e)?", "present", "ok", "add", "help",
+  "s[lov]+e", "c[ao]m(e)?", "arrive", "engage", "instruct",
+  "model", "stop", "gone",
+  "clean(up)?", "f[eai]ll", "adopt", "cit(e)?", "dispose", "dilapidate",
+  "repair", "r[ea]hab(b)?", "renovat(e)?", "destroy", "disable",
+  "maintain", "abandon", "prune", "rent", "remain", "revise",
+  "correct", "inform", "pend", "gain", "care", "explain",
+  "just([if]+)?f(y|i)", "request",
+  "fix", "touch", "bark", "post", "via", "forward", "refuse",
+  "locat(e)?", "pass", "abat(e)?(ment)?", "accomplish", "acquire",
+  "determine", "imperil", "caus(e)?", "go", "stay",
+  "exterminate", "unclog", "satisf(y|i)", "decide",
+  "burn", "attach", "abate", "turn", "void", "foreclose", "peel",
+  "function", "enter", "list(?!\\b)", "flood",
+  "clear", "confirm", "(a)?wait", "belong", "check", "reset", "alive", "bust",
+  "(un)?able", "drain", "set", "provide",
+  "walk", "tow", "suppl(y|i)",
+  "t[ao]k(e)?", "avoid",
+  "select", "treat", "place(?!\\b)", "lock(?!\\b)",
+  "deliver", "smell",
+  "eliminate", "cease", "block", "neglect",
+  "replace",
+  "g[eo]t", "look", "notice", "obstruct",
+  "complete",
+  "demo(lish)?", "print", "disinfect", "seal",
+  "dismiss", "select",
+  "paint", "spray", "dump",
+  "fall", "pick", "(write|pick)up",
+  "progress", "wear",
+  "lean", "leak",
+  "(?<!civil )issu(e)?",
+  "start", "order",
+  "boar(d)?", "secure",
+  "creat(e)?",
+  "need", "want", "meet",
+  "provide", "includ(e)?",
+  "cut", "mow",
+  "left",
+  "run(n)?",
+  "give",
+  "liv(e)?",
+  "talk", "spoke", "state", "sa(id|y)", "mention",
+  "see", "respond",
+  "mov(e)?", "report",
+  "own", "evict", "sold", "purchase", "sell",
+  "work",
+  "occup(i|y)",
+  "vaca(n)?t",
+  "found", "observe", "cover",
+  "access", "assess", "show",
+  "attempt",
+  "a[d]+ress",
+  "require",
+  "cancel(l)?", "clos(e)?", "open",
+  "exist",
+  "response",
+  "wr[oi][t]+(e)?", "sen[dt]", "email", "schedule", "train", 
+  "mon[it]+or", "verif(y|i)", "approve",
+  "outdate",
+  "refe(r)+(?!al)",
+  "entry",
+  "comply",
+  "damag(e)?", "concern", "receive",
+  "hang",
+  "us(e)?", "mail",
+  "assign",
+  "contact", "answer", "call",
+  "submit(t)?",
+  "install",
+  "(in|non)?comp[lia]+n(ce|t)",
+  "(?<!code )v[ioa]+l(a)?t(e|((i)?on))?",
+  "park(?!\\b)",
+  "trimm",
+  "(un)?( )?c[op]+er[tai]+(v(i)?e)?",
+  "damage",
+  "restore",
+  "inspect(?!ion)",
+  "transfer", "allow", "f(i|ou)nd",
+  "keep", "visit", "appear", "change", "update"
+  ), 
+  "(es|s|en|n|[elita]*ed|d|[lita]*ion(s)?|(ar)?ing)?", 
+  "\\b"
+  ) %>% str_c(collapse = "|")
+
+vEvent <- str_c("\\b", c(
+  "at.*time.*of", "on", "f( )?u", "if", "at", "upon", "time", "next", "due to",
+  "((follow up|later|next) )?date", "(with)?in", "now", "follow up", "continue", "currently",
+  "during", "\\d{1,3} day(s)?", "weather permi[t]+ing", "current", "\\d{1,2}( )?h(ou)?r(s)?",
+  "month(s( ago)?)?", "week(end|s)?", "never", "before", "recently", "until", "again", "after",
+  "yesterday", "since", "april", "january", "friday", "saturday", "monday", "future", "today", "spring( 2021)?", "year",
+  "morning", "once", "while", "when", "subsequent", "2019", "soon", "earlier", "time"
+  ), "\\b") %>% 
+  str_c(collapse = "|")
+```
+
+```{r}
+subject <- ppl %>% 
+  mutate(
+    LV2 = str_extract_all(rs, vLV2),
+    event = str_extract_all(rs, vEvent),
+    status = str_extract_all(rs, vStatus),
+    process = str_extract_all(rs, vProcess),
+    rs = str_remove_all(rs, vAdv),
+    rs = str_remove_all(rs, vLV2),
+    rs = str_remove_all(rs, vEvent),
+    rs = str_remove_all(rs, vStatus),
+    rs = str_remove_all(rs, vProcess),
+    rs = str_squish(rs),
+    rs = na_if(rs, "")
+  )
+
+sbj <- subject %>% 
+  filter(!is.na(rs))
+
+sbj %>% count(rs) %>% arrange(desc(n))
+```
+
+
