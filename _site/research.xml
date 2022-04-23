@@ -7,52 +7,7 @@
     <description>SJ
 </description>
     <generator>Distill</generator>
-    <lastBuildDate>Sat, 19 Feb 2022 00:00:00 +0000</lastBuildDate>
-    <item>
-      <title>CE5: Inspectors and Updates</title>
-      <dc:creator>Sarah Johnson</dc:creator>
-      <link>https://sarahjohnson.io/posts/2022-01-22-311-data-5</link>
-      <description>In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.</description>
-      <category>code enforcement</category>
-      <guid>https://sarahjohnson.io/posts/2022-01-22-311-data-5</guid>
-      <pubDate>Sat, 19 Feb 2022 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>CE4: Extracting resolution codes</title>
-      <dc:creator>Sarah Johnson</dc:creator>
-      <link>https://sarahjohnson.io/posts/2022-01-11-311-data-4</link>
-      <description>In this post I continue to clean up Memphis's code enforcement dataset by removing certain codes from the resolution summary.</description>
-      <category>code enforcement</category>
-      <guid>https://sarahjohnson.io/posts/2022-01-11-311-data-4</guid>
-      <pubDate>Fri, 21 Jan 2022 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>CE3: The quest for tidy data</title>
-      <dc:creator>Sarah Johnson</dc:creator>
-      <link>https://sarahjohnson.io/posts/2022-01-10-311-data-3</link>
-      <description>How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.</description>
-      <category>code enforcement</category>
-      <guid>https://sarahjohnson.io/posts/2022-01-10-311-data-3</guid>
-      <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>CE2: Searching for housing code enforcement requests</title>
-      <dc:creator>Sarah Johnson</dc:creator>
-      <link>https://sarahjohnson.io/posts/2021-12-04-311-data-2</link>
-      <description>How to import the dataset, filter for CE, and begin searching for housing violations.</description>
-      <category>code enforcement</category>
-      <guid>https://sarahjohnson.io/posts/2021-12-04-311-data-2</guid>
-      <pubDate>Sat, 04 Dec 2021 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>CE1: Intro to Memphis' 311 dataset</title>
-      <dc:creator>Sarah Johnson</dc:creator>
-      <link>https://sarahjohnson.io/posts/2021-12-03-311-data</link>
-      <description>Introducing the public dataset containing all 311 service requests since 2016.</description>
-      <category>code enforcement</category>
-      <guid>https://sarahjohnson.io/posts/2021-12-03-311-data</guid>
-      <pubDate>Fri, 03 Dec 2021 00:00:00 +0000</pubDate>
-    </item>
+    <lastBuildDate>Wed, 27 Oct 2021 00:00:00 +0000</lastBuildDate>
     <item>
       <title>Housing Units</title>
       <dc:creator>Sarah Johnson</dc:creator>

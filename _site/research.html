@@ -1861,6 +1861,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
+        if ($(this).children()[0].nodeName == "D-FOOTNOTE") {
+          var fn = $(this).children()[0]
+          $(this).html(fn.shadowRoot.querySelector("sup"))
+          $(this).id = fn.id
+          fn.remove()
+        }
         var refs = $(this).attr('data-cites').split(" ");
         var refHtml = refs.map(function(ref) {
           return "<p>" + $('#ref-' + ref).html() + "</p>";
@@ -2035,7 +2041,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2217,99 +2223,6 @@ function init_posts_list() {
 <div class="posts-container posts-with-sidebar posts-apply-limit l-screen-inset">
 <div class="posts-list">
 <h1 class="posts-list-caption" data-caption="Research">Research</h1>
-<a href="posts/2022-01-22-311-data-5/" class="post-preview">
-<script class="post-metadata" type="text/json">{"categories":["code enforcement"]}</script>
-<div class="metadata">
-<div class="publishedDate">Feb. 19, 2022</div>
-<div class="dt-authors">
-<div class="dt-author">Sarah Johnson</div>
-</div>
-</div>
-<div class="thumbnail"></div>
-<div class="description">
-<h2>CE5: Inspectors and Updates</h2>
-<div class="dt-tags">
-<div class="dt-tag">code enforcement</div>
-</div>
-<p>In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.</p>
-</div>
-</a>
-<a href="posts/2022-01-11-311-data-4/" class="post-preview">
-<script class="post-metadata" type="text/json">{"categories":["code enforcement"]}</script>
-<div class="metadata">
-<div class="publishedDate">Jan. 21, 2022</div>
-<div class="dt-authors">
-<div class="dt-author">Sarah Johnson</div>
-</div>
-</div>
-<div class="thumbnail">
-<img/>
-</div>
-<div class="description">
-<h2>CE4: Extracting resolution codes</h2>
-<div class="dt-tags">
-<div class="dt-tag">code enforcement</div>
-</div>
-<p>In this post I continue to clean up Memphis's code enforcement dataset by removing certain codes from the resolution summary.</p>
-</div>
-</a>
-<a href="posts/2022-01-10-311-data-3/" class="post-preview">
-<script class="post-metadata" type="text/json">{"categories":["code enforcement"]}</script>
-<div class="metadata">
-<div class="publishedDate">Jan. 10, 2022</div>
-<div class="dt-authors">
-<div class="dt-author">Sarah Johnson</div>
-</div>
-</div>
-<div class="thumbnail">
-<img/>
-</div>
-<div class="description">
-<h2>CE3: The quest for tidy data</h2>
-<div class="dt-tags">
-<div class="dt-tag">code enforcement</div>
-</div>
-<p>How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.</p>
-</div>
-</a>
-<a href="posts/2021-12-04-311-data-2/" class="post-preview">
-<script class="post-metadata" type="text/json">{"categories":["code enforcement"]}</script>
-<div class="metadata">
-<div class="publishedDate">Dec. 4, 2021</div>
-<div class="dt-authors">
-<div class="dt-author">Sarah Johnson</div>
-</div>
-</div>
-<div class="thumbnail">
-<img/>
-</div>
-<div class="description">
-<h2>CE2: Searching for housing code enforcement requests</h2>
-<div class="dt-tags">
-<div class="dt-tag">code enforcement</div>
-</div>
-<p>How to import the dataset, filter for CE, and begin searching for housing violations.</p>
-</div>
-</a>
-<a href="posts/2021-12-03-311-data/" class="post-preview">
-<script class="post-metadata" type="text/json">{"categories":["code enforcement"]}</script>
-<div class="metadata">
-<div class="publishedDate">Dec. 3, 2021</div>
-<div class="dt-authors">
-<div class="dt-author">Sarah Johnson</div>
-</div>
-</div>
-<div class="thumbnail">
-<img/>
-</div>
-<div class="description">
-<h2>CE1: Intro to Memphis' 311 dataset</h2>
-<div class="dt-tags">
-<div class="dt-tag">code enforcement</div>
-</div>
-<p>Introducing the public dataset containing all 311 service requests since 2016.</p>
-</div>
-</a>
 <a href="posts/2021-10-27-housing-units/" class="post-preview">
 <script class="post-metadata" type="text/json">{"categories":["census"]}</script>
 <div class="metadata">
@@ -2319,7 +2232,7 @@ function init_posts_list() {
 </div>
 </div>
 <div class="thumbnail">
-<img data-src="posts/2021-10-27-housing-units/housing-units_files/figure-html5/tract-1.png"/>
+<img src="posts/2021-10-27-housing-units/housing-units_files/figure-html5/tract-1.png"/>
 </div>
 <div class="description">
 <h2>Housing Units</h2>
@@ -2338,7 +2251,7 @@ function init_posts_list() {
 </div>
 </div>
 <div class="thumbnail">
-<img data-src="posts/2021-10-22-boundaries/IMG_2501.png"/>
+<img src="posts/2021-10-22-boundaries/IMG_2501.png"/>
 </div>
 <div class="description">
 <h2>Mapping Memphis</h2>
@@ -2355,15 +2268,11 @@ function init_posts_list() {
 <ul>
 <li>
 <a href="#category:articles">articles</a>
-<span class="category-count">(7)</span>
+<span class="category-count">(2)</span>
 </li>
 <li>
 <a href="#category:census">census</a>
 <span class="category-count">(2)</span>
-</li>
-<li>
-<a href="#category:code_enforcement">code enforcement</a>
-<span class="category-count">(5)</span>
 </li>
 </ul>
 </div>
@@ -2383,7 +2292,8 @@ function init_posts_list() {
 
 
 <div class="d-article">
-<div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
