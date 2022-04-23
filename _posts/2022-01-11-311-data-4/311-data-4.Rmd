@@ -12,6 +12,7 @@ output:
     self_contained: false
     toc: true
 repository_url: https://github.com/sj-io/sj-distill
+draft: true
 ---
 
 ```{r setup, include=FALSE}

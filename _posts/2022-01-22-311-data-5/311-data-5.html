@@ -112,7 +112,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","categories","output","repository_url"]}},"value":[{"type":"character","attributes":{},"value":["CE5: Inspectors and Updates"]},{"type":"character","attributes":{},"value":["In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Sarah Johnson"]}]}]},{"type":"character","attributes":{},"value":["2022-02-19"]},{"type":"character","attributes":{},"value":["code enforcement"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://github.com/sj-io/sj-distill"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","categories","output","repository_url","draft"]}},"value":[{"type":"character","attributes":{},"value":["CE5: Inspectors and Updates"]},{"type":"character","attributes":{},"value":["In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Sarah Johnson"]}]}]},{"type":"character","attributes":{},"value":["2022-02-19"]},{"type":"character","attributes":{},"value":["code enforcement"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://github.com/sj-io/sj-distill"]},{"type":"logical","attributes":{},"value":[true]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -1444,7 +1444,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="311-data-5_files/header-attrs-2.11/header-attrs.js"></script>
+  <script src="311-data-5_files/header-attrs-2.13/header-attrs.js"></script>
   <script src="311-data-5_files/jquery-3.6.0/jquery-3.6.0.min.js"></script>
   <script src="311-data-5_files/popper-2.6.0/popper.min.js"></script>
   <link href="311-data-5_files/tippy-6.2.7/tippy.css" rel="stylesheet" />
@@ -1481,7 +1481,9 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <div class="dt=tag">code enforcement</div>
 </div>
 <!--/radix_placeholder_categories-->
-<p><p>In this post I further tidy the resolution summary of Memphis’s code enforcement dataset by extracting status updates and mentions of code inspectors.</p></p>
+<p><p>In this post I further tidy the resolution summary of Memphis’s
+code enforcement dataset by extracting status updates and mentions of
+code inspectors.</p></p>
 </div>
 
 <div class="d-byline">
@@ -1498,19 +1500,45 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <li><a href="#starting-code">Starting Code</a>
 <ul>
 <li><a href="#extract-numbers">Extract numbers</a></li>
-<li><a href="#extract-resolution-codes">Extract Resolution Codes</a></li>
+<li><a href="#extract-resolution-codes">Extract Resolution
+Codes</a></li>
 </ul></li>
 <li><a href="#code-inspectors">Code Inspectors</a></li>
 <li><a href="#status-updates">Status Updates</a></li>
 </ul>
 </nav>
 </div>
-<p>This post is part of a series breaking down Memphis code enforcement data to find information relevant to renter-occupied housing. I am currently working with a version of the dataset downloaded December 3, 2021 that contains 53 columns and 1.3 million rows.</p>
-<p><a href="https://sarahjohnson.io/posts/2021-12-03-311-data/">Part one</a> introduced the dataset and identified the most useful columns for my research. <a href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/">Part two</a> looked at how to import the dataset in R and do basic filtering to try and find housing-related requests. In <a href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">part three</a> I clarified my goal and laid out plans for how to tidy the dataset. Currently I am trying to extract important information from the <code>RESOLUTION_SUMMARY</code>, a catch-all, manually-entered column.</p>
-<p>In part three I moved numerical information into new columns, including dates, phone numbers, and references to other service requests. In <a href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/">part four</a> I removed instances where the <code>RESOLUTION_SUMMARY</code> duplicated information found in the <code>RESOLUTION_CODE</code> column, which code inspectors use to categorize how a request was resolved. I also manually created a list of resolutions not currently included in the <code>RESOLUTION_CODE</code> column.</p>
-<p>In this post I will continue to clean up the <code>RESOLUTION_SUMMARY</code> column by extracting mentions of code inspectors and creating a new column to include updates related to a service request.</p>
+<p>This post is part of a series breaking down Memphis code enforcement
+data to find information relevant to renter-occupied housing. I am
+currently working with a version of the dataset downloaded December 3,
+2021 that contains 53 columns and 1.3 million rows.</p>
+<p><a href="https://sarahjohnson.io/posts/2021-12-03-311-data/">Part
+one</a> introduced the dataset and identified the most useful columns
+for my research. <a
+href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/">Part two</a>
+looked at how to import the dataset in R and do basic filtering to try
+and find housing-related requests. In <a
+href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">part
+three</a> I clarified my goal and laid out plans for how to tidy the
+dataset. Currently I am trying to extract important information from the
+<code>RESOLUTION_SUMMARY</code>, a catch-all, manually-entered
+column.</p>
+<p>In part three I moved numerical information into new columns,
+including dates, phone numbers, and references to other service
+requests. In <a
+href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/">part
+four</a> I removed instances where the <code>RESOLUTION_SUMMARY</code>
+duplicated information found in the <code>RESOLUTION_CODE</code> column,
+which code inspectors use to categorize how a request was resolved. I
+also manually created a list of resolutions not currently included in
+the <code>RESOLUTION_CODE</code> column.</p>
+<p>In this post I will continue to clean up the
+<code>RESOLUTION_SUMMARY</code> column by extracting mentions of code
+inspectors and creating a new column to include updates related to a
+service request.</p>
 <h2 id="starting-code">Starting Code</h2>
-<p>First, import the dataset. I alter some columns to all lowercase to make data matching easier.</p>
+<p>First, import the dataset. I alter some columns to all lowercase to
+make data matching easier.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span>
@@ -1523,7 +1551,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Filter the <code>DEPARTMENT</code> for code enforcement data and the <code>REQUEST_TYPE</code> for “derelict” and “miscellaneous”, the two request types relevant to rental housing. I further narrowed my focus to four columns: the <code>INCIDENT_NUMBER</code>, or service request (SR) number, to use as a key, and three columns related to the request’s resolution.</p>
+<p>Filter the <code>DEPARTMENT</code> for code enforcement data and the
+<code>REQUEST_TYPE</code> for “derelict” and “miscellaneous”, the two
+request types relevant to rental housing. I further narrowed my focus to
+four columns: the <code>INCIDENT_NUMBER</code>, or service request (SR)
+number, to use as a key, and three columns related to the request’s
+resolution.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>zCE</span> <span class='op'>&lt;-</span> <span class='va'>zService_Requests_since_2016</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1537,10 +1570,17 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Of the 1.3 million rows in the dataset, 165,836 fall under code enforcement, and 62,470 contained the relevant <code>REQUEST_TYPE</code>. There were 14,902 rows omitted due to an empty <code>RESOLUTION_SUMMARY</code>.</p>
+<p>Of the 1.3 million rows in the dataset, 165,836 fall under code
+enforcement, and 62,470 contained the relevant
+<code>REQUEST_TYPE</code>. There were 14,902 rows omitted due to an
+empty <code>RESOLUTION_SUMMARY</code>.</p>
 <p>The zCE table has 4 columns and 47,568 rows.</p>
 <h3 id="extract-numbers">Extract numbers</h3>
-<p>Using the code from <a href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">CE3</a>, separate numerical data into new columns. The following code will be used to find mentions of service request numbers, dates, and tax sale numbers.</p>
+<p>Using the code from <a
+href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">CE3</a>,
+separate numerical data into new columns. The following code will be
+used to find mentions of service request numbers, dates, and tax sale
+numbers.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vSR</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
@@ -1578,8 +1618,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>I am hiding the code used to identify phone numbers from these blog posts due to privacy concerns.</p>
-<p>Use the above code to extract this information from the resolution summary into new columns. I also added a section of code (containing <code>"\\W"</code>) to remove non-alphanumeric characters, due to punctuation and symbols complicating future code.</p>
+<p>I am hiding the code used to identify phone numbers from these blog
+posts due to privacy concerns.</p>
+<p>Use the above code to extract this information from the resolution
+summary into new columns. I also added a section of code (containing
+<code>"\\W"</code>) to remove non-alphanumeric characters, due to
+punctuation and symbols complicating future code.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>zNumbers</span> <span class='op'>&lt;-</span> <span class='va'>zCE</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1605,7 +1649,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>I then remove rows where the resolution summary and resolution code columns are empty, to see which rows I still need to clean up.</p>
+<p>I then remove rows where the resolution summary and resolution code
+columns are empty, to see which rows I still need to clean up.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>zNum</span> <span class='op'>&lt;-</span> <span class='va'>zNumbers</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1613,9 +1658,15 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>There are 45,333 rows that still contain information in the resolution summary or resolution code.</p>
+<p>There are 45,333 rows that still contain information in the
+resolution summary or resolution code.</p>
 <h3 id="extract-resolution-codes">Extract Resolution Codes</h3>
-<p>Using the code from <a href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/">CE4</a>, identify instances where the resolution summary contains duplicate information found in the resolution code. I also created an incomplete list of other resolutions commonly mentioned but not included in the resolution code column.</p>
+<p>Using the code from <a
+href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/">CE4</a>,
+identify instances where the resolution summary contains duplicate
+information found in the resolution code. I also created an incomplete
+list of other resolutions commonly mentioned but not included in the
+resolution code column.</p>
 <div class="layout-chunk" data-layout="l-body">
 <details>
 <summary>
@@ -1681,7 +1732,8 @@ Show code
 </div>
 </details>
 </div>
-<p>I extracted this information into a new column, <code>rc2</code>, a temporary secondary resolution code column.</p>
+<p>I extracted this information into a new column, <code>rc2</code>, a
+temporary secondary resolution code column.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>zRC</span> <span class='op'>&lt;-</span> <span class='va'>zNum</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1694,7 +1746,9 @@ Show code
 </code></pre>
 </div>
 </div>
-<p>Filter the dataset one last time to see which rows still contain information in the resolution summary. These rows will be the focus of this post.</p>
+<p>Filter the dataset one last time to see which rows still contain
+information in the resolution summary. These rows will be the focus of
+this post.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>todo</span> <span class='op'>&lt;-</span> <span class='va'>zRC</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>rs</span><span class='op'>)</span><span class='op'>)</span>
@@ -1703,7 +1757,8 @@ Show code
 </div>
 <p>There are 27,149 rows that still need to be cleaned up.</p>
 <h2 id="code-inspectors">Code Inspectors</h2>
-<p>To begin writing new code, let’s find the most common information that remains in the resolution summary.</p>
+<p>To begin writing new code, let’s find the most common information
+that remains in the resolution summary.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>todo</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/count.html'>count</a></span><span class='op'>(</span><span class='va'>rs</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/desc.html'>desc</a></span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span><span class='op'>)</span>
@@ -1724,8 +1779,11 @@ Show code
 10 at time of reinspection     155
 # … with 13,142 more rows</code></pre>
 </div>
-<p>Mentions of inspections are by far the most common entry. We can also see frequent mention of code inspectors assigned to the case (per inspector james, walker, burton, etc).</p>
-<p>To organize this data, I first identify mentions of certain people, including inspectors and tenants.</p>
+<p>Mentions of inspections are by far the most common entry. We can also
+see frequent mention of code inspectors assigned to the case (per
+inspector james, walker, burton, etc).</p>
+<p>To organize this data, I first identify mentions of certain people,
+including inspectors and tenants.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vRoles</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://stringr.tidyverse.org/reference/str_c.html'>str_c</a></span><span class='op'>(</span><span class='st'>"(per )?"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"insp(ector)?(?!ection)"</span>,
@@ -1735,7 +1793,8 @@ Show code
 </code></pre>
 </div>
 </div>
-<p>This information is separated into a new column and the dataset is again tidied up.</p>
+<p>This information is separated into a new column and the dataset is
+again tidied up.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>roles</span> <span class='op'>&lt;-</span> <span class='va'>todo</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1764,7 +1823,9 @@ Show code
 10 at time of reinspection     155
 # … with 13,043 more rows</code></pre>
 </div>
-<p>Next, I created a list of names of code inspectors. I did this by filtering the <code>roles</code> column for mentions of “inspector”, and manually building a list.</p>
+<p>Next, I created a list of names of code inspectors. I did this by
+filtering the <code>roles</code> column for mentions of “inspector”, and
+manually building a list.</p>
 <div class="layout-chunk" data-layout="l-body">
 <details>
 <summary>
@@ -1859,7 +1920,8 @@ Show code
 </div>
 </details>
 </div>
-<p>I then extracted inspector names into a separate column titled <code>person</code>.</p>
+<p>I then extracted inspector names into a separate column titled
+<code>person</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>insp</span> <span class='op'>&lt;-</span> <span class='va'>roles</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1872,7 +1934,8 @@ Show code
 </code></pre>
 </div>
 </div>
-<p>Once again, filter out rows that are now empty and count the most common entries that remain in the resolution summary.</p>
+<p>Once again, filter out rows that are now empty and count the most
+common entries that remain in the resolution summary.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>todo2</span> <span class='op'>&lt;-</span> <span class='va'>insp</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1896,9 +1959,14 @@ Show code
 10 at the time of the inspection            75
 # … with 12,480 more rows</code></pre>
 </div>
-<p>There are 23,618 rows that still contain information in the resolution summary. As above, the most common entries are related to inspections.</p>
+<p>There are 23,618 rows that still contain information in the
+resolution summary. As above, the most common entries are related to
+inspections.</p>
 <h2 id="status-updates">Status Updates</h2>
-<p>Rather than an inspector manually typing “at the time of inspection”, there would ideally be a column for common updates to service requests. Using the above table, I have created an incomplete list of some of the most common updates.</p>
+<p>Rather than an inspector manually typing “at the time of inspection”,
+there would ideally be a column for common updates to service requests.
+Using the above table, I have created an incomplete list of some of the
+most common updates.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vStatus</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
@@ -1925,7 +1993,9 @@ Show code
 </code></pre>
 </div>
 </div>
-<p>Per usual, I extracted this information into a new column and filtered to see what information still remains in the resolution summary column.</p>
+<p>Per usual, I extracted this information into a new column and
+filtered to see what information still remains in the resolution summary
+column.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>status</span> <span class='op'>&lt;-</span> <span class='va'>todo2</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1957,9 +2027,16 @@ Show code
 10 a notice to property from casual entry                           52
 # … with 10,780 more rows</code></pre>
 </div>
-<p>There are 15,459 rows that still contain information in the resolution column. Many rows only contain one or two words that have slipped by due to my imperfect data cleaning methods (on, and, the, file, from, house).</p>
-<p>Other rows show improvements that still need to be made to the resolution code column from the starting code (“close”, “this sr is cancelled and will be re<em>issued</em>…”, and “<em>issued</em> a notice to <em>board and secure</em> property”).</p>
-<p>Out of curiosity, let’s see what the most common entries are if we omit rows that start and end with a word or phrase mentioned below.</p>
+<p>There are 15,459 rows that still contain information in the
+resolution column. Many rows only contain one or two words that have
+slipped by due to my imperfect data cleaning methods (on, and, the,
+file, from, house).</p>
+<p>Other rows show improvements that still need to be made to the
+resolution code column from the starting code (“close”, “this sr is
+cancelled and will be re<em>issued</em>…”, and “<em>issued</em> a notice
+to <em>board and secure</em> property”).</p>
+<p>Out of curiosity, let’s see what the most common entries are if we
+omit rows that start and end with a word or phrase mentioned below.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vIncomplete</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://stringr.tidyverse.org/reference/str_c.html'>str_c</a></span><span class='op'>(</span><span class='st'>"^"</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
@@ -1999,12 +2076,37 @@ Show code
 # … with 10,761 more rows</code></pre>
 </div>
 <p>There are a few main takeaways from this final table.</p>
-<p>First, we can see how the “miscellaneous” request type is a catch all and not exclusive to housing requests, as seen by mention of a tire ordinance.</p>
-<p>Second, there are multiple rows that <em>should have</em> been captured by the resolution code section, but were missed due to typos (“uncopperative” and “violation resloved”). From my experience working with this dataset, typos are very common and will pose a difficult barrier to extracting all relevant and useful information. For this reason, I heavily emphasized in the original version of my capstone that more standardization in the code enforcement data entry process would greatly improve the amount of information researchers could gather.</p>
-<p>Third, many requests that have been closed out do not have a clear resolution. For instance, there are 55 service requests that were closed because an apartment complex sweep was cancelled–not because the property was repaired. There is no indication of when the apartment sweep has been rescheduled. Similarly, there are many rows where requests have been closed because the property transferred ownership (again, not because the property was repaired). These instances show the need for a place for inspectors to log updates, rather than erroneously closing and entering resolutions for properties still in disrepair.</p>
-<p>Finally, it is becoming harder to clean up large chunks of the resolution summary. The most common resolution summary that remains was only mentioned in 58 rows. While the code used so far has been able to clean up around 70% of the rows included in the original zCE dataset, it will be increasingly hard to extract data from the remaining 30% of rows.</p>
-<p>For my next post, I plan to recap the steps taken so far, clean up certain sections of code, and clear up confusion on any steps I have changed over the course of these posts.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<p>First, we can see how the “miscellaneous” request type is a catch all
+and not exclusive to housing requests, as seen by mention of a tire
+ordinance.</p>
+<p>Second, there are multiple rows that <em>should have</em> been
+captured by the resolution code section, but were missed due to typos
+(“uncopperative” and “violation resloved”). From my experience working
+with this dataset, typos are very common and will pose a difficult
+barrier to extracting all relevant and useful information. For this
+reason, I heavily emphasized in the original version of my capstone that
+more standardization in the code enforcement data entry process would
+greatly improve the amount of information researchers could gather.</p>
+<p>Third, many requests that have been closed out do not have a clear
+resolution. For instance, there are 55 service requests that were closed
+because an apartment complex sweep was cancelled–not because the
+property was repaired. There is no indication of when the apartment
+sweep has been rescheduled. Similarly, there are many rows where
+requests have been closed because the property transferred ownership
+(again, not because the property was repaired). These instances show the
+need for a place for inspectors to log updates, rather than erroneously
+closing and entering resolutions for properties still in disrepair.</p>
+<p>Finally, it is becoming harder to clean up large chunks of the
+resolution summary. The most common resolution summary that remains was
+only mentioned in 58 rows. While the code used so far has been able to
+clean up around 70% of the rows included in the original zCE dataset, it
+will be increasingly hard to extract data from the remaining 30% of
+rows.</p>
+<p>For my next post, I plan to recap the steps taken so far, clean up
+certain sections of code, and clear up confusion on any steps I have
+changed over the course of these posts.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>

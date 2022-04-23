@@ -12,6 +12,7 @@ output:
     self_contained: false
     toc: true
 repository_url: https://github.com/sj-io/sj-distill
+draft: true
 ---
 
 ```{r setup, include=FALSE}
@@ -107,19 +108,13 @@ Sometimes a service request will be closed because there is already an active SR
 
 Here is an example of five SRs that relate to each other, with four referencing another SR:
 
-+------------+-----------------+-----------------------------------------------------------+
-|            | Service Request | Resolution Summary                                        |
-+============+=================+===========================================================+
-| 1          | 4452866         | closed void tenant vacated property written up sr 4482990 |
-+------------+-----------------+-----------------------------------------------------------+
-| 2          | 4455128         | closed void tenant vacated property written up sr 4482990 |
-+------------+-----------------+-----------------------------------------------------------+
-| 3          | 4482990         | see sr 3734488                                            |
-+------------+-----------------+-----------------------------------------------------------+
-| 4          | 3734488         | see sr 5057460                                            |
-+------------+-----------------+-----------------------------------------------------------+
-| 5          | 5057460         | closed violation in compliance                            |
-+------------+-----------------+-----------------------------------------------------------+
+|     | Service Request | Resolution Summary                                        |
+|---------------|---------------|-------------------------------------------|
+| 1   | 4452866         | closed void tenant vacated property written up sr 4482990 |
+| 2   | 4455128         | closed void tenant vacated property written up sr 4482990 |
+| 3   | 4482990         | see sr 3734488                                            |
+| 4   | 3734488         | see sr 5057460                                            |
+| 5   | 5057460         | closed violation in compliance                            |
 
 My goal is to separate the referenced SRs into a new column and clean up extra words. To do this I'll be using the **stringr** package, part of the **tidyverse** package loaded above. In each section of code for this post, I start by creating a (very ugly) string that matches the pattern of the number I'm trying to find and select surrounding words. Then I extract the information into a new column and remove it from the resolution summary.
 

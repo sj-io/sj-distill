@@ -112,7 +112,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","categories","output","repository_url"]}},"value":[{"type":"character","attributes":{},"value":["CE4: Extracting resolution codes"]},{"type":"character","attributes":{},"value":["In this post I continue to clean up Memphis's code enforcement dataset by removing certain codes from the resolution summary.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Sarah Johnson"]}]}]},{"type":"character","attributes":{},"value":["2022-01-21"]},{"type":"character","attributes":{},"value":["code enforcement"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://github.com/sj-io/sj-distill"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","categories","output","repository_url","draft"]}},"value":[{"type":"character","attributes":{},"value":["CE4: Extracting resolution codes"]},{"type":"character","attributes":{},"value":["In this post I continue to clean up Memphis's code enforcement dataset by removing certain codes from the resolution summary.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Sarah Johnson"]}]}]},{"type":"character","attributes":{},"value":["2022-01-21"]},{"type":"character","attributes":{},"value":["code enforcement"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://github.com/sj-io/sj-distill"]},{"type":"logical","attributes":{},"value":[true]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -1264,6 +1264,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
+        if ($(this).children()[0].nodeName == "D-FOOTNOTE") {
+          var fn = $(this).children()[0]
+          $(this).html(fn.shadowRoot.querySelector("sup"))
+          $(this).id = fn.id
+          fn.remove()
+        }
         var refs = $(this).attr('data-cites').split(" ");
         var refHtml = refs.map(function(ref) {
           return "<p>" + $('#ref-' + ref).html() + "</p>";
@@ -1438,7 +1444,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="311-data-4_files/header-attrs-2.11/header-attrs.js"></script>
+  <script src="311-data-4_files/header-attrs-2.13/header-attrs.js"></script>
   <script src="311-data-4_files/jquery-3.6.0/jquery-3.6.0.min.js"></script>
   <script src="311-data-4_files/popper-2.6.0/popper.min.js"></script>
   <link href="311-data-4_files/tippy-6.2.7/tippy.css" rel="stylesheet" />
@@ -1475,7 +1481,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <div class="dt=tag">code enforcement</div>
 </div>
 <!--/radix_placeholder_categories-->
-<p><p>In this post I continue to clean up Memphis’s code enforcement dataset by removing certain codes from the resolution summary.</p></p>
+<p><p>In this post I continue to clean up Memphis’s code enforcement
+dataset by removing certain codes from the resolution summary.</p></p>
 </div>
 
 <div class="d-byline">
@@ -1492,7 +1499,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <li><a href="#starting-code">Starting Code</a>
 <ul>
 <li><a href="#import-dataset">Import dataset</a></li>
-<li><a href="#filter-for-ce-data-omit-nas">Filter for CE data, omit NAs</a></li>
+<li><a href="#filter-for-ce-data-omit-nas">Filter for CE data, omit
+NAs</a></li>
 <li><a href="#extract-numbers">Extract numbers</a></li>
 </ul></li>
 <li><a href="#omit-resolution-codes">Omit Resolution Codes</a>
@@ -1504,12 +1512,41 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </ul>
 </nav>
 </div>
-<p>This post is part of a series breaking down Memphis code enforcement data. <a href="https://sarahjohnson.io/posts/2021-12-03-311-data/">Part one</a> introduced the dataset and briefly explained the purpose of all 53 columns. <a href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/">Part two</a> looked at how to import the dataset in R and do basic filtering to try and find housing-related requests. Since that post I have decided to take a different approach to tidying the dataset, but there’s still useful information, such as <a href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/#filter-for-housing">the frequency of each request type for the service requests</a>.</p>
-<p>In <a href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">part three</a> I clarified my goal and laid out plans for how I will tidy this dataset moving forward. Currently I am trying to extract important information from the <code>RESOLUTION_SUMMARY</code> variable, a catch-all, manually-entered column. Previously, I extracted dates, phone numbers, and references to other service requests into new columns. In this post I will remove instances where the <code>RESOLUTION_SUMMARY</code> duplicates information found in the <code>RESOLUTION_CODE</code> column.</p>
+<p>This post is part of a series breaking down Memphis code enforcement
+data. <a href="https://sarahjohnson.io/posts/2021-12-03-311-data/">Part
+one</a> introduced the dataset and briefly explained the purpose of all
+53 columns. <a
+href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/">Part two</a>
+looked at how to import the dataset in R and do basic filtering to try
+and find housing-related requests. Since that post I have decided to
+take a different approach to tidying the dataset, but there’s still
+useful information, such as <a
+href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/#filter-for-housing">the
+frequency of each request type for the service requests</a>.</p>
+<p>In <a
+href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">part
+three</a> I clarified my goal and laid out plans for how I will tidy
+this dataset moving forward. Currently I am trying to extract important
+information from the <code>RESOLUTION_SUMMARY</code> variable, a
+catch-all, manually-entered column. Previously, I extracted dates, phone
+numbers, and references to other service requests into new columns. In
+this post I will remove instances where the
+<code>RESOLUTION_SUMMARY</code> duplicates information found in the
+<code>RESOLUTION_CODE</code> column.</p>
 <h2 id="starting-code">Starting Code</h2>
-<p>This section uses code from the <a href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/">second</a> and <a href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">third</a> posts to get started. Please refer to those posts for more in-depth explanations of what I’m doing, or you can <a href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/#omit-resolution-codes">skip ahead</a> to the new code.</p>
+<p>This section uses code from the <a
+href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/">second</a>
+and <a
+href="https://sarahjohnson.io/posts/2022-01-10-311-data-3/">third</a>
+posts to get started. Please refer to those posts for more in-depth
+explanations of what I’m doing, or you can <a
+href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/#omit-resolution-codes">skip
+ahead</a> to the new code.</p>
 <h3 id="import-dataset">Import dataset</h3>
-<p>To start, import the dataset. I’m still working with a version downloaded December 3, 2021, which is 53 columns and 1,311,942 rows. I’m altering some columns to all lower case, because it makes future data matching easier.</p>
+<p>To start, import the dataset. I’m still working with a version
+downloaded December 3, 2021, which is 53 columns and 1,311,942 rows. I’m
+altering some columns to all lower case, because it makes future data
+matching easier.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span>
@@ -1523,8 +1560,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </div>
 </div>
 <h3 id="filter-for-ce-data-omit-nas">Filter for CE data, omit NAs</h3>
-<p>Narrow the dataset for Code Enforcement. I also filtered <code>REQUEST_TYPE</code> for “derelict” and “miscellaneous”, the two request types relevant to rental housing.</p>
-<p>For this post I’ll be working with three columns related to the resolution, and the <code>INCIDENT_NUMBER</code> (AKA service request number) as a key. I renamed the columns to make work faster.</p>
+<p>Narrow the dataset for Code Enforcement. I also filtered
+<code>REQUEST_TYPE</code> for “derelict” and “miscellaneous”, the two
+request types relevant to rental housing.</p>
+<p>For this post I’ll be working with three columns related to the
+resolution, and the <code>INCIDENT_NUMBER</code> (AKA service request
+number) as a key. I renamed the columns to make work faster.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>zCE</span> <span class='op'>&lt;-</span> <span class='va'>zService_Requests_since_2016</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1538,10 +1579,16 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Of the 1.3 million rows in this dataset, 165,836 fall under Code Enforcement, and 62,470 of those are listed as “Miscellaneous” or “Substandard, Derelict Struc”. There were 14,902 rows omitted because they had an empty <code>RESOLUTION_SUMMARY</code>.</p>
+<p>Of the 1.3 million rows in this dataset, 165,836 fall under Code
+Enforcement, and 62,470 of those are listed as “Miscellaneous” or
+“Substandard, Derelict Struc”. There were 14,902 rows omitted because
+they had an empty <code>RESOLUTION_SUMMARY</code>.</p>
 <p>The <code>zCE</code> table has 4 columns and 47,568 rows.</p>
 <h3 id="extract-numbers">Extract numbers</h3>
-<p>Next I use the code from my last post to clean up the resolution summary. I remove instances of service request numbers, dates, tax sale numbers, and phone numbers and separate that information into separate columns.</p>
+<p>Next I use the code from my last post to clean up the resolution
+summary. I remove instances of service request numbers, dates, tax sale
+numbers, and phone numbers and separate that information into separate
+columns.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vSR</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
@@ -1579,7 +1626,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>As mentioned in the last post, I am hiding the code used to extract phone numbers from blog posts due to privacy concerns.</p>
+<p>As mentioned in the last post, I am hiding the code used to extract
+phone numbers from blog posts due to privacy concerns.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>numbers</span> <span class='op'>&lt;-</span> <span class='va'>zCE</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1605,7 +1653,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Since I’m cleaning up the resolution summary and resolution codes, I can remove rows where these columns are <em>NA</em>.</p>
+<p>Since I’m cleaning up the resolution summary and resolution codes, I
+can remove rows where these columns are <em>NA</em>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>num</span> <span class='op'>&lt;-</span> <span class='va'>numbers</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1613,10 +1662,14 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>In the last post I did not work with the resolution code column. Removing rows where this column was <em>NA</em> omitted an additional 14 rows.</p>
+<p>In the last post I did not work with the resolution code column.
+Removing rows where this column was <em>NA</em> omitted an additional 14
+rows.</p>
 <p>The starting dataset is 45,333 rows and seven columns.</p>
 <h2 id="omit-resolution-codes">Omit Resolution Codes</h2>
-<p>While perusing the data, I noticed that frequently the only information entered in the resolution summary is the resolution code. To see this, compare the most common resolution codes and summaries.</p>
+<p>While perusing the data, I noticed that frequently the only
+information entered in the resolution summary is the resolution code. To
+see this, compare the most common resolution codes and summaries.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/count.html'>count</a></span><span class='op'>(</span><span class='va'>rcm</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/desc.html'>desc</a></span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span><span class='op'>)</span>
@@ -1655,9 +1708,13 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 10 violation has been corrected                                 427
 # … with 16,075 more rows</code></pre>
 </div>
-<p>Since this information is already in its own column, we don’t need it duplicated.</p>
+<p>Since this information is already in its own column, we don’t need it
+duplicated.</p>
 <h3 id="attempt-1">Attempt 1</h3>
-<p>My first attempt was straightforward: if the resolution summary contained the same words found in the resolution code or code meaning, remove it from the summary. I use <code>str_remove()</code> to remove instances where this info is repeated.</p>
+<p>My first attempt was straightforward: if the resolution summary
+contained the same words found in the resolution code or code meaning,
+remove it from the summary. I use <code>str_remove()</code> to remove
+instances where this info is repeated.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dupCode</span> <span class='op'>&lt;-</span> <span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1680,8 +1737,16 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Removing instances where the resolution summary restated the resolution code or resolution code meaning cleared out the resolution summary of 11,106 rows, 23% of the starting <code>zCE</code> dataset.</p>
-<p>The <code>newNA</code> dataset was created to double check my results to make sure I didn’t erroneously clear out any resolution summaries. The dataset takes rows where the new output is <em>NA</em> and joins in the original resolution summary (<code>rs.y</code>). I use the <code>count()</code> function to compact the 11,106 rows to show unique summaries.</p>
+<p>Removing instances where the resolution summary restated the
+resolution code or resolution code meaning cleared out the resolution
+summary of 11,106 rows, 23% of the starting <code>zCE</code>
+dataset.</p>
+<p>The <code>newNA</code> dataset was created to double check my results
+to make sure I didn’t erroneously clear out any resolution summaries.
+The dataset takes rows where the new output is <em>NA</em> and joins in
+the original resolution summary (<code>rs.y</code>). I use the
+<code>count()</code> function to compact the 11,106 rows to show unique
+summaries.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>newNA</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/count.html'>count</a></span><span class='op'>(</span><span class='va'>rs.y</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span>
@@ -1702,8 +1767,13 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 10 ja , # , # &amp; #          1
 # … with 41 more rows</code></pre>
 </div>
-<p>Of the 11K+ rows that are now <em>NA,</em> there are only 51 unique resolution summaries, and it appears most of those variations are from punctuation and symbols. Only a snippet of the old resolution summaries are shown here, but I can verify on the back-end that there were no rows with other information that were accidentally removed.</p>
-<p>Now let’s see what remains in the 34,486 rows that still contain information in the resolution summary.</p>
+<p>Of the 11K+ rows that are now <em>NA,</em> there are only 51 unique
+resolution summaries, and it appears most of those variations are from
+punctuation and symbols. Only a snippet of the old resolution summaries
+are shown here, but I can verify on the back-end that there were no rows
+with other information that were accidentally removed.</p>
+<p>Now let’s see what remains in the 34,486 rows that still contain
+information in the resolution summary.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>todo</span> <span class='op'>&lt;-</span> <span class='va'>dupCode</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>rs</span><span class='op'>)</span><span class='op'>)</span>
@@ -1726,9 +1796,18 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 10 per inspector james                                          211
 # … with 15,652 more rows</code></pre>
 </div>
-<p>It looks like there’s still plenty of rows that closely, but don’t exactly, match resolution codes. Rows that said “case not justified” were removed, but not rows that only said “not justified”.</p>
-<p>For other rows, we might need to create a new resolution code. There is no resolution code for “in compliance” or “resolved”; these are often coded “closed, miscellaneous”. However, I think it would be useful to know if a request was closed because it was brought into compliance.</p>
-<p>I also found that my code messed up some resolution summaries. The <code>str_remove()</code> removed partial word matches of codes found in the summary. So if a resolution code was “co”, it changed the word “in<strong>co</strong>rrect” to “inrrect” and “<strong>co</strong>unty” to “unty”.</p>
+<p>It looks like there’s still plenty of rows that closely, but don’t
+exactly, match resolution codes. Rows that said “case not justified”
+were removed, but not rows that only said “not justified”.</p>
+<p>For other rows, we might need to create a new resolution code. There
+is no resolution code for “in compliance” or “resolved”; these are often
+coded “closed, miscellaneous”. However, I think it would be useful to
+know if a request was closed because it was brought into compliance.</p>
+<p>I also found that my code messed up some resolution summaries. The
+<code>str_remove()</code> removed partial word matches of codes found in
+the summary. So if a resolution code was “co”, it changed the word
+“in<strong>co</strong>rrect” to “inrrect” and “<strong>co</strong>unty”
+to “unty”.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>todo</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='fu'><a href='https://stringr.tidyverse.org/reference/str_detect.html'>str_detect</a></span><span class='op'>(</span><span class='va'>rs</span>, <span class='st'>"inrrect"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='va'>rs</span><span class='op'>)</span>
@@ -1754,10 +1833,23 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </div>
 <p>Let’s find a way to rewrite this code and fix these problems.</p>
 <h3 id="attempt-2">Attempt 2</h3>
-<p>First, I will make sure that resolution codes and meanings do not partially match with words. Then, I will create an additional list of codes to add to the ones we are removing.</p>
+<p>First, I will make sure that resolution codes and meanings do not
+partially match with words. Then, I will create an additional list of
+codes to add to the ones we are removing.</p>
 <h4 id="no-partial-word-matches">No partial word matches</h4>
-<p>In an <a href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/#extract-numbers">earlier section</a>, I used <code>\\b</code> around the beginning and ends of words, which tells R to look for <strong>word boundaries</strong> and prevent partial matches. However, there’s no easy way (as far as I know) to include this in the <code>str_remove()</code> function. Instead, the easiest method is likely to create a list of all the resolution codes and meanings and add a <code>\\b</code> to the starts and ends of each.</p>
-<p>To do this, I first create a table with only the resolution code and meaning columns. I pivot these into one column, and keep only uniques. I also omit the word “shelby” because it is frequently used outside of the codes and can cause problems later on.</p>
+<p>In an <a
+href="https://sarahjohnson.io/posts/2022-01-11-311-data-4/#extract-numbers">earlier
+section</a>, I used <code>\\b</code> around the beginning and ends of
+words, which tells R to look for <strong>word boundaries</strong> and
+prevent partial matches. However, there’s no easy way (as far as I know)
+to include this in the <code>str_remove()</code> function. Instead, the
+easiest method is likely to create a list of all the resolution codes
+and meanings and add a <code>\\b</code> to the starts and ends of
+each.</p>
+<p>To do this, I first create a table with only the resolution code and
+meaning columns. I pivot these into one column, and keep only uniques. I
+also omit the word “shelby” because it is frequently used outside of the
+codes and can cause problems later on.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>RC</span> <span class='op'>&lt;-</span> <span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1769,21 +1861,24 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>There are 136 unique resolution codes and meanings. Next I convert the column to a list of values.</p>
+<p>There are 136 unique resolution codes and meanings. Next I convert
+the column to a list of values.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vRC</span> <span class='op'>&lt;-</span> <span class='va'>RC</span><span class='op'>$</span><span class='va'>rcs</span>
 </code></pre>
 </div>
 </div>
-<p>Now I can add <code>//b</code> to the beginning and end of each value with <code>str_c()</code>.</p>
+<p>Now I can add <code>//b</code> to the beginning and end of each value
+with <code>str_c()</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vRC1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://stringr.tidyverse.org/reference/str_c.html'>str_c</a></span><span class='op'>(</span><span class='st'>"\\b"</span>, <span class='va'>vRC</span>, <span class='st'>"\\b"</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://stringr.tidyverse.org/reference/str_c.html'>str_c</a></span><span class='op'>(</span>collapse <span class='op'>=</span> <span class='st'>"|"</span><span class='op'>)</span>
 </code></pre>
 </div>
 </div>
-<p>To see if this worked, I run my code again and use my new list of values with <code>str_remove()</code>.</p>
+<p>To see if this worked, I run my code again and use my new list of
+values with <code>str_remove()</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dupCode2</span> <span class='op'>&lt;-</span> <span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1817,7 +1912,9 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 # … with 90 more rows</code></pre>
 </div>
 <p>It worked! No more partial word matches.</p>
-<p>Running the new code converted an additional 163 rows to NA. This is because some rows contained a resolution code different from the one entered in the <code>rc</code> or <code>rcm</code> column.</p>
+<p>Running the new code converted an additional 163 rows to NA. This is
+because some rows contained a resolution code different from the one
+entered in the <code>rc</code> or <code>rcm</code> column.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>newNA2</span> <span class='op'>&lt;-</span> <span class='va'>dupCode2</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1829,24 +1926,31 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 <pre><code># A tibble: 163 × 5
-        sr rc.x       rcm.x                        rs.y          rs.x 
-     &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;                        &lt;chr&gt;         &lt;chr&gt;
- 1 4523704 npa-active keeps the file open in the … jw-dm         &lt;NA&gt; 
- 2 5419850 uc         uncooperative                no one home   &lt;NA&gt; 
- 3 5057458 npa-active keeps the file open in the … jw-dm         &lt;NA&gt; 
- 4 2948636 npa-active keeps the file open in the … justified, a… &lt;NA&gt; 
- 5 5387258 nj         case not justified           uncooperative &lt;NA&gt; 
- 6 5330236 vom        v.o. for miscellaneous       cvoid         &lt;NA&gt; 
- 7 4523696 shelby     shelby county owned propert… jw-dm         &lt;NA&gt; 
- 8 5466094 vom        v.o. for miscellaneous       no one home.  &lt;NA&gt; 
- 9 5423480 cvoid      closed void                  uncooperative &lt;NA&gt; 
-10 5423738 cvoid      closed void                  uncooperative &lt;NA&gt; 
+        sr rc.x       rcm.x                                rs.y  rs.x 
+     &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;                                &lt;chr&gt; &lt;chr&gt;
+ 1 4523704 npa-active keeps the file open in the system k… jw-dm &lt;NA&gt; 
+ 2 5419850 uc         uncooperative                        no o… &lt;NA&gt; 
+ 3 5057458 npa-active keeps the file open in the system k… jw-dm &lt;NA&gt; 
+ 4 2948636 npa-active keeps the file open in the system k… just… &lt;NA&gt; 
+ 5 5387258 nj         case not justified                   unco… &lt;NA&gt; 
+ 6 5330236 vom        v.o. for miscellaneous               cvoid &lt;NA&gt; 
+ 7 4523696 shelby     shelby county owned property. pleas… jw-dm &lt;NA&gt; 
+ 8 5466094 vom        v.o. for miscellaneous               no o… &lt;NA&gt; 
+ 9 5423480 cvoid      closed void                          unco… &lt;NA&gt; 
+10 5423738 cvoid      closed void                          unco… &lt;NA&gt; 
 # … with 153 more rows</code></pre>
 </div>
-<p>For this reason, in future instances I will use <code>str_extract()</code> to create a new resolution code column before using <code>str_remove()</code>.</p>
-<p>However, I’m not finished; I still need to catch partial code matches like “not justified” from the resolution summary.</p>
+<p>For this reason, in future instances I will use
+<code>str_extract()</code> to create a new resolution code column before
+using <code>str_remove()</code>.</p>
+<p>However, I’m not finished; I still need to catch partial code matches
+like “not justified” from the resolution summary.</p>
 <h4 id="manual-resolution-codes">Manual resolution codes</h4>
-<p>The easiest method to remove these additional matches (as far as I know) is to create my own list of codes and add it to the list of values to be extracted. The first portion of the list is existing codes that have been slightly reworded; the second half is new resolution codes I’ve created.</p>
+<p>The easiest method to remove these additional matches (as far as I
+know) is to create my own list of codes and add it to the list of values
+to be extracted. The first portion of the list is existing codes that
+have been slightly reworded; the second half is new resolution codes
+I’ve created.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vNewRC</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
@@ -1899,7 +2003,9 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>This list is by no means comprehensive or perfect, but it’s a good start. We can further refine it later. Now let’s rerun our code one last time using our new list of values.</p>
+<p>This list is by no means comprehensive or perfect, but it’s a good
+start. We can further refine it later. Now let’s rerun our code one last
+time using our new list of values.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dupCode3</span> <span class='op'>&lt;-</span> <span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1917,7 +2023,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Let’s see how many new rows are <em>NA</em>, meaning all information has been extracted from the resolution summary.</p>
+<p>Let’s see how many new rows are <em>NA</em>, meaning all information
+has been extracted from the resolution summary.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>newNA3</span> <span class='op'>&lt;-</span> <span class='va'>dupCode3</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -1929,22 +2036,25 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 <pre><code># A tibble: 5,815 × 5
-        sr rc.x       rcm.x                       rs.y           rs.x 
-     &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;                       &lt;chr&gt;          &lt;chr&gt;
- 1 2731732 npa-active keeps the file open in the… administrativ… &lt;NA&gt; 
- 2 2621056 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
- 3 2677350 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
- 4 4299426 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
- 5 2733374 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
- 6 2620298 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
- 7 2866626 cr         closed, rehab               rehabilitatio… &lt;NA&gt; 
- 8 3749828 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
- 9 4698796 npa-active keeps the file open in the… active npa ca… &lt;NA&gt; 
-10 4903736 cvom       comp. v.o. - miscellaneous  resolved, ten… &lt;NA&gt; 
+        sr rc.x       rcm.x                                rs.y  rs.x 
+     &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;                                &lt;chr&gt; &lt;chr&gt;
+ 1 2731732 npa-active keeps the file open in the system k… admi… &lt;NA&gt; 
+ 2 2621056 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+ 3 2677350 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+ 4 4299426 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+ 5 2733374 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+ 6 2620298 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+ 7 2866626 cr         closed, rehab                        reha… &lt;NA&gt; 
+ 8 3749828 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+ 9 4698796 npa-active keeps the file open in the system k… acti… &lt;NA&gt; 
+10 4903736 cvom       comp. v.o. - miscellaneous           reso… &lt;NA&gt; 
 # … with 5,805 more rows</code></pre>
 </div>
-<p>The custom list of resolution codes converted another 5,815 rows to <em>NA</em> since the last run, bringing our total to 17,081 for this post.</p>
-<p>Let’s see the most common information that remains in the resolution summary.</p>
+<p>The custom list of resolution codes converted another 5,815 rows to
+<em>NA</em> since the last run, bringing our total to 17,081 for this
+post.</p>
+<p>Let’s see the most common information that remains in the resolution
+summary.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>todo3</span> <span class='op'>&lt;-</span> <span class='va'>dupCode3</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='op'>!</span><span class='fu'><a href='https://rdrr.io/r/base/NA.html'>is.na</a></span><span class='op'>(</span><span class='va'>rs</span><span class='op'>)</span><span class='op'>)</span>
@@ -1967,9 +2077,16 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 10 per inspector burton         171
 # … with 14,530 more rows</code></pre>
 </div>
-<p>The most common resolution summaries remaining largely fall into two categories: indication that a property was inspected or rechecked; or the name of the inspector who updated the service request. I plan to address these issues in the next post. This will further heavily cut down on the amount of information remaining in the resolution summary.</p>
+<p>The most common resolution summaries remaining largely fall into two
+categories: indication that a property was inspected or rechecked; or
+the name of the inspector who updated the service request. I plan to
+address these issues in the next post. This will further heavily cut
+down on the amount of information remaining in the resolution
+summary.</p>
 <h2 id="final-code">Final Code</h2>
-<p>To finish out, I’ll combine all the relevant steps from above so I can easily copy and paste this code for future use. The first step is to create my list of resolution codes to extract.</p>
+<p>To finish out, I’ll combine all the relevant steps from above so I
+can easily copy and paste this code for future use. The first step is to
+create my list of resolution codes to extract.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>RC</span> <span class='op'>&lt;-</span> <span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
@@ -2031,7 +2148,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Step two is to extract this list of codes into their own column and remove them from the resolution summary.</p>
+<p>Step two is to extract this list of codes into their own column and
+remove them from the resolution summary.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>newRC</span> <span class='op'>&lt;-</span> <span class='va'>num</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -2049,8 +2167,16 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>All done! As I said above, this is not a comprehensive or final list of resolution codes, but it does clean out over 17,000 rows, approximately 36% of the original <code>zCE</code> dataset. Recall that the last post cleared out nearly 5% of resolution summaries. In total, nearly 41% of all rows in the <code>zCE</code> dataset have had all information extracted from the resolution summary. This is a major step towards having a tidy dataset that will be much easier to analyze and work with.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<p>All done! As I said above, this is not a comprehensive or final list
+of resolution codes, but it does clean out over 17,000 rows,
+approximately 36% of the original <code>zCE</code> dataset. Recall that
+the last post cleared out nearly 5% of resolution summaries. In total,
+nearly 41% of all rows in the <code>zCE</code> dataset have had all
+information extracted from the resolution summary. This is a major step
+towards having a tidy dataset that will be much easier to analyze and
+work with.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>

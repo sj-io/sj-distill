@@ -112,7 +112,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","categories","output","repository_url"]}},"value":[{"type":"character","attributes":{},"value":["CE3: The quest for tidy data"]},{"type":"character","attributes":{},"value":["How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Sarah Johnson"]}]}]},{"type":"character","attributes":{},"value":["2022-01-10"]},{"type":"character","attributes":{},"value":["code enforcement"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://github.com/sj-io/sj-distill"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","categories","output","repository_url","draft"]}},"value":[{"type":"character","attributes":{},"value":["CE3: The quest for tidy data"]},{"type":"character","attributes":{},"value":["How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Sarah Johnson"]}]}]},{"type":"character","attributes":{},"value":["2022-01-10"]},{"type":"character","attributes":{},"value":["code enforcement"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://github.com/sj-io/sj-distill"]},{"type":"logical","attributes":{},"value":[true]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -1264,6 +1264,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
+        if ($(this).children()[0].nodeName == "D-FOOTNOTE") {
+          var fn = $(this).children()[0]
+          $(this).html(fn.shadowRoot.querySelector("sup"))
+          $(this).id = fn.id
+          fn.remove()
+        }
         var refs = $(this).attr('data-cites').split(" ");
         var refHtml = refs.map(function(ref) {
           return "<p>" + $('#ref-' + ref).html() + "</p>";
@@ -1438,7 +1444,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="311-data-3_files/header-attrs-2.11/header-attrs.js"></script>
+  <script src="311-data-3_files/header-attrs-2.13/header-attrs.js"></script>
   <script src="311-data-3_files/jquery-3.6.0/jquery-3.6.0.min.js"></script>
   <script src="311-data-3_files/popper-2.6.0/popper.min.js"></script>
   <link href="311-data-3_files/tippy-6.2.7/tippy.css" rel="stylesheet" />
@@ -1475,7 +1481,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <div class="dt=tag">code enforcement</div>
 </div>
 <!--/radix_placeholder_categories-->
-<p><p>How I plan to clean the Memphis 311 dataset. Extracting SRs, dates, and phone numbers from the resolution summary.</p></p>
+<p><p>How I plan to clean the Memphis 311 dataset. Extracting SRs,
+dates, and phone numbers from the resolution summary.</p></p>
 </div>
 
 <div class="d-byline">
@@ -1494,7 +1501,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <li><a href="#the-plan">The Plan</a></li>
 <li><a href="#step-by-step-code">Step-By-Step Code</a>
 <ul>
-<li><a href="#references-to-other-service-requests-srs">References to other service requests (SRs)</a></li>
+<li><a href="#references-to-other-service-requests-srs">References to
+other service requests (SRs)</a></li>
 <li><a href="#dates">Dates</a></li>
 <li><a href="#phone-numbers">Phone Numbers</a></li>
 </ul></li>
@@ -1502,41 +1510,108 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </ul>
 </nav>
 </div>
-<p>Happy new year! It’s been about a month since my <a href="https://sarahjohnson.io/posts/2021-12-04-311-data-2">last post</a> analyzing Memphis code enforcement data, but I have been making steady progress at developing a way to tidy the dataset. Before getting into the code, I’d like to take a step back and explain my goals and plan.</p>
+<p>Happy new year! It’s been about a month since my <a
+href="https://sarahjohnson.io/posts/2021-12-04-311-data-2">last post</a>
+analyzing Memphis code enforcement data, but I have been making steady
+progress at developing a way to tidy the dataset. Before getting into
+the code, I’d like to take a step back and explain my goals and
+plan.</p>
 <h2 id="the-goal-tidy-data">The Goal: Tidy data</h2>
-<p>Currently I cannot answer basic questions I need to finish my capstone to my satisfaction. How many code enforcement requests are for structural violations? How many of those are for renter-occupied units/How often do renters contact code enforcement? What are the most common requests renters report? How are these requests resolved and how long does the process take?</p>
-<p>My overall goal is to convert Memphis’s code enforcement data into a tidy dataset. <strong>Tidy data</strong> is a standardized way to organize data that makes it easy for analysts to quickly find the information they’re looking for. In tidy data:</p>
+<p>Currently I cannot answer basic questions I need to finish my
+capstone to my satisfaction. How many code enforcement requests are for
+structural violations? How many of those are for renter-occupied
+units/How often do renters contact code enforcement? What are the most
+common requests renters report? How are these requests resolved and how
+long does the process take?</p>
+<p>My overall goal is to convert Memphis’s code enforcement data into a
+tidy dataset. <strong>Tidy data</strong> is a standardized way to
+organize data that makes it easy for analysts to quickly find the
+information they’re looking for. In tidy data:</p>
 <p>1. Each variable has its own column.</p>
 <p>2. Each observation has its own row.</p>
 <p>3. Each value has its own cell.</p>
 <figure>
-<img src="https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png" alt="Three rules make a dataset tidy: variables are in columns, observations are in rows, and values are in cells (Wickham &amp; Grolemund)." /><figcaption aria-hidden="true">Three rules make a dataset tidy: variables are in columns, observations are in rows, and values are in cells (<a href="https://r4ds.had.co.nz/tidy-data.html#introduction-6">Wickham &amp; Grolemund</a>).</figcaption>
+<img
+src="https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png"
+alt="Three rules make a dataset tidy: variables are in columns, observations are in rows, and values are in cells (Wickham &amp; Grolemund)." />
+<figcaption aria-hidden="true">Three rules make a dataset tidy:
+variables are in columns, observations are in rows, and values are in
+cells (<a
+href="https://r4ds.had.co.nz/tidy-data.html#introduction-6">Wickham
+&amp; Grolemund</a>).</figcaption>
 </figure>
-<p>The answer to my questions are mostly available in the dataset, but there is no easy way to find them. By writing R code, I plan to create a reproducible way to restructure this dataset to quickly and easily find the answer to these questions.</p>
+<p>The answer to my questions are mostly available in the dataset, but
+there is no easy way to find them. By writing R code, I plan to create a
+reproducible way to restructure this dataset to quickly and easily find
+the answer to these questions.</p>
 <h2 id="outlining-the-problem">Outlining the Problem</h2>
-<p>I’ve <a href="https://sarahjohnson.io/posts/2021-12-03-311-data/">previously discussed</a> how this dataset is overwhelming, with 53 columns and 1,311,942 rows as of December 3, 2021. In that post I briefly explained all the columns included in this dataset. Much of the bulk in columns are from various ways locations and dates and entered.</p>
-<p>The columns I have used most often are the <code>INCIDENT_NUMBER</code>, a seven-digit number for each service request that acts as a key to the dataset, the <code>REQUEST_TYPE</code>, which generally categorizes what the request is about, the <code>RESOLUTION_CODE</code>, where inspectors select a code to classify how the request has been updated or resolved, and the <code>RESOLUTION_SUMMARY</code>, where inspectors type in any and all descriptive info regarding the request.</p>
-<p>As I mentioned <a href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/#filter-for-housing">in my second post</a> regarding this dataset, there is no category under <code>REQUEST_TYPE</code> that contains all structural violations; many if not most fall under the “Miscellaneous” category, but not all miscellaneous requests are related to structural violations. However, the <code>RESOLUTION_CODE</code> and <code>RESOLUTION_SUMMARY</code> fields can sometimes tell us this information. Unfortunately, <code>RESOLUTION_CODES</code> are not always used consistently across inspectors, adding an additional hurdle.</p>
-<p>The <code>RESOLUTION_SUMMARY</code> contains a lot of valuable information, and extracting data from this column will prove key to answering my questions. However, because all the information is manually entered, there is less consistency and frequent typos, which make data analysis harder. Still, inspectors mostly have a standard way of entering information, so I believe I can find a way (while also improving my R skills).</p>
+<p>I’ve <a
+href="https://sarahjohnson.io/posts/2021-12-03-311-data/">previously
+discussed</a> how this dataset is overwhelming, with 53 columns and
+1,311,942 rows as of December 3, 2021. In that post I briefly explained
+all the columns included in this dataset. Much of the bulk in columns
+are from various ways locations and dates and entered.</p>
+<p>The columns I have used most often are the
+<code>INCIDENT_NUMBER</code>, a seven-digit number for each service
+request that acts as a key to the dataset, the
+<code>REQUEST_TYPE</code>, which generally categorizes what the request
+is about, the <code>RESOLUTION_CODE</code>, where inspectors select a
+code to classify how the request has been updated or resolved, and the
+<code>RESOLUTION_SUMMARY</code>, where inspectors type in any and all
+descriptive info regarding the request.</p>
+<p>As I mentioned <a
+href="https://sarahjohnson.io/posts/2021-12-04-311-data-2/#filter-for-housing">in
+my second post</a> regarding this dataset, there is no category under
+<code>REQUEST_TYPE</code> that contains all structural violations; many
+if not most fall under the “Miscellaneous” category, but not all
+miscellaneous requests are related to structural violations. However,
+the <code>RESOLUTION_CODE</code> and <code>RESOLUTION_SUMMARY</code>
+fields can sometimes tell us this information. Unfortunately,
+<code>RESOLUTION_CODES</code> are not always used consistently across
+inspectors, adding an additional hurdle.</p>
+<p>The <code>RESOLUTION_SUMMARY</code> contains a lot of valuable
+information, and extracting data from this column will prove key to
+answering my questions. However, because all the information is manually
+entered, there is less consistency and frequent typos, which make data
+analysis harder. Still, inspectors mostly have a standard way of
+entering information, so I believe I can find a way (while also
+improving my R skills).</p>
 <h2 id="the-plan">The Plan</h2>
 <p>To make the dataset tidy, I plan to:</p>
 <ul>
-<li><p>Eliminate the need for the <code>RESOLUTION_SUMMARY</code> column</p></li>
-<li><p>Collapse <strong>date</strong> and <strong>location</strong> columns</p></li>
-<li><p>Recode the <code>RESOLUTION_CODE</code> column to be more consistent</p></li>
-<li><p>Create new categories under <code>REQUEST_TYPE</code> for structural violations</p></li>
+<li><p>Eliminate the need for the <code>RESOLUTION_SUMMARY</code>
+column</p></li>
+<li><p>Collapse <strong>date</strong> and <strong>location</strong>
+columns</p></li>
+<li><p>Recode the <code>RESOLUTION_CODE</code> column to be more
+consistent</p></li>
+<li><p>Create new categories under <code>REQUEST_TYPE</code> for
+structural violations</p></li>
 </ul>
-<p>These goals often overlap. Dates, locations, and resolution codes are frequently mentioned in the <code>RESOLUTION_SUMMARY</code> column. Sometimes the only way to determine whether a request is related to a rental unit is to search that column for keywords like “tenant”. Cleaning up this column and extracting useful information is the largest obstacle to tidying the dataset.</p>
-<p>If I want to make regular posts/updates, I’ll need to break down this plan into smaller pieces. For this post I will begin to extract numerical information from the <code>RESOLUTION_SUMMARY</code> column. I am beginning with this step because identifying and extracting numbers in R is easier than filtering for words (which often contain typos).</p>
-<p>I will mainly be extracting three types of numbers from the <code>RESOLUTION_SUMMARY</code> column into new columns:</p>
+<p>These goals often overlap. Dates, locations, and resolution codes are
+frequently mentioned in the <code>RESOLUTION_SUMMARY</code> column.
+Sometimes the only way to determine whether a request is related to a
+rental unit is to search that column for keywords like “tenant”.
+Cleaning up this column and extracting useful information is the largest
+obstacle to tidying the dataset.</p>
+<p>If I want to make regular posts/updates, I’ll need to break down this
+plan into smaller pieces. For this post I will begin to extract
+numerical information from the <code>RESOLUTION_SUMMARY</code> column. I
+am beginning with this step because identifying and extracting numbers
+in R is easier than filtering for words (which often contain typos).</p>
+<p>I will mainly be extracting three types of numbers from the
+<code>RESOLUTION_SUMMARY</code> column into new columns:</p>
 <ol type="1">
 <li><p>References to other service requests → <code>ref</code></p></li>
 <li><p>Dates → <code>date</code></p></li>
 <li><p>Phone numbers → <code>ph</code></p></li>
 </ol>
-<p>Clearing out these numbers will greatly narrow down the amount of information in the <code>RESOLUTION_SUMMARY</code>.</p>
+<p>Clearing out these numbers will greatly narrow down the amount of
+information in the <code>RESOLUTION_SUMMARY</code>.</p>
 <h2 id="step-by-step-code">Step-By-Step Code</h2>
-<p>Since I’m breaking down my coding progress, I’m going to limit my columns to only the ones I need for this post. To get started, import the dataset.</p>
+<p>Since I’m breaking down my coding progress, I’m going to limit my
+columns to only the ones I need for this post. To get started, import
+the dataset.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span>
@@ -1547,8 +1622,13 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Filter the <code>DEPARTMENT</code> for “code enforcement”. I also filtered <code>REQUEST_TYPE</code> for “derelict” and “miscellaneous”, the two request types that contain rental housing requests.</p>
-<p>For this post I am only working with the <code>RESOLUTION_SUMMARY</code> column (renamed <code>rs</code>), plus the <code>INCIDENT_NUMBER</code> (renamed <code>sr</code>) as a key. The last filter omits rows where the resolution summary is <em>NA</em>.</p>
+<p>Filter the <code>DEPARTMENT</code> for “code enforcement”. I also
+filtered <code>REQUEST_TYPE</code> for “derelict” and “miscellaneous”,
+the two request types that contain rental housing requests.</p>
+<p>For this post I am only working with the
+<code>RESOLUTION_SUMMARY</code> column (renamed <code>rs</code>), plus
+the <code>INCIDENT_NUMBER</code> (renamed <code>sr</code>) as a key. The
+last filter omits rows where the resolution summary is <em>NA</em>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>zCE</span> <span class='op'>&lt;-</span> <span class='va'>zService_Requests_since_2016</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
@@ -1560,16 +1640,30 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Of the 1.3 million rows in this dataset, 165,836 fall under Code Enforcement, and 62,470 of those are listed as “Miscellaneous” or “Substandard, Derelict Struc”, the two categories which contain rental housing requests. There were 14,902 rows omitted because there was nothing entered into the <code>RESOLUTION_SUMMARY</code>.</p>
-<p>The table we’re starting with has 2 columns, <code>sr</code> (for service request) and <code>rs</code> (for resolution summary), and 47,568 rows.</p>
-<h3 id="references-to-other-service-requests-srs">References to other service requests (SRs)</h3>
-<p>Sometimes a service request will be closed because there is already an active SR for the address, or an SR will be closed in order to create a new one. Service requests are the easiest numbers to remove because they are all seven digits with no special characters, as opposed to dates and phone numbers which vary in length and format. The SRs are usually surrounded by some variation of the phrase “please refer to sr #xxxxxxx”.</p>
-<p>Here is an example of five SRs that relate to each other, with four referencing another SR:</p>
+<p>Of the 1.3 million rows in this dataset, 165,836 fall under Code
+Enforcement, and 62,470 of those are listed as “Miscellaneous” or
+“Substandard, Derelict Struc”, the two categories which contain rental
+housing requests. There were 14,902 rows omitted because there was
+nothing entered into the <code>RESOLUTION_SUMMARY</code>.</p>
+<p>The table we’re starting with has 2 columns, <code>sr</code> (for
+service request) and <code>rs</code> (for resolution summary), and
+47,568 rows.</p>
+<h3 id="references-to-other-service-requests-srs">References to other
+service requests (SRs)</h3>
+<p>Sometimes a service request will be closed because there is already
+an active SR for the address, or an SR will be closed in order to create
+a new one. Service requests are the easiest numbers to remove because
+they are all seven digits with no special characters, as opposed to
+dates and phone numbers which vary in length and format. The SRs are
+usually surrounded by some variation of the phrase “please refer to sr
+#xxxxxxx”.</p>
+<p>Here is an example of five SRs that relate to each other, with four
+referencing another SR:</p>
 <table>
 <colgroup>
-<col style="width: 14%" />
-<col style="width: 19%" />
-<col style="width: 65%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 58%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -1606,8 +1700,19 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </tr>
 </tbody>
 </table>
-<p>My goal is to separate the referenced SRs into a new column and clean up extra words. To do this I’ll be using the <strong>stringr</strong> package, part of the <strong>tidyverse</strong> package loaded above. In each section of code for this post, I start by creating a (very ugly) string that matches the pattern of the number I’m trying to find and select surrounding words. Then I extract the information into a new column and remove it from the resolution summary.</p>
-<p>I use <code>str_extract_all()</code> to pull SRs from the resolution summary into a new column, <code>ref</code>. I try to identify surrounding phrases by creating <code>vSR</code> and then replace them with a space. Then I clean up the resolution summary by using <code>str_remove_all()</code>, then <code>str_squish()</code> to omit extra whitespaces.</p>
+<p>My goal is to separate the referenced SRs into a new column and clean
+up extra words. To do this I’ll be using the <strong>stringr</strong>
+package, part of the <strong>tidyverse</strong> package loaded above. In
+each section of code for this post, I start by creating a (very ugly)
+string that matches the pattern of the number I’m trying to find and
+select surrounding words. Then I extract the information into a new
+column and remove it from the resolution summary.</p>
+<p>I use <code>str_extract_all()</code> to pull SRs from the resolution
+summary into a new column, <code>ref</code>. I try to identify
+surrounding phrases by creating <code>vSR</code> and then replace them
+with a space. Then I clean up the resolution summary by using
+<code>str_remove_all()</code>, then <code>str_squish()</code> to omit
+extra whitespaces.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vSR</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>
@@ -1635,13 +1740,14 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>In the CE dataset, there were 4,422 references to one or more SRs.</p>
+<p>In the CE dataset, there were 4,422 references to one or more
+SRs.</p>
 <p>Using the SRs mentioned above, let’s see a sample of the results.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>refSR</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='fu'><a href='https://stringr.tidyverse.org/reference/str_detect.html'>str_detect</a></span><span class='op'>(</span><span class='va'>sr</span>, <span class='st'>"4452866|4455128|4482990|3734488"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
-  <span class='fu'><a href='https://rdrr.io/pkg/tidyr/man/hoist.html'>unnest_longer</a></span><span class='op'>(</span><span class='va'>ref</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://tidyr.tidyverse.org/reference/hoist.html'>unnest_longer</a></span><span class='op'>(</span><span class='va'>ref</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>ref <span class='op'>=</span> <span class='fu'><a href='https://stringr.tidyverse.org/reference/str_remove.html'>str_remove_all</a></span><span class='op'>(</span><span class='va'>ref</span>, <span class='st'>"\\D"</span><span class='op'>)</span>,
          ref <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/numeric.html'>as.numeric</a></span><span class='op'>(</span><span class='va'>ref</span><span class='op'>)</span><span class='op'>)</span>
 </code></pre>
@@ -1654,12 +1760,29 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 3 4482990 &lt;NA&gt;                                           3734488
 4 4455128 closed void tenant vacated property written up 4482990</code></pre>
 </div>
-<p>Looks good so far! The referenced SRs are now cleanly in their own column and related words were removed from the resolution summary, completely clearing out two of the summaries.</p>
-<p>There were about 32 SRs I found that were not captured because they were mistyped, usually with too few or too many digits. I also found one row where a phone number with no area code or punctuation was mistakenly marked as an SR. I could not find any other instances where this occurred and until I figure out a way to account for this, it may be best to manually fix that one row.</p>
+<p>Looks good so far! The referenced SRs are now cleanly in their own
+column and related words were removed from the resolution summary,
+completely clearing out two of the summaries.</p>
+<p>There were about 32 SRs I found that were not captured because they
+were mistyped, usually with too few or too many digits. I also found one
+row where a phone number with no area code or punctuation was mistakenly
+marked as an SR. I could not find any other instances where this
+occurred and until I figure out a way to account for this, it may be
+best to manually fix that one row.</p>
 <h3 id="dates">Dates</h3>
-<p>Each row in the dataset contains all the information for one SR. Inspectors will often enter dates in the resolution summary to keep track of updates or enter hearing dates for cases going through court.</p>
-<p>Dates mentioned in the resolution summary are usually formatted month/day/year. The punctuation used to divide dates varies from row to row, but <code>\\W</code> catches all non-word characters. I extract dates into a new <code>date</code> column and remove their mention from the resolution summary.</p>
-<p>I found that tax sale numbers (present in about 26 requests) are formatted similar to dates, so I went ahead and created a column to host these numbers so they wouldn’t be accidentally pulled into the dates column.</p>
+<p>Each row in the dataset contains all the information for one SR.
+Inspectors will often enter dates in the resolution summary to keep
+track of updates or enter hearing dates for cases going through
+court.</p>
+<p>Dates mentioned in the resolution summary are usually formatted
+month/day/year. The punctuation used to divide dates varies from row to
+row, but <code>\\W</code> catches all non-word characters. I extract
+dates into a new <code>date</code> column and remove their mention from
+the resolution summary.</p>
+<p>I found that tax sale numbers (present in about 26 requests) are
+formatted similar to dates, so I went ahead and created a column to host
+these numbers so they wouldn’t be accidentally pulled into the dates
+column.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>vMonths</span> <span class='op'>&lt;-</span>
@@ -1709,12 +1832,15 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Currently, all the dates are nested together in one row. This is intentional as I plan to return to the dates column soon to link events that dates reference. But I unnested a few SRs below to show an example of the results.</p>
+<p>Currently, all the dates are nested together in one row. This is
+intentional as I plan to return to the dates column soon to link events
+that dates reference. But I unnested a few SRs below to show an example
+of the results.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>dates</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='fu'><a href='https://stringr.tidyverse.org/reference/str_detect.html'>str_detect</a></span><span class='op'>(</span><span class='va'>sr</span>, <span class='st'>"5201038|3951530|2634410|2973268"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
-  <span class='fu'><a href='https://rdrr.io/pkg/tidyr/man/hoist.html'>unnest_longer</a></span><span class='op'>(</span><span class='va'>date</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
+  <span class='fu'><a href='https://tidyr.tidyverse.org/reference/hoist.html'>unnest_longer</a></span><span class='op'>(</span><span class='va'>date</span><span class='op'>)</span> <span class='op'><a href='https://magrittr.tidyverse.org/reference/pipe.html'>%&gt;%</a></span> 
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='va'>sr</span>, <span class='va'>rs</span>, <span class='va'>date</span>, <span class='va'>taxSale</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -1730,10 +1856,25 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 7 5201038 1st attempt , 2nd attempt ,3rd attempt 4-15-21       &lt;NA&gt;   
 8 5201038 1st attempt , 2nd attempt ,3rd attempt 4-16-21       &lt;NA&gt;   </code></pre>
 </div>
-<p>Clearly there is still work to be done, but the first step of extracting dates from the resolution summary is complete. The code captured the overwhelming majority of dates mentioned. The few that slipped through are mistyped in a way where they could easily be mistaken for another type of number. I plan to return to these rows later. In the future I also will clean up the new <code>date</code> column to standardize dates into one format. In rows with multiple dates, I also need to find an easy way to link which events go with which dates (probably using punctuation).</p>
+<p>Clearly there is still work to be done, but the first step of
+extracting dates from the resolution summary is complete. The code
+captured the overwhelming majority of dates mentioned. The few that
+slipped through are mistyped in a way where they could easily be
+mistaken for another type of number. I plan to return to these rows
+later. In the future I also will clean up the new <code>date</code>
+column to standardize dates into one format. In rows with multiple
+dates, I also need to find an easy way to link which events go with
+which dates (probably using punctuation).</p>
 <h3 id="phone-numbers">Phone Numbers</h3>
-<p>Lastly I will extract phone numbers mentioned in the dataset. Sometimes a phone number is entered to refer a citizen to another government department. However, there are hundreds of instances where the phone number listed is for a private citizen with whom an inspector plans to follow up. As this dataset is open, this can be considered a privacy violation. As such, I will not be making the code to extract these number visible on this blog.</p>
-<p>Currently I can accurately extract phone numbers, but there is no easy way to capture citizen names.</p>
+<p>Lastly I will extract phone numbers mentioned in the dataset.
+Sometimes a phone number is entered to refer a citizen to another
+government department. However, there are hundreds of instances where
+the phone number listed is for a private citizen with whom an inspector
+plans to follow up. As this dataset is open, this can be considered a
+privacy violation. As such, I will not be making the code to extract
+these number visible on this blog.</p>
+<p>Currently I can accurately extract phone numbers, but there is no
+easy way to capture citizen names.</p>
 <h2 id="final-code">Final Code</h2>
 <p>Let’s put all the code together in one executable chunk.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -1761,10 +1902,18 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </code></pre>
 </div>
 </div>
-<p>Altogether this code extracted information 13,362 rows and fully cleaned out the resolution summary of 2,221 rows, or 4.7% of code enforcement service requests that were not <em>NA</em> to start. That may not seem like a lot, but this exercise will make future steps much easier.</p>
-<p>Next I plan to further clean up the resolution summary by removing text that is identical to information already found in the <code>RESOLUTION_CODE</code> field.</p>
-<p>If you know ways to improve this code, please let me know on Github (linked below)!</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<p>Altogether this code extracted information 13,362 rows and fully
+cleaned out the resolution summary of 2,221 rows, or 4.7% of code
+enforcement service requests that were not <em>NA</em> to start. That
+may not seem like a lot, but this exercise will make future steps much
+easier.</p>
+<p>Next I plan to further clean up the resolution summary by removing
+text that is identical to information already found in the
+<code>RESOLUTION_CODE</code> field.</p>
+<p>If you know ways to improve this code, please let me know on Github
+(linked below)!</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
