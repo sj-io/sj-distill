@@ -14,8 +14,6 @@ collections:
     categories: true
 navbar:
   right:
-    - text: "Capstone"
-      href: capstone.html
     - text: "Research"
       href: research.html
     - text: "Reference"
