@@ -17,14 +17,16 @@
       <category>memphis</category>
       <guid>https://sarahjohnson.io/ref/census-surveys</guid>
       <pubDate>Sun, 19 Jun 2022 00:00:00 +0000</pubDate>
+      <media:content url="https://sarahjohnson.io/ref/census-surveys/cs.png" medium="image" type="image/png" width="620" height="386"/>
     </item>
     <item>
-      <title>Income &amp; Affordable Housing Table</title>
+      <title>Incomes &amp; Affordable Housing</title>
       <dc:creator>Sarah Johnson</dc:creator>
       <link>https://sarahjohnson.io/ref/cost-burden</link>
       <description>A table showing the maximum amount a household can spend on housing without being cost burdened.</description>
       <guid>https://sarahjohnson.io/ref/cost-burden</guid>
       <pubDate>Sun, 19 Jun 2022 00:00:00 +0000</pubDate>
+      <media:content url="https://sarahjohnson.io/ref/cost-burden/cb.png" medium="image" type="image/png" width="672" height="263"/>
     </item>
     <item>
       <title>Census Housing Variables</title>
@@ -34,6 +36,7 @@
       <category>census</category>
       <guid>https://sarahjohnson.io/ref/hsg-var-tree</guid>
       <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+      <media:content url="https://sarahjohnson.io/ref/hsg-var-tree/ct.png" medium="image" type="image/png" width="819" height="368"/>
     </item>
     <item>
       <title>Memphis Census Boundaries</title>
@@ -44,6 +47,7 @@
       <category>memphis</category>
       <guid>https://sarahjohnson.io/ref/mphs-boundary</guid>
       <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+      <media:content url="https://sarahjohnson.io/ref/mphs-boundary/cb.png" medium="image" type="image/png" width="1052" height="745"/>
     </item>
     <item>
       <title>NPA</title>

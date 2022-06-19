@@ -1,10 +1,11 @@
 ---
-title: "Income & Affordable Housing Table"
+title: "Incomes & Affordable Housing"
 description: |
   A table showing the maximum amount a household can spend on housing without being cost burdened.
 author:
   - name: Sarah Johnson
 date: 2022-06-19
+preview: cb.png
 output:
   distill::distill_article:
     self_contained: false
@@ -17,11 +18,11 @@ knitr::opts_chunk$set(echo = FALSE)
 
 The federal government determines **affordable housing** to be no more than 30% of a person's income. Someone paying more than 30% is considered **cost burdened**; more than 50% is **extremely cost burdened**.
 
-The following table lists incomes and corresponding affordable rents. This table does not account for any taxes that decrease take-home wages (and thus lowering how much rent one can afford) or if someone with an hourly wage works more/less than 40 hours a week.
+The following table lists some incomes and the corresponding affordable housing costs. 
 
 **Yearly Income** is hourly wage \* 40 hours a week \* 52 weeks a year.
 
-**Monthly Housing** is 30% of the yearly wage, divided by 12 months of the year.
+**Max Affordable Housing** is 30% of the yearly wage, divided by 12 months of the year.
 
 <br>
 
@@ -40,7 +41,7 @@ affRents <- income %>%
 ```{r}
 datatable(affRents,
           rownames = FALSE,
-          colnames = c("Hourly Wage", "Yearly Income", "Monthly Housing"),
+          colnames = c("Hourly Wage", "Yearly Income", "Max Affordable Housing"),
           caption = "Table 1: Incomes and maximum affordable housing costs",
           options = list(pageLength = 20)
           ) %>% 
