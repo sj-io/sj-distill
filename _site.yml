@@ -10,14 +10,12 @@ collections:
     categories: true
   capstone:
     categories: true
-  reference:
+  ref:
     categories: true
 navbar:
   right:
-    - text: "Research"
-      href: research.html
     - text: "Reference"
-      href: reference.html
+      href: ref.html
     - text: "About"
       href: index.html
     - icon: fa fa-github

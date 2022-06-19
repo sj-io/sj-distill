@@ -5,29 +5,29 @@
       "title": "Capstone",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2022-05-07T20:31:30-05:00"
+      "last_modified": "2022-06-19T15:49:25-05:00"
     },
     {
       "path": "index.html",
       "title": "Sarah Johnson",
       "author": [],
-      "contents": "\n\n          \n          \n          SJ\n          \n          \n          Research\n          Reference\n          About\n          \n          \n          \n          ☰\n          \n          \n      \n        \n          \n            Sarah Johnson\n          \n          \n            \n              Hello, I’m Sarah 👋 I’m currently the Intake and\n              Outreach Coordinator at the Shelby County Department of\n              Housing. I received my bachelor’s in economics and\n              master’s in urban planning from the University of Memphis.\n              When I’m not working, I enjoy rock climbing and playing\n              Mario Kart.\n            \n            \n              Hello, I’m Sarah 👋 I’m currently the Intake and\n              Outreach Coordinator at the Shelby County Department of\n              Housing. I received my bachelor’s in economics and\n              master’s in urban planning from the University of Memphis.\n              When I’m not working, I enjoy rock climbing and playing\n              Mario Kart.\n            \n          \n\n          \n            \n              \n                  \n                    \n                      Email\n                    \n                  \n                \n                                \n                  \n                    \n                      Github\n                    \n                  \n                \n                                \n                  \n                    \n                      LinkedIn\n                    \n                  \n                \n                              \n          \n\n          \n            \n              \n                                \n                  \n                    Email\n                  \n                \n                                \n                  \n                    Github\n                  \n                \n                                \n                  \n                    LinkedIn\n                  \n                \n                              \n            \n          \n        \n      \n    \n\n    \n    \n    ",
-      "last_modified": "2022-05-07T20:31:30-05:00"
+      "contents": "\n\n          \n          \n          SJ\n          \n          \n          Reference\n          About\n          \n          \n          \n          ☰\n          \n          \n      \n        \n          \n            Sarah Johnson\n          \n          \n            \n              Hello 👋 I’m the Intake/Outreach Coordinator at the\n              Shelby County Department of Housing. I received my\n              bachelor’s in economics and master’s in urban planning\n              from the University of Memphis. I’m passionate about\n              guaranteeing people access to healthy, safe, affordable\n              housing.\n            \n            \n              Hello 👋 I’m the Intake/Outreach Coordinator at the\n              Shelby County Department of Housing. I received my\n              bachelor’s in economics and master’s in urban planning\n              from the University of Memphis. I’m passionate about\n              guaranteeing people access to healthy, safe, affordable\n              housing.\n            \n          \n\n          \n            \n              \n                  \n                    \n                      Email\n                    \n                  \n                \n                                \n                  \n                    \n                      Github\n                    \n                  \n                \n                                \n                  \n                    \n                      LinkedIn\n                    \n                  \n                \n                              \n          \n\n          \n            \n              \n                                \n                  \n                    Email\n                  \n                \n                                \n                  \n                    Github\n                  \n                \n                                \n                  \n                    LinkedIn\n                  \n                \n                              \n            \n          \n        \n      \n    \n\n    \n    \n    ",
+      "last_modified": "2022-06-19T15:49:25-05:00"
     },
     {
-      "path": "reference.html",
+      "path": "ref.html",
       "title": "Reference",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2022-05-07T20:31:31-05:00"
+      "last_modified": "2022-06-19T15:49:26-05:00"
     },
     {
       "path": "research.html",
       "title": "Research",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2022-05-07T20:31:31-05:00"
+      "last_modified": "2022-06-19T15:49:27-05:00"
     }
   ],
-  "collections": ["posts/posts.json", "capstone/capstone.json", "reference/reference.json"]
+  "collections": ["posts/posts.json", "capstone/capstone.json", "ref/ref.json"]
 }

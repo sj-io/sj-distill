@@ -6,23 +6,15 @@
   </url>
   <url>
     <loc>https://sarahjohnson.io/</loc>
-    <lastmod>2022-04-22T20:25:58-05:00</lastmod>
+    <lastmod>2022-06-18T13:40:29-05:00</lastmod>
   </url>
   <url>
-    <loc>https://sarahjohnson.io/reference.html</loc>
-    <lastmod>2021-11-06T14:31:25-05:00</lastmod>
+    <loc>https://sarahjohnson.io/ref.html</loc>
+    <lastmod>2022-06-18T14:16:31-05:00</lastmod>
   </url>
   <url>
     <loc>https://sarahjohnson.io/research.html</loc>
     <lastmod>2021-11-04T10:20:12-05:00</lastmod>
-  </url>
-  <url>
-    <loc>https://sarahjohnson.io/posts/2021-10-27-housing-units/</loc>
-    <lastmod>2021-12-13T21:26:38-06:00</lastmod>
-  </url>
-  <url>
-    <loc>https://sarahjohnson.io/posts/2021-10-22-boundaries/</loc>
-    <lastmod>2021-12-13T21:29:12-06:00</lastmod>
   </url>
   <url>
     <loc>https://sarahjohnson.io/capstone/2022-01-24-311-data/</loc>
@@ -41,23 +33,31 @@
     <lastmod>2022-02-04T16:39:02-06:00</lastmod>
   </url>
   <url>
-    <loc>https://sarahjohnson.io/reference/2022-01-21-npa/</loc>
-    <lastmod>2022-01-21T02:48:56-06:00</lastmod>
+    <loc>https://sarahjohnson.io/ref/census-surveys/</loc>
+    <lastmod>2022-06-19T15:26:11-05:00</lastmod>
   </url>
   <url>
-    <loc>https://sarahjohnson.io/reference/2021-12-24-census-tree/</loc>
-    <lastmod>2021-12-26T17:23:47-06:00</lastmod>
+    <loc>https://sarahjohnson.io/ref/cost-burden/</loc>
+    <lastmod>2022-06-19T15:44:52-05:00</lastmod>
   </url>
   <url>
-    <loc>https://sarahjohnson.io/reference/2021-11-10-urlta/</loc>
-    <lastmod>2022-01-21T02:51:54-06:00</lastmod>
+    <loc>https://sarahjohnson.io/ref/hsg-var-tree/</loc>
+    <lastmod>2022-06-18T15:15:48-05:00</lastmod>
   </url>
   <url>
-    <loc>https://sarahjohnson.io/reference/2021-11-07-housing-acts/</loc>
-    <lastmod>2022-01-21T02:53:42-06:00</lastmod>
+    <loc>https://sarahjohnson.io/ref/mphs-boundary/</loc>
+    <lastmod>2022-06-18T16:15:28-05:00</lastmod>
   </url>
   <url>
-    <loc>https://sarahjohnson.io/reference/2021-11-06-affordable-rents/</loc>
-    <lastmod>2021-11-06T17:51:41-05:00</lastmod>
+    <loc>https://sarahjohnson.io/ref/npa/</loc>
+    <lastmod>2022-06-18T14:31:35-05:00</lastmod>
+  </url>
+  <url>
+    <loc>https://sarahjohnson.io/ref/urlta/</loc>
+    <lastmod>2022-06-18T14:33:22-05:00</lastmod>
+  </url>
+  <url>
+    <loc>https://sarahjohnson.io/ref/us-hsg-acts/</loc>
+    <lastmod>2022-06-18T14:25:45-05:00</lastmod>
   </url>
 </urlset>

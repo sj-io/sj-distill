@@ -13,4 +13,4 @@ output:
 site: distill::distill_website
 ---
 
-Hello, I'm Sarah 👋 I'm currently the Intake and Outreach Coordinator at the Shelby County Department of Housing. I received my bachelor's in economics and master's in urban planning from the University of Memphis. When I'm not working, I enjoy rock climbing and playing Mario Kart[.](https://sarah.fyi/)
+Hello 👋 I'm the Intake/Outreach Coordinator at the Shelby County Department of Housing. I received my bachelor's in economics and master's in urban planning from the University of Memphis. I'm passionate about guaranteeing people access to healthy, safe, affordable housing.

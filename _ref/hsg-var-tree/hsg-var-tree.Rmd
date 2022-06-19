@@ -1,0 +1,288 @@
+---
+title: "Census Housing Variables"
+description: |
+  A visual tree of Census variables related to housing.
+author:
+  - name: Sarah Johnson
+date: 2022-06-18
+categories:
+  - census
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    toc_depth: 4
+    code_download: true
+repository_url: https://github.com/sj-io/sj-distill
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+The Census releases [a lot of information](https://api.census.gov/data/2020/acs/acs5/variables.html). I wanted a way to visualize Census variables related to housing, so I made a tree using R and the terminal. The following tree shows 2020 Census variables that start with "B25", the housing-related group, excluding aggregates, medians, or race subvariables.
+
+# Census variable tree
+
+``` zsh
+.
+├── AGE-OF-HOUSEHOLDER
+│   ├── GROSS-RENT-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   │   └── 25072
+│   ├── MEALS-INCLUDED-IN-RENT
+│   │   └── 25055
+│   └── SELECTED-MONTHLY-OWNER-COSTS-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│       └── 25093
+├── BEDROOMS
+│   ├── 25041
+│   └── GROSS-RENT
+│       └── 25068
+├── CONTRACT-RENT
+│   └── 25056
+├── GROSS-RENT
+│   └── 25063
+├── GROSS-RENT-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   └── 25070
+├── HOUSE-HEATING-FUEL
+│   └── 25040
+├── HOUSEHOLD-INCOME
+│   ├── GROSS-RENT-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   │   └── 25074
+│   └── SELECTED-MONTHLY-OWNER-COSTS-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│       └── 25095
+├── HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS-IN-2020-INFLATION-ADJUSTED-DOLLARS
+│   ├── GROSS-RENT
+│   │   └── 25122
+│   └── VALUE
+│       └── 25121
+├── HOUSING-UNITS
+│   └── 25001
+├── INCLUSION-OF-UTILITIES-IN-RENT
+│   └── 25069
+├── KITCHEN-FACILITIES
+│   └── MEALS-INCLUDED-IN-RENT
+│       └── 25054
+├── KITCHEN-FACILITIES-FOR-ALL-HOUSING-UNITS
+│   └── 25051
+├── KITCHEN-FACILITIES-FOR-OCCUPIED-HOUSING-UNITS
+│   └── 25052
+├── MONTHLY-HOUSING-COSTS
+│   └── 25104
+├── MORTGAGE-STATUS
+│   ├── 25081
+│   ├── AGE-OF-HOUSEHOLDER
+│   │   └── 25027
+│   ├── HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS-IN-2020-INFLATION-ADJUSTED-DOLLARS
+│   │   └── 25098
+│   ├── MONTHLY-HOUSING-COSTS-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   │   └── 25101
+│   ├── RATIO-OF-VALUE-TO-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   │   └── 25100
+│   ├── REAL-ESTATE-TAXES-PAID
+│   │   └── 25102
+│   ├── SELECTED-MONTHLY-OWNER-COSTS-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   │   └── 25091
+│   └── VALUE
+│       └── 25096
+├── MORTGAGE-STATUS-AND-SELECTED-MONTHLY-OWNER-COSTS
+│   └── 25087
+├── OCCUPANCY-STATUS
+│   └── 25002
+├── PLUMBING-FACILITIES
+│   └── OCCUPANTS-PER-ROOM
+│       └── YEAR-STRUCTURE-BUILT
+│           └── 25050
+├── PLUMBING-FACILITIES-FOR-ALL-HOUSING-UNITS
+│   └── 25047
+├── PLUMBING-FACILITIES-FOR-OCCUPIED-HOUSING-UNITS
+│   └── 25048
+├── PRICE-ASKED
+│   └── 25085
+├── RACE-OF-HOUSEHOLDER
+│   └── 25006
+├── RENT-ASKED
+│   └── 25061
+├── ROOMS
+│   └── 25017
+├── SELECTED-MONTHLY-OWNER-COSTS
+│   └── 25094
+├── TENURE
+│   ├── 25003
+│   ├── AGE-OF-HOUSEHOLDER
+│   │   ├── 25007
+│   │   ├── OCCUPANTS-PER-ROOM
+│   │   │   └── 25015
+│   │   ├── UNITS-IN-STRUCTURE
+│   │   │   └── 25125
+│   │   ├── YEAR-HOUSEHOLDER-MOVED-INTO-UNIT
+│   │   │   └── 25128
+│   │   └── YEAR-STRUCTURE-BUILT
+│   │       └── 25126
+│   ├── BEDROOMS
+│   │   └── 25042
+│   ├── EDUCATIONAL-ATTAINMENT-OF-HOUSEHOLDER
+│   │   └── 25013
+│   ├── FAMILIES-AND-PRESENCE-OF-OWN-CHILDREN
+│   │   └── 25012
+│   ├── HOUSE-HEATING-FUEL
+│   │   └── 25117
+│   ├── HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS-IN-2020-INFLATION-ADJUSTED-DOLLARS
+│   │   └── 25118
+│   ├── HOUSEHOLD-SIZE
+│   │   ├── 25009
+│   │   ├── AGE-OF-HOUSEHOLDER
+│   │   │   └── 25116
+│   │   └── UNITS-IN-STRUCTURE
+│   │       └── 25124
+│   ├── HOUSEHOLD-TYPE-AND-PRESENCE-AND-AGE-OF-OWN-CHILDREN
+│   │   └── 25115
+│   ├── HOUSEHOLD-TYPE-INCLUDING-LIVING-ALONE-AND-AGE-OF-HOUSEHOLDER
+│   │   └── 25011
+│   ├── HOUSING-COSTS-AS-A-PERCENTAGE-OF-HOUSEHOLD-INCOME-IN-THE-PAST-12-MONTHS
+│   │   └── 25106
+│   ├── KITCHEN-FACILITIES
+│   │   └── 25053
+│   ├── OCCUPANTS-PER-ROOM
+│   │   └── 25014
+│   ├── PLUMBING-FACILITIES
+│   │   ├── 25049
+│   │   └── OCCUPANTS-PER-ROOM
+│   │       └── 25016
+│   ├── ROOMS
+│   │   └── 25020
+│   ├── SELECTED-PHYSICAL-AND-FINANCIAL-CONDITIONS
+│   │   └── 25123
+│   ├── TELEPHONE-SERVICE-AVAILABLE
+│   │   └── AGE-OF-HOUSEHOLDER
+│   │       └── 25043
+│   ├── UNITS-IN-STRUCTURE
+│   │   └── 25032
+│   ├── VEHICLES-AVAILABLE
+│   │   ├── 25044
+│   │   └── AGE-OF-HOUSEHOLDER
+│   │       └── 25045
+│   ├── YEAR-HOUSEHOLDER-MOVED-INTO-UNIT
+│   │   ├── 25038
+│   │   └── UNITS-IN-STRUCTURE
+│   │       └── 25129
+│   └── YEAR-STRUCTURE-BUILT
+│       ├── 25036
+│       └── UNITS-IN-STRUCTURE
+│           └── 25127
+├── TOTAL-POPULATION-IN-OCCUPIED-HOUSING-UNITS
+│   └── TENURE
+│       ├── 25008
+│       ├── UNITS-IN-STRUCTURE
+│       │   └── 25033
+│       └── YEAR-HOUSEHOLDER-MOVED-INTO-UNIT
+│           └── 25026
+├── UNITS-IN-STRUCTURE
+│   └── 25024
+├── VACANCY-STATUS
+│   └── 25004
+├── VACANT-CURRENT-RESIDENCE-ELSEWHERE
+│   └── 25005
+├── VALUE
+│   └── 25075
+└── YEAR-STRUCTURE-BUILT
+    └── 25034
+    
+160 directories, 0 files
+```
+
+# The Code
+
+## R
+
+First, load the tidyverse and tidycensus packages.
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+Use the `load_variables()` function to get Census variables.
+
+```{r}
+v20 <- load_variables(2020, "acs5")
+```
+
+Narrow for housing-related variables, which start with "B25".
+
+```{r}
+hsg <- v20 %>% 
+  filter(str_detect(name, "^B25"))
+
+head(hsg)
+```
+
+There are 2,208 variables related to housing, so I narrowed down the data using `filter()`. I used `mutate()` to change variable names into a folder-friendly format. Then, `unite()` was used to join the variable name with the variable, separated by a slash.
+
+```{r}
+h1 <- hsg %>% 
+  filter(str_detect(name, "_001$"),           #' only top-level variables
+         !str_detect(name, "[:alpha:]_"),     #' omit race variables
+         str_detect(label, "Estimate!!Total") #' omit aggregates, medians, etc.
+         ) %>% 
+  select(-label) %>%
+  mutate(concept = str_replace_all(concept, "-(?=[:alpha:])", " "),
+         concept = str_remove_all(concept, "[:punct:]"),
+         concept = str_replace_all(concept, " BY ", "/"),
+         name = str_remove(name, "_001"),
+         name = str_remove_all(name, "^B")
+         ) %>% 
+  unite(col = "fileStr", concept, name, sep = "/", na.rm = TRUE) %>% 
+  mutate(fileStr = str_replace_all(fileStr, "\\s", "-"),
+         fileStr = str_replace_all(fileStr, "-{2,}", "-"))
+
+head(h1)
+```
+
+Turn the column into a list of values.
+
+```{r}
+vH1 <- h1$fileStr
+```
+
+Use `write_lines()` to convert the list into a .txt file.
+
+```{r}
+write_lines(vH1, file = "~/Documents/H1.txt")
+```
+
+The output is a text file with 76 lines, which we will convert to a directory.
+
+## Terminal
+
+In the terminal, make a new directory to house your Census tree.
+
+``` zsh
+mkdir ~/Documents/census
+cd Documents/census
+```
+
+Convert the text file to a file directory using the following code.
+
+``` zsh
+xargs -I {} mkdir -p "{}" < "../H1.txt"
+```
+
+Finally, create a tree of the file directory. Note: requires the [tree](Turn the column into a list of values.) package.
+
+``` zsh
+tree
+```
+
+The output is the tree at the top of this page.
+
+You can search for certain words in the terminal using `find`.
+
+``` zsh
+find . -name "AGE*"
+./AGE-OF-HOUSEHOLDER
+./TENURE/AGE-OF-HOUSEHOLDER
+./TENURE/VEHICLES-AVAILABLE/AGE-OF-HOUSEHOLDER
+./TENURE/TELEPHONE-SERVICE-AVAILABLE/AGE-OF-HOUSEHOLDER
+./TENURE/HOUSEHOLD-SIZE/AGE-OF-HOUSEHOLDER
+./MORTGAGE-STATUS/AGE-OF-HOUSEHOLDER
+```

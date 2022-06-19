@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>SJ</title>
+    <link>https://sarahjohnson.io</link>
+    <atom:link href="https://sarahjohnson.io/ref.xml" rel="self" type="application/rss+xml"/>
+    <description>SJ
+</description>
+    <generator>Distill</generator>
+    <lastBuildDate>Sun, 19 Jun 2022 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>Census Surveys and Programs</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/census-surveys</link>
+      <description>Comparing the American Community Survey and Population Estimates Program using Memphis housing data.</description>
+      <category>census</category>
+      <category>memphis</category>
+      <guid>https://sarahjohnson.io/ref/census-surveys</guid>
+      <pubDate>Sun, 19 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Income &amp; Affordable Housing Table</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/cost-burden</link>
+      <description>A table showing the maximum amount a household can spend on housing without being cost burdened.</description>
+      <guid>https://sarahjohnson.io/ref/cost-burden</guid>
+      <pubDate>Sun, 19 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Census Housing Variables</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/hsg-var-tree</link>
+      <description>A visual tree of Census variables related to housing.</description>
+      <category>census</category>
+      <guid>https://sarahjohnson.io/ref/hsg-var-tree</guid>
+      <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Memphis Census Boundaries</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/mphs-boundary</link>
+      <description>A map of Census boundaries related to Memphis, Tennessee.</description>
+      <category>census</category>
+      <category>memphis</category>
+      <guid>https://sarahjohnson.io/ref/mphs-boundary</guid>
+      <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>NPA</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/npa</link>
+      <description>Tennessee's Neighborhood Preservation Act</description>
+      <category>law</category>
+      <category>TCA</category>
+      <guid>https://sarahjohnson.io/ref/npa</guid>
+      <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>URLTA</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/urlta</link>
+      <description>Tennessee's Uniform Residential Landlord Tenant Act</description>
+      <category>law</category>
+      <category>TCA</category>
+      <guid>https://sarahjohnson.io/ref/urlta</guid>
+      <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>U.S. Housing Acts</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/ref/us-hsg-acts</link>
+      <description>A (mostly) comprehensive list of federal housing legislation, organized by decade and president in office.</description>
+      <category>law</category>
+      <guid>https://sarahjohnson.io/ref/us-hsg-acts</guid>
+      <pubDate>Sat, 18 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>
