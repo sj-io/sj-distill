@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(tidycensus)
 library(plotly)
+library(gt)
 ```
 
 ```{r}
@@ -85,26 +86,122 @@ gg <- hsg %>%
 ggplotly(gg)
 ```
 
--   🏘️ \
-    B25001_001: Housing Units\
-    **B25002_001: Occupancy Status**
+```{r}
+popMphs <- map_dfr(yrs, ~ {
+  get_acs(geography = "place",
+                state = "TN",
+                variables = c("B26001_001", "B25008_001"),
+                year = .x,
+                cache_table = TRUE)
+}, .id = "year") %>% 
+  filter(str_detect(NAME, "Memphis")) 
 
-    -   **B25002_003: Vacant**
+popSh <- map_dfr(yrs, ~ {
+  get_acs(geography = "county",
+                state = "TN", county = "Shelby",
+                variables = c("B26001_001", "B25008_001"),
+                year = .x,
+                cache_table = TRUE)
+}, .id = "year")
 
-    -   **B25002_002: Occupied**\
-        B25003_001: Tenure
+popMSA <- map_dfr(yrs, ~ {
+  get_acs(geography = "cbsa",
+                variables = c("B26001_001", "B25008_001"),
+                year = .x,
+                cache_table = TRUE)
+}, .id = "year") %>% 
+  filter(str_detect(NAME, "Memphis"))
+```
 
-        -   B25003_002: Owner occupied
+```{r}
+pop <- rbind(popMphs, popSh, popMSA) %>% 
+  mutate(year = recode(year, '1' = 2010, '2' = 2015, '3' = 2020),
+         variable = recode(variable,
+                           'B25008_001' = 'Pop in Housing Units',
+                           'B26001_001' = 'Group Quarters Pop'),
+         NAME = recode(NAME, 
+                       'Memphis city, Tennessee' = 'Memphis',
+                       'Shelby County, Tennessee' = 'Shelby County',
+                       'Memphis, TN-MS-AR Metro Area' = 'Memphis Metro')) 
 
-        -   B25003_003: Renter occupied
+pop$NAME <- factor(pop$NAME, 
+                   levels = c(
+                     'Memphis', 'Shelby County', 'Memphis Metro'))
+pop$variable <- factor(pop$variable, levels = c(
+  'Pop in Housing Units', 'Group Quarters Pop'
+))
+```
 
--   👥 \
-    B01003: Total Population
+```{r layout = 'l-page'}
+gg2 <- pop %>% 
+  ggplot(aes(x = year, y = estimate, fill = variable)) +
+  geom_area(show.legend = FALSE) +
+  facet_wrap(~NAME) +
+  labs(x = "Year",
+       y = "Estimate",
+       title = "Population in Memphis area") +
+  scale_x_continuous(breaks = c(2010, 2015, 2020)) +
+  scale_y_continuous(labels = scales::comma)
 
-    -   B26001: Group Quarters Population
+ggplotly(gg2)
+```
 
-    -   B25008_001: Total Population in Occupied Housing Units by Tenure
+```{r}
+pophsg <- rbind(pop, hsg) %>% 
+  filter(year != "2015") %>% 
+  group_by(NAME, variable) %>% 
+  mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
+  filter(!is.na(pct_chg)) %>% 
+  select(-c(year, GEOID, moe)) %>% ungroup() %>% 
+  filter(variable == "Pop in Housing Units" | variable == "Occupied Units") %>% 
+  mutate(variable = recode(variable, 
+         'Pop in Housing Units' = 'Population',
+         'Occupied Units' = 'Households'))
+```
 
-        -   B25008_002: Owner occupied
-
-        -   B25008_003: Renter occupied
+```{r}
+pophsg %>% 
+  pivot_wider(names_from = NAME, 
+              values_from = c(estimate, pct_chg)) %>% 
+  gt() %>% 
+  tab_spanner(
+    label = "Memphis",
+    columns = c(estimate_Memphis, pct_chg_Memphis)
+  ) %>% 
+  tab_spanner(
+    label = "Shelby County",
+    columns = c('estimate_Shelby County', 'pct_chg_Shelby County')
+  ) %>% 
+  tab_spanner(
+    label = "Memphis Metro",
+    columns = c('estimate_Memphis Metro', 'pct_chg_Memphis Metro')
+  ) %>% 
+  fmt_percent(columns = c(
+    'pct_chg_Memphis',
+    'pct_chg_Shelby County',
+    'pct_chg_Memphis Metro'
+    )) %>% 
+  fmt_number(columns = c(
+    'estimate_Memphis', 
+    'estimate_Shelby County',
+    'estimate_Memphis Metro'),
+    decimals = 0) %>% 
+  cols_label(
+    'estimate_Memphis' = '2020',
+    'pct_chg_Memphis' = '2010-2020',
+    'estimate_Shelby County' = '2020', 
+    'pct_chg_Shelby County' = '2010-2020',
+    'estimate_Memphis Metro' = '2020', 
+    'pct_chg_Memphis Metro' = '2010-2020',
+    'variable' = ' '
+  ) %>% 
+  tab_footnote(
+    footnote = "Population is the Total Population in Occupied Housing, which excludes people living in group quarters."
+  ) %>% 
+  tab_footnote(
+    footnote = "Source: ACS 5-Year 2005-2010 & 2015-2020"
+  ) %>% 
+  tab_header(
+    title = "Population and Households in Memphis Area"
+  )
+```
