@@ -10,7 +10,6 @@ output:
     self_contained: false
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
@@ -18,5 +17,94 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r}
 library(tidyverse)
 library(tidycensus)
+library(plotly)
 ```
 
+```{r}
+v20 <- load_variables(2020, "acs5")
+
+yrs <- c(2010, 2015, 2020)
+```
+
+```{r}
+hsgMphs <- map_dfr(yrs, ~ {
+  get_acs(geography = "place",
+                state = "TN",
+                table = "B25002",
+                year = .x,
+                cache_table = TRUE)
+}, .id = "year") %>% 
+  filter(str_detect(NAME, "Memphis")) 
+
+hsgSh <- map_dfr(yrs, ~ {
+  get_acs(geography = "county",
+                state = "TN", county = "Shelby",
+                table = "B25002",
+                year = .x,
+                cache_table = TRUE)
+}, .id = "year")
+
+hsgMSA <- map_dfr(yrs, ~ {
+  get_acs(geography = "cbsa",
+                table = "B25002",
+                year = .x,
+                cache_table = TRUE)
+}, .id = "year") %>% 
+  filter(str_detect(NAME, "Memphis"))
+```
+
+```{r}
+hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>% 
+  mutate(year = recode(year, '1' = 2010, '2' = 2015, '3' = 2020),
+         variable = recode(variable,
+                           'B25002_001' = 'Total Housing Units',
+                           'B25002_002' = 'Occupied Units',
+                           'B25002_003' = 'Vacant Units'),
+         NAME = recode(NAME, 
+                       'Memphis city, Tennessee' = 'Memphis',
+                       'Shelby County, Tennessee' = 'Shelby County',
+                       'Memphis, TN-MS-AR Metro Area' = 'Memphis Metro')) 
+
+hsg$NAME <- factor(hsg$NAME, 
+                   levels = c(
+                     'Memphis', 'Shelby County', 'Memphis Metro'))
+```
+
+```{r layout = 'l-page'}
+gg <- hsg %>% 
+  filter(variable != 'Total Housing Units') %>% 
+  ggplot(aes(x = year, y = estimate, fill = variable)) +
+  geom_area(show.legend = FALSE) +
+  facet_wrap(~NAME) +
+  labs(x = "Year",
+       y = "Estimate",
+       title = "Total Housing Units in Memphis area") +
+  scale_x_continuous(breaks = c(2010, 2015, 2020)) +
+  scale_y_continuous(labels = scales::comma)
+
+ggplotly(gg)
+```
+
+-   🏘️ \
+    B25001_001: Housing Units\
+    **B25002_001: Occupancy Status**
+
+    -   **B25002_003: Vacant**
+
+    -   **B25002_002: Occupied**\
+        B25003_001: Tenure
+
+        -   B25003_002: Owner occupied
+
+        -   B25003_003: Renter occupied
+
+-   👥 \
+    B01003: Total Population
+
+    -   B26001: Group Quarters Population
+
+    -   B25008_001: Total Population in Occupied Housing Units by Tenure
+
+        -   B25008_002: Owner occupied
+
+        -   B25008_003: Renter occupied
