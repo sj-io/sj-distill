@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "path": "mphs/pop-hsg/",
+    "title": "Population and Housing",
+    "description": "Census data for Memphis, Shelby County, and the Memphis MSA.",
+    "author": [
+      {
+        "name": "Sarah Johnson",
+        "url": {}
+      }
+    ],
+    "date": "2022-06-20",
+    "categories": [],
+    "contents": "\n\n\n\n\n\n\n",
+    "preview": {},
+    "last_modified": "2022-06-20T13:50:26-05:00",
+    "input_file": "pop-hsg.knit.md"
+  }
+]

@@ -1,9 +1,9 @@
 ---
-title: "pop-hsg"
+title: "Population and Housing"
 description: |
-  A short description of the post.
+  Census data for Memphis, Shelby County, and the Memphis MSA.
 author:
-  - name: Valued User
+  - name: Sarah Johnson
 date: 2022-06-20
 output:
   distill::distill_article:
@@ -15,8 +15,8 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-Distill is a publication format for scientific and technical writing, native to the web.
-
-Learn more about using Distill at <https://rstudio.github.io/distill>.
-
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
 

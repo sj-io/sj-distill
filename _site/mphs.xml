@@ -8,5 +8,13 @@
 </description>
     <generator>Distill</generator>
     <lastBuildDate>Mon, 20 Jun 2022 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>Population and Housing</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/mphs/pop-hsg</link>
+      <description>Census data for Memphis, Shelby County, and the Memphis MSA.</description>
+      <guid>https://sarahjohnson.io/mphs/pop-hsg</guid>
+      <pubDate>Mon, 20 Jun 2022 00:00:00 +0000</pubDate>
+    </item>
   </channel>
 </rss>
