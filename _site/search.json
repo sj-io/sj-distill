@@ -15,11 +15,18 @@
       "last_modified": "2022-06-19T15:49:25-05:00"
     },
     {
+      "path": "mphs.html",
+      "title": "Memphis",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2022-06-20T13:47:18-05:00"
+    },
+    {
       "path": "ref.html",
       "title": "Reference",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2022-06-19T15:49:26-05:00"
+      "last_modified": "2022-06-20T00:21:39-05:00"
     },
     {
       "path": "research.html",
@@ -29,5 +36,5 @@
       "last_modified": "2022-06-19T15:49:27-05:00"
     }
   ],
-  "collections": ["posts/posts.json", "capstone/capstone.json", "ref/ref.json"]
+  "collections": ["posts/posts.json", "capstone/capstone.json", "ref/ref.json", "mphs/mphs.json"]
 }
