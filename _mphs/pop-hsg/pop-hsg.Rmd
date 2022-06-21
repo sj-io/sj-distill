@@ -20,13 +20,13 @@ library(tidycensus)
 library(gt)
 ```
 
-```{r eval=FALSE, include=FALSE}
-v20 <- load_variables(2020, "acs5")
-
+```{r include=FALSE}
 yrs <- c(2010, 2020)
 ```
 
 ```{r eval=FALSE, include=FALSE}
+v20 <- load_variables(2020, "acs5")
+
 hsgMphs <- map_dfr(yrs, ~ {
   get_acs(
     geography = "place",
@@ -60,6 +60,40 @@ hsgMSA <- map_dfr(yrs, ~ {
   filter(str_detect(NAME, "Memphis"))
 ```
 
+```{r include=FALSE}
+avghsgMphs <- map_dfr(yrs, ~ {
+  get_acs(
+    geography = "place",
+    state = "TN",
+    table = "B25010",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "year") %>%
+  filter(str_detect(NAME, "Memphis"))
+
+avghsgSh <- map_dfr(yrs, ~ {
+  get_acs(
+    geography = "county",
+    state = "TN",
+    county = "Shelby",
+    table = "B25010",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "year")
+
+avghsgMSA <- map_dfr(yrs, ~ {
+  get_acs(
+    geography = "cbsa",
+    table = "B25010",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "year") %>%
+  filter(str_detect(NAME, "Memphis"))
+```
+
 ```{r eval=FALSE, include=FALSE}
 hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>% 
   mutate(year = recode(year, '1' = 2010, '2' = 2020),
@@ -67,6 +101,15 @@ hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>%
                            'B25002_001' = 'Total Housing Units',
                            'B25002_002' = 'Occupied Units',
                            'B25002_003' = 'Vacant Units'))
+```
+
+```{r include=FALSE}
+avghsg <- rbind(avghsgMphs, avghsgSh, avghsgMSA) %>% 
+  mutate(year = recode(year, '1' = 2010, '2' = 2020),
+         variable = recode(variable,
+                           'B25010_001' = 'Avg HH Size',
+                           'B25010_002' = 'Owner Occupied',
+                           'B25010_003' = 'Renter Occupied'))
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -122,7 +165,7 @@ pophsg <- read_csv("../_data/pophsg.csv")
 ```
 
 ```{r}
-pophsgIn <- pophsg %>% 
+pophsgIn <- rbind(pophsg, avghsg) %>% 
   group_by(NAME, variable) %>% 
   mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
   filter(!is.na(pct_chg)) %>% 
