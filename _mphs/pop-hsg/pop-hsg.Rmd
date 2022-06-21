@@ -211,6 +211,14 @@ hsgtblEx <- pophsgEx %>%
   filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
 ```
 
+# Intro
+
+There are two main ways to measure population using Census data: the total population and the number of households. The Census Bureau publishes more robust data on households, so this figure is more commonly used for in-depth housing analysis. This post will explore population and housing data for the city of Memphis, Shelby County, and the Memphis MSA.
+
+# Population and Households
+
+The following table shows the total population, number of households, and average household size in Memphis, Shelby County, and the Memphis Metro Area. Below each area are the 2020 estimates and the percent change from 2010 to 2020.
+
 ```{r tblPHI, layout='l-page'}
 totalIn %>% 
   pivot_wider(names_from = NAME, 
@@ -260,6 +268,14 @@ totalIn %>%
   )
 ```
 
+There were 1.3 million people living in the Memphis MSA in 2020, according to the 5-Year American Community Survey. Most of the population lived within Shelby County (70%), and just under half lived inside the City of Memphis (48%). While the county and metro area saw modest increases in population from 2010 to 2020, Memphis had a slight decrease, enough to consider the population stagnant.
+
+However, the number of households increased in all jurisdictions. How can the population of the city decrease while the number of households increase? The answer is a decrease in household size, meaning fewer people are living together. This is shown by the 3.5% decrease in average household size over the past decade.
+
+This means that **even though the population in the city remained stagnant, there was still an increase in the demand for housing** over the past decade.
+
+To better see the rate of growth outside of the city, the table below subtracts Memphis data from Shelby County, and Shelby County data from the Memphis Metro region.
+
 ```{r tblPHE, layout='l-page'}
 totalEx %>% 
   pivot_wider(names_from = NAME, 
@@ -307,6 +323,10 @@ totalEx %>%
     subtitle = "Exclusive geographies"
   )
 ```
+
+While the city's population stagnated, there was strong growth in Shelby County and even slightly growth more outside the county limits. Memphis is currently attempting to encourage denser development and to "build up not out", however the highest growth has been in areas furthest away from the city center.
+
+# Housing Units
 
 ```{r tblHI, layout='l-page'}
 hsgtblIn %>% 
