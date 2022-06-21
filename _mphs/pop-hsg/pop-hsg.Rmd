@@ -14,19 +14,19 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r}
+```{r library}
 library(tidyverse)
 library(tidycensus)
 library(gt)
 ```
 
-```{r include=FALSE}
+```{r yrsVars, eval=FALSE, include=FALSE}
 yrs <- c(2010, 2020)
+
+v20 <- load_variables(2020, "acs5")
 ```
 
-```{r eval=FALSE, include=FALSE}
-v20 <- load_variables(2020, "acs5")
-
+```{r getHsg, eval=FALSE, include=FALSE}
 hsgMphs <- map_dfr(yrs, ~ {
   get_acs(
     geography = "place",
@@ -60,7 +60,7 @@ hsgMSA <- map_dfr(yrs, ~ {
   filter(str_detect(NAME, "Memphis"))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r getHsgAvg, eval=FALSE, include=FALSE}
 avghsgMphs <- map_dfr(yrs, ~ {
   get_acs(
     geography = "place",
@@ -94,7 +94,7 @@ avghsgMSA <- map_dfr(yrs, ~ {
   filter(str_detect(NAME, "Memphis"))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r bindHsg, eval=FALSE, include=FALSE}
 hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>% 
   mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
@@ -103,7 +103,7 @@ hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>%
                            'B25002_003' = 'Vacant Units'))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r bindHsgAvg, eval=FALSE, include=FALSE}
 avghsg <- rbind(avghsgMphs, avghsgSh, avghsgMSA) %>% 
   mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
@@ -112,7 +112,7 @@ avghsg <- rbind(avghsgMphs, avghsgSh, avghsgMSA) %>%
                            'B25010_003' = 'Renter Occupied'))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r getPop, eval=FALSE, include=FALSE}
 popMphs <- map_dfr(yrs, ~ {
   get_acs(geography = "place",
                 state = "TN",
@@ -139,14 +139,14 @@ popMSA <- map_dfr(yrs, ~ {
   filter(str_detect(NAME, "Memphis"))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r bindPop, eval=FALSE, include=FALSE}
 pop <- rbind(popMphs, popSh, popMSA) %>% 
   mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
                            'B25008_001' = 'Pop in Housing Units'))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r bindAll, eval=FALSE, include=FALSE}
 pophsg <- rbind(pop, hsg, avghsg) %>% 
   mutate(NAME = recode(NAME, 
                        'Memphis city, Tennessee' = 'Memphis',
@@ -156,15 +156,15 @@ pophsg <- rbind(pop, hsg, avghsg) %>%
 pophsg$NAME <- factor(pophsg$NAME, levels = c('Memphis', 'County', 'Metro'))
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r writeCSV, eval=FALSE, include=FALSE}
 write_csv(pophsg, "../_data/pophsg.csv")
 ```
 
-```{r}
+```{r readCSV}
 pophsg <- read_csv("../_data/pophsg.csv")
 ```
 
-```{r}
+```{r pctChgIn}
 pophsgIn <- pophsg %>% 
   group_by(NAME, variable) %>% 
   mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
@@ -172,7 +172,7 @@ pophsgIn <- pophsg %>%
   select(-c(year, GEOID, moe)) %>% ungroup() 
 ```
 
-```{r}
+```{r pctChgEx}
 pophsgEx <- pophsg %>% 
   select(-c(GEOID, moe)) %>% 
   pivot_wider(names_from = NAME, values_from = estimate) %>% 
@@ -188,7 +188,7 @@ pophsgEx <- pophsg %>%
   ungroup()
 ```
 
-```{r}
+```{r filterRecode}
 totalIn <- pophsgIn %>% 
   filter(variable == "Pop in Housing Units" | 
            variable == "Occupied Units" |
@@ -211,7 +211,7 @@ hsgtblEx <- pophsgEx %>%
   filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
 ```
 
-```{r layout='l-page'}
+```{r tblPHI, layout='l-page'}
 totalIn %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
@@ -260,7 +260,7 @@ totalIn %>%
   )
 ```
 
-```{r layout='l-page'}
+```{r tblPHE, layout='l-page'}
 totalEx %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
@@ -308,7 +308,7 @@ totalEx %>%
   )
 ```
 
-```{r layout='l-page'}
+```{r tblHI, layout='l-page'}
 hsgtblIn %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
@@ -353,7 +353,7 @@ hsgtblIn %>%
   )
 ```
 
-```{r layout='l-page'}
+```{r tblHE, layout='l-page'}
 hsgtblEx %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
