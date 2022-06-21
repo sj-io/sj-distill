@@ -28,28 +28,35 @@ yrs <- c(2010, 2020)
 
 ```{r eval=FALSE, include=FALSE}
 hsgMphs <- map_dfr(yrs, ~ {
-  get_acs(geography = "place",
-                state = "TN",
-                table = "B25002",
-                year = .x,
-                cache_table = TRUE)
-}, .id = "year") %>% 
-  filter(str_detect(NAME, "Memphis")) 
+  get_acs(
+    geography = "place",
+    state = "TN",
+    table = "B25002",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "year") %>%
+  filter(str_detect(NAME, "Memphis"))
 
 hsgSh <- map_dfr(yrs, ~ {
-  get_acs(geography = "county",
-                state = "TN", county = "Shelby",
-                table = "B25002",
-                year = .x,
-                cache_table = TRUE)
+  get_acs(
+    geography = "county",
+    state = "TN",
+    county = "Shelby",
+    table = "B25002",
+    year = .x,
+    cache_table = TRUE
+  )
 }, .id = "year")
 
 hsgMSA <- map_dfr(yrs, ~ {
-  get_acs(geography = "cbsa",
-                table = "B25002",
-                year = .x,
-                cache_table = TRUE)
-}, .id = "year") %>% 
+  get_acs(
+    geography = "cbsa",
+    table = "B25002",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "year") %>%
   filter(str_detect(NAME, "Memphis"))
 ```
 
@@ -59,15 +66,7 @@ hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>%
          variable = recode(variable,
                            'B25002_001' = 'Total Housing Units',
                            'B25002_002' = 'Occupied Units',
-                           'B25002_003' = 'Vacant Units'),
-         NAME = recode(NAME, 
-                       'Memphis city, Tennessee' = 'Memphis',
-                       'Shelby County, Tennessee' = 'Shelby County',
-                       'Memphis, TN-MS-AR Metro Area' = 'Memphis Metro')) 
-
-hsg$NAME <- factor(hsg$NAME, 
-                   levels = c(
-                     'Memphis', 'Shelby County', 'Memphis Metro'))
+                           'B25002_003' = 'Vacant Units'))
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -101,49 +100,75 @@ popMSA <- map_dfr(yrs, ~ {
 pop <- rbind(popMphs, popSh, popMSA) %>% 
   mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
-                           'B25008_001' = 'Pop in Housing Units'),
-         NAME = recode(NAME, 
-                       'Memphis city, Tennessee' = 'Memphis',
-                       'Shelby County, Tennessee' = 'Shelby County',
-                       'Memphis, TN-MS-AR Metro Area' = 'Memphis Metro')) 
-
-pop$NAME <- factor(pop$NAME, 
-                   levels = c(
-                     'Memphis', 'Shelby County', 'Memphis Metro'))
+                           'B25008_001' = 'Pop in Housing Units'))
 ```
 
 ```{r eval=FALSE, include=FALSE}
 pophsg <- rbind(pop, hsg) %>% 
-  group_by(NAME, variable) %>% 
-  mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
-  filter(!is.na(pct_chg)) %>% 
-  select(-c(year, GEOID, moe)) %>% ungroup() 
+  mutate(NAME = recode(NAME, 
+                       'Memphis city, Tennessee' = 'Memphis',
+                       'Shelby County, Tennessee' = 'County',
+                       'Memphis, TN-MS-AR Metro Area' = 'Metro'))
+
+pophsg$NAME <- factor(pophsg$NAME, levels = c('Memphis', 'County', 'Metro'))
 ```
 
 ```{r eval=FALSE, include=FALSE}
 write_csv(pophsg, "../_data/pophsg.csv")
 ```
 
-
 ```{r}
 pophsg <- read_csv("../_data/pophsg.csv")
 ```
 
+```{r}
+pophsgIn <- pophsg %>% 
+  group_by(NAME, variable) %>% 
+  mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
+  filter(!is.na(pct_chg)) %>% 
+  select(-c(year, GEOID, moe)) %>% ungroup() 
+```
 
 ```{r}
-total <- pophsg %>% 
+pophsgEx <- pophsg %>% 
+  select(-c(GEOID, moe)) %>% 
+  pivot_wider(names_from = NAME, values_from = estimate) %>% 
+  mutate(Metro = Metro - County,
+         County = County - Memphis) %>% 
+  pivot_longer(cols = c(Memphis, County, Metro), 
+               names_to = "NAME", 
+               values_to = "estimate") %>% 
+  group_by(NAME, variable) %>% 
+  mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
+  filter(!is.na(pct_chg)) %>% 
+  select(-year) %>% 
+  ungroup()
+```
+
+```{r}
+totalIn <- pophsgIn %>% 
   filter(variable == "Pop in Housing Units" | 
            variable == "Occupied Units") %>% 
   mutate(variable = recode(variable, 
          'Pop in Housing Units' = 'Population',
          'Occupied Units' = 'Households'))
 
-hsgtbl <- pophsg %>% 
+hsgtblIn <- pophsgIn %>% 
+  filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
+
+totalEx <- pophsgEx %>% 
+  filter(variable == "Pop in Housing Units" | 
+           variable == "Occupied Units") %>% 
+  mutate(variable = recode(variable, 
+         'Pop in Housing Units' = 'Population',
+         'Occupied Units' = 'Households'))
+
+hsgtblEx <- pophsgEx %>% 
   filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
 ```
 
 ```{r layout='l-page'}
-total %>% 
+totalIn %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
   gt() %>% 
@@ -153,44 +178,45 @@ total %>%
   ) %>% 
   tab_spanner(
     label = "Shelby County",
-    columns = c('estimate_Shelby County', 'pct_chg_Shelby County')
+    columns = c('estimate_County', 'pct_chg_County')
   ) %>% 
   tab_spanner(
     label = "Memphis Metro",
-    columns = c('estimate_Memphis Metro', 'pct_chg_Memphis Metro')
+    columns = c('estimate_Metro', 'pct_chg_Metro')
   ) %>% 
   fmt_percent(columns = c(
     'pct_chg_Memphis',
-    'pct_chg_Shelby County',
-    'pct_chg_Memphis Metro'
+    'pct_chg_County',
+    'pct_chg_Metro'
     )) %>% 
   fmt_number(columns = c(
     'estimate_Memphis', 
-    'estimate_Shelby County',
-    'estimate_Memphis Metro'),
+    'estimate_County',
+    'estimate_Metro'),
     decimals = 0) %>% 
   cols_label(
     'estimate_Memphis' = '2020',
     'pct_chg_Memphis' = '2010-2020',
-    'estimate_Shelby County' = '2020', 
-    'pct_chg_Shelby County' = '2010-2020',
-    'estimate_Memphis Metro' = '2020', 
-    'pct_chg_Memphis Metro' = '2010-2020',
+    'estimate_County' = '2020', 
+    'pct_chg_County' = '2010-2020',
+    'estimate_Metro' = '2020', 
+    'pct_chg_Metro' = '2010-2020',
     'variable' = ' '
   ) %>% 
   tab_footnote(
     footnote = "Population is the Total Population in Occupied Housing, which excludes people living in group quarters."
   ) %>% 
   tab_footnote(
-    footnote = "Source: ACS 5-Year 2005-2010 & 2015-2020"
+    footnote = "Source: 5-Year ACS 2005-2010 & 2015-2020"
   ) %>% 
   tab_header(
-    title = "Population and Households in Memphis Area"
+    title = "Population and Households in Memphis Area",
+    subtitle = "Inclusive geographies"
   )
 ```
 
 ```{r layout='l-page'}
-hsgtbl %>% 
+totalEx %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
   gt() %>% 
@@ -200,35 +226,129 @@ hsgtbl %>%
   ) %>% 
   tab_spanner(
     label = "Shelby County",
-    columns = c('estimate_Shelby County', 'pct_chg_Shelby County')
+    columns = c('estimate_County', 'pct_chg_County')
   ) %>% 
   tab_spanner(
     label = "Memphis Metro",
-    columns = c('estimate_Memphis Metro', 'pct_chg_Memphis Metro')
+    columns = c('estimate_Metro', 'pct_chg_Metro')
   ) %>% 
   fmt_percent(columns = c(
     'pct_chg_Memphis',
-    'pct_chg_Shelby County',
-    'pct_chg_Memphis Metro'
+    'pct_chg_County',
+    'pct_chg_Metro'
     )) %>% 
   fmt_number(columns = c(
     'estimate_Memphis', 
-    'estimate_Shelby County',
-    'estimate_Memphis Metro'),
+    'estimate_County',
+    'estimate_Metro'),
     decimals = 0) %>% 
   cols_label(
     'estimate_Memphis' = '2020',
     'pct_chg_Memphis' = '2010-2020',
-    'estimate_Shelby County' = '2020', 
-    'pct_chg_Shelby County' = '2010-2020',
-    'estimate_Memphis Metro' = '2020', 
-    'pct_chg_Memphis Metro' = '2010-2020',
+    'estimate_County' = '2020', 
+    'pct_chg_County' = '2010-2020',
+    'estimate_Metro' = '2020', 
+    'pct_chg_Metro' = '2010-2020',
     'variable' = ' '
   ) %>% 
   tab_footnote(
-    footnote = "Source: ACS 5-Year 2005-2010 & 2015-2020"
+    footnote = "Population is the Total Population in Occupied Housing, which excludes people living in group quarters."
+  ) %>% 
+  tab_footnote(
+    footnote = "Source: 5-Year ACS 2005-2010 & 2015-2020"
   ) %>% 
   tab_header(
-    title = "Housing Units in Memphis Area"
+    title = "Population and Households in Memphis Area",
+    subtitle = "Exclusive geographies"
+  )
+```
+
+```{r layout='l-page'}
+hsgtblIn %>% 
+  pivot_wider(names_from = NAME, 
+              values_from = c(estimate, pct_chg)) %>% 
+  gt() %>% 
+  tab_spanner(
+    label = "Memphis",
+    columns = c(estimate_Memphis, pct_chg_Memphis)
+  ) %>% 
+  tab_spanner(
+    label = "Shelby County",
+    columns = c('estimate_County', 'pct_chg_County')
+  ) %>% 
+  tab_spanner(
+    label = "Memphis Metro",
+    columns = c('estimate_Metro', 'pct_chg_Metro')
+  ) %>% 
+  fmt_percent(columns = c(
+    'pct_chg_Memphis',
+    'pct_chg_County',
+    'pct_chg_Metro'
+    )) %>% 
+  fmt_number(columns = c(
+    'estimate_Memphis', 
+    'estimate_County',
+    'estimate_Metro'),
+    decimals = 0) %>% 
+  cols_label(
+    'estimate_Memphis' = '2020',
+    'pct_chg_Memphis' = '2010-2020',
+    'estimate_County' = '2020', 
+    'pct_chg_County' = '2010-2020',
+    'estimate_Metro' = '2020', 
+    'pct_chg_Metro' = '2010-2020',
+    'variable' = ' '
+  ) %>% 
+  tab_footnote(
+    footnote = "Source: 5-Year ACS 2005-2010 & 2015-2020"
+  ) %>% 
+  tab_header(
+    title = "Housing Units in Memphis Area",
+    subtitle = "Inclusive geographies"
+  )
+```
+
+```{r layout='l-page'}
+hsgtblEx %>% 
+  pivot_wider(names_from = NAME, 
+              values_from = c(estimate, pct_chg)) %>% 
+  gt() %>% 
+  tab_spanner(
+    label = "Memphis",
+    columns = c(estimate_Memphis, pct_chg_Memphis)
+  ) %>% 
+  tab_spanner(
+    label = "Shelby County",
+    columns = c('estimate_County', 'pct_chg_County')
+  ) %>% 
+  tab_spanner(
+    label = "Memphis Metro",
+    columns = c('estimate_Metro', 'pct_chg_Metro')
+  ) %>% 
+  fmt_percent(columns = c(
+    'pct_chg_Memphis',
+    'pct_chg_County',
+    'pct_chg_Metro'
+    )) %>% 
+  fmt_number(columns = c(
+    'estimate_Memphis', 
+    'estimate_County',
+    'estimate_Metro'),
+    decimals = 0) %>% 
+  cols_label(
+    'estimate_Memphis' = '2020',
+    'pct_chg_Memphis' = '2010-2020',
+    'estimate_County' = '2020', 
+    'pct_chg_County' = '2010-2020',
+    'estimate_Metro' = '2020', 
+    'pct_chg_Metro' = '2010-2020',
+    'variable' = ' '
+  ) %>% 
+  tab_footnote(
+    footnote = "Source: 5-Year ACS 2005-2010 & 2015-2020"
+  ) %>% 
+  tab_header(
+    title = "Housing Units in Memphis Area",
+    subtitle = "Exclusive geographies"
   )
 ```
