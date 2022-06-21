@@ -23,3 +23,21 @@ year,GEOID,NAME,variable,estimate,moe
 2020,32820,Metro,Total Housing Units,569954,519
 2020,32820,Metro,Occupied Units,505544,2384
 2020,32820,Metro,Vacant Units,64410,2188
+2010,4748000,Memphis,Avg HH Size,2.58,0.02
+2010,4748000,Memphis,Owner Occupied,2.6,0.03
+2010,4748000,Memphis,Renter Occupied,2.56,0.04
+2020,4748000,Memphis,Avg HH Size,2.49,0.03
+2020,4748000,Memphis,Owner Occupied,2.53,0.04
+2020,4748000,Memphis,Renter Occupied,2.45,0.04
+2010,47157,County,Avg HH Size,2.65,0.02
+2010,47157,County,Owner Occupied,2.7,0.03
+2010,47157,County,Renter Occupied,2.56,0.03
+2020,47157,County,Avg HH Size,2.58,0.02
+2020,47157,County,Owner Occupied,2.66,0.03
+2020,47157,County,Renter Occupied,2.48,0.03
+2010,32820,Metro,Avg HH Size,2.67,0.01
+2010,32820,Metro,Owner Occupied,2.71,0.02
+2010,32820,Metro,Renter Occupied,2.59,0.03
+2020,32820,Metro,Avg HH Size,2.61,0.02
+2020,32820,Metro,Owner Occupied,2.67,0.02
+2020,32820,Metro,Renter Occupied,2.52,0.03

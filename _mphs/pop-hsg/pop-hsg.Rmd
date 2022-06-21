@@ -60,7 +60,7 @@ hsgMSA <- map_dfr(yrs, ~ {
   filter(str_detect(NAME, "Memphis"))
 ```
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 avghsgMphs <- map_dfr(yrs, ~ {
   get_acs(
     geography = "place",
@@ -103,7 +103,7 @@ hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>%
                            'B25002_003' = 'Vacant Units'))
 ```
 
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 avghsg <- rbind(avghsgMphs, avghsgSh, avghsgMSA) %>% 
   mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
@@ -147,7 +147,7 @@ pop <- rbind(popMphs, popSh, popMSA) %>%
 ```
 
 ```{r eval=FALSE, include=FALSE}
-pophsg <- rbind(pop, hsg) %>% 
+pophsg <- rbind(pop, hsg, avghsg) %>% 
   mutate(NAME = recode(NAME, 
                        'Memphis city, Tennessee' = 'Memphis',
                        'Shelby County, Tennessee' = 'County',
@@ -165,7 +165,7 @@ pophsg <- read_csv("../_data/pophsg.csv")
 ```
 
 ```{r}
-pophsgIn <- rbind(pophsg, avghsg) %>% 
+pophsgIn <- pophsg %>% 
   group_by(NAME, variable) %>% 
   mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
   filter(!is.na(pct_chg)) %>% 
@@ -191,7 +191,8 @@ pophsgEx <- pophsg %>%
 ```{r}
 totalIn <- pophsgIn %>% 
   filter(variable == "Pop in Housing Units" | 
-           variable == "Occupied Units") %>% 
+           variable == "Occupied Units" |
+           variable == "Avg HH Size") %>% 
   mutate(variable = recode(variable, 
          'Pop in Housing Units' = 'Population',
          'Occupied Units' = 'Households'))
@@ -236,6 +237,7 @@ totalIn %>%
     'estimate_Memphis', 
     'estimate_County',
     'estimate_Metro'),
+    rows = 1:2,
     decimals = 0) %>% 
   cols_label(
     'estimate_Memphis' = '2020',
