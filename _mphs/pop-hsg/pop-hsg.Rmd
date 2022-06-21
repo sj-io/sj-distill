@@ -17,17 +17,16 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r}
 library(tidyverse)
 library(tidycensus)
-library(plotly)
 library(gt)
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 v20 <- load_variables(2020, "acs5")
 
-yrs <- c(2010, 2015, 2020)
+yrs <- c(2010, 2020)
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 hsgMphs <- map_dfr(yrs, ~ {
   get_acs(geography = "place",
                 state = "TN",
@@ -54,9 +53,9 @@ hsgMSA <- map_dfr(yrs, ~ {
   filter(str_detect(NAME, "Memphis"))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 hsg <- rbind(hsgMphs, hsgSh, hsgMSA) %>% 
-  mutate(year = recode(year, '1' = 2010, '2' = 2015, '3' = 2020),
+  mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
                            'B25002_001' = 'Total Housing Units',
                            'B25002_002' = 'Occupied Units',
@@ -71,11 +70,11 @@ hsg$NAME <- factor(hsg$NAME,
                      'Memphis', 'Shelby County', 'Memphis Metro'))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 popMphs <- map_dfr(yrs, ~ {
   get_acs(geography = "place",
                 state = "TN",
-                variables = c("B26001_001", "B25008_001"),
+                variables = "B25008_001",
                 year = .x,
                 cache_table = TRUE)
 }, .id = "year") %>% 
@@ -84,26 +83,25 @@ popMphs <- map_dfr(yrs, ~ {
 popSh <- map_dfr(yrs, ~ {
   get_acs(geography = "county",
                 state = "TN", county = "Shelby",
-                variables = c("B26001_001", "B25008_001"),
+                variables = "B25008_001",
                 year = .x,
                 cache_table = TRUE)
 }, .id = "year")
 
 popMSA <- map_dfr(yrs, ~ {
   get_acs(geography = "cbsa",
-                variables = c("B26001_001", "B25008_001"),
+                variables = "B25008_001",
                 year = .x,
                 cache_table = TRUE)
 }, .id = "year") %>% 
   filter(str_detect(NAME, "Memphis"))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 pop <- rbind(popMphs, popSh, popMSA) %>% 
-  mutate(year = recode(year, '1' = 2010, '2' = 2015, '3' = 2020),
+  mutate(year = recode(year, '1' = 2010, '2' = 2020),
          variable = recode(variable,
-                           'B25008_001' = 'Pop in Housing Units',
-                           'B26001_001' = 'Group Quarters Pop'),
+                           'B25008_001' = 'Pop in Housing Units'),
          NAME = recode(NAME, 
                        'Memphis city, Tennessee' = 'Memphis',
                        'Shelby County, Tennessee' = 'Shelby County',
@@ -112,28 +110,34 @@ pop <- rbind(popMphs, popSh, popMSA) %>%
 pop$NAME <- factor(pop$NAME, 
                    levels = c(
                      'Memphis', 'Shelby County', 'Memphis Metro'))
-pop$variable <- factor(pop$variable, levels = c(
-  'Pop in Housing Units', 'Group Quarters Pop'
-))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 pophsg <- rbind(pop, hsg) %>% 
-  filter(year != "2015") %>% 
   group_by(NAME, variable) %>% 
   mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
   filter(!is.na(pct_chg)) %>% 
   select(-c(year, GEOID, moe)) %>% ungroup() 
+```
 
+```{r eval=FALSE, include=FALSE}
+write_csv(pophsg, "../_data/pophsg.csv")
+```
+
+
+```{r}
+pophsg <- read_csv("../_data/pophsg.csv")
+```
+
+
+```{r}
 total <- pophsg %>% 
   filter(variable == "Pop in Housing Units" | 
            variable == "Occupied Units") %>% 
   mutate(variable = recode(variable, 
          'Pop in Housing Units' = 'Population',
          'Occupied Units' = 'Households'))
-```
 
-```{r}
 hsgtbl <- pophsg %>% 
   filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
 ```
