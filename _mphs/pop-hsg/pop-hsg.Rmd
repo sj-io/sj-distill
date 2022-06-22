@@ -511,7 +511,19 @@ hsgST <- rbind(hsgTN, hsgAR, hsgMS)
 ```
 
 ```{r}
+vacST <- hsgST %>% 
+  select(-moe) %>% 
+  filter(variable != "B25002_002") %>% 
+  pivot_wider(names_from = variable,
+              values_from = estimate) %>% 
+  mutate(vacancy = (B25002_003 / B25002_001)*100) %>% 
+  select(-c(4:5))
+```
+
+
+```{r}
 library(tigris)
+library(tmap)
 options(tigris_use_cache = TRUE)
 ```
 ```{r}
@@ -524,7 +536,14 @@ tracts <- rbind(tractAR, tractTN, tractMS) %>%
 ```
 
 ```{r}
-hsgGeo <- hsgST %>% left_join(tracts, by = "GEOID")
+vacGeo <- tracts %>% 
+  right_join(vacST, by = "GEOID") %>% 
+  select(GEOID, vacancy)
+```
+
+```{r}
+tm_shape(vacGeo) +
+  tm_polygons(col = "vacancy")
 ```
 
 
