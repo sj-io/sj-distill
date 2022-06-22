@@ -217,9 +217,11 @@ hsgtblEx <- pophsgEx %>%
 
 # Intro
 
-There are two main ways to measure population using Census data: the total population and the number of households. The Census Bureau publishes more robust data on households, so this figure is more commonly used for in-depth housing analysis. This post will explore population and housing data for the city of Memphis, Shelby County, and the Memphis MSA.
+While "the housing crisis" is present nearly everywhere across America, how it manifests is unique to each and every place. Tackling the crisis requires understanding a place's existing market, the needs of its residents, and the laws that shape how the market functions. This post will examine Census data to learn: how many people live in the Memphis area, how many housing units exist, how many are vacant, and how these figures have changed over the past decade.
 
 # Population and Households
+
+There are two main ways to measure population using Census data: the total population and the number of households. The Census Bureau publishes more robust data on households, so this figure is more commonly used for in-depth housing analysis. Typically an increase (or decrease) in the population is tandem with an increase (or decrease) in the number of households. This was not the case in Memphis, where a stagnant population illuminated changes in household composition.
 
 The following table shows the total population, number of households, and average household size in Memphis, Shelby County, and the Memphis Metro Area. Below each area are the 2020 estimates and the percent change from 2010 to 2020.
 
@@ -328,13 +330,13 @@ totalEx %>%
   )
 ```
 
-While the city's population stagnated, there was strong growth in Shelby County and even slightly growth more outside the county limits. Memphis is currently attempting to encourage denser development and to "build up not out", however the highest growth has been in areas furthest away from the city center.
+While the city's population remained flat, there was strong growth in Shelby County and even more outside the county limits. Memphis is currently attempting to encourage denser development and to "build up not out", however the highest growth has been in areas furthest away from the city center.
 
 # Housing Units
 
 The housing market collapse of 2008 caused a decrease in new developments in the ensuing decade, tightening the supply. How much was this seen in Memphis?
 
-The table below shows the total number of housing units in the Memphis area, and how many of those units were occupied or vacant.
+The table below shows the total number of housing units in the Memphis area, and how many of those units were occupied or vacant. Because a unit must contain a household to be considered occupied, the number of occupied units under each area is identical to the total number of households in the above tables.
 
 ```{r tblHI, layout='l-page'}
 hsgtblIn %>% 
@@ -381,13 +383,11 @@ hsgtblIn %>%
   )
 ```
 
-The city, county, and metro areas all saw large decreases in the number of vacant housing units. In real numbers, there was a decrease of 5,680 vacant units and an increase of 9,261 occupied units within the city between 2010 and 2020. Since the increase in occupied units exceeded the decrease in vacant units, we can conclude there was some new development--a minimum of 3,581 units--though this is considerably small considering the 10 year time span.
-
-The number of occupied units under each area is identical to the total number of households in the above tables.
+Overall, there was a significant decrease in the number of vacant housing units. For the city of Memphis, there was a drop of 5,680 vacant units and an increase of 9,261 occupied units between 2010 and 2020. Since the increase in occupied units exceeded the decrease in vacant units, we can conclude there was some new development--a minimum of 3,581 units--though this is considerably small considering the 10 year time span.
 
 To better analyze changes in housing units for areas outside the city, the following table subtracts Memphis data from Shelby County and Shelby County data from the Memphis Metro region.
 
-```{r tblHE, layout='l-page'}
+```{r tblHE, layout='l-page', fig.cap='Housing Units in Memphis Area'}
 hsgtblEx %>% 
   pivot_wider(names_from = NAME, 
               values_from = c(estimate, pct_chg)) %>% 
@@ -432,18 +432,16 @@ hsgtblEx %>%
   )
 ```
 
-While Memphis has a high vacancy rate of 14.6%, the rate is considerably lower in the county outside the city, at 5.2%. The metro falls somewhere in the middle at 9.1% vacancy for all housing units.
+While Memphis has a high vacancy rate (14.6%), the county outside the city has a significantly lower rate of 5.2%. The county saw an increase of 6,903 occupied units and a decrease in 761 vacant units, meaning at least 6,142 new units were developed.
 
-Removing the county's data reveals that the outlying metro area saw an increase in the number of vacant units. Overall, there was an increase of 12,992 occupied units AND an increase in 1,696 vacant units. This combination of increased occupancy and vacancy signifies substantial new development in areas outside Shelby County--at least 14,688 units.
-
-The county saw an increase of 6,903 occupied units and a decrease in 761 vacant units, meaning at least 6,142 new units were developed.
+The outlying metro's vacancy rate falls somewhere in the middle at 9.1%. Removing the county's data reveals that the outlying metro area saw an increase in the number of vacant units, in contrast to the city and county. Overall, there was an increase of 12,992 occupied units AND an increase in 1,696 vacant units. This combination of increased occupancy and vacancy signifies substantial new development in areas outside Shelby County--at least 14,688 units.
 
 In total, at least 24,411 new housing units were developed in the Memphis area from 2010-2020, with development primarily in the metro area outside Shelby County.
 
-Despite most development occurring outside the city limits, Memphis' high vacancy rate means there is still a large amount of existing housing that should be available. However, the quality and safety of these homes may make them uninhabitable, or the costs may be too high for existing residents to afford. This information is outside the scope of this post and further research is needed to draw any conclusions.
+Despite most development occurring outside the city limits, Memphis' high vacancy rate means there is still a large amount of existing housing that should be available. However, the quality of these homes may make them uninhabitable, the area may be undesirable, or the costs may be too high for existing residents to afford. This information is outside the scope of this post and further research is needed to draw any conclusions.
 
 # Conclusion
 
-Memphis's population stagnated over the past decade, hovering around 635,000 people. Over this same time period, the number of households increased, driven by a decrease in average household size. This means that while the population in the city remained stagnant, there was still an increase in the demand for housing over the past decade.
+Memphis's population stagnated between 2010 and 2020, hovering around 635,000 people. Over this same time period, a decrease in average household size lead to an increase in the number of households. This means that while the population in the city remained flat, there was still an increase in the demand for housing over the past decade.
 
-Areas outside the city saw population/household growth of over 7%. Despite a recent desire by city officials to increase density, new development over the past decade was primarily in the metro region outside the county limits. Memphis's high vacancy rate should mean there is still a large amount of the existing housing stock available for occupancy. Further research is needed on the quality and cost of this housing to determine actual availability.
+Meanwhile, areas outside the city saw strong population/household growth. Despite a recent desire by city officials to increase density, new development over the past decade was primarily in the metro region outside the county limits. Memphis's high vacancy rate should mean there is still a large amount of the existing housing stock available for occupancy. Further research is needed on the quality, cost, and location of this housing to determine actual availability.
