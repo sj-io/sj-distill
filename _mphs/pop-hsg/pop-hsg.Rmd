@@ -471,6 +471,63 @@ In total, at least 24,411 new housing units were developed in the Memphis area f
 
 Despite most development occurring outside the city limits and large drops in vacancy, this data suggests Memphis still has tens of thousands of existing units that should be available. However, the quality of these homes may make them uninhabitable, the area may be undesirable, or the costs may be too high for existing residents to afford. This information is outside the scope of this post and further research is needed to draw any conclusions.
 
+```{r}
+cTN <- list(157, 167, 047)
+cAR <- "Crittenden"
+cMS <- list("DeSoto", "Tunica", "Tate", "Marshall")
+```
+
+```{r}
+hsgTN <- map_dfr(cTN, ~ {
+  get_acs(
+    geography = "tract",
+    state = 47,
+    county = .x,
+    table = "B25002",
+    cache_table = TRUE
+  )
+}, .id = "county")
+
+hsgMS <- map_dfr(cMS, ~ {
+  get_acs(
+    geography = "tract",
+    state = "MS",
+    county = .x,
+    table = "B25002",
+    cache_table = TRUE
+  )
+}, .id = "county")
+
+hsgAR <- get_acs(
+  geography = "tract",
+  state = "AR",
+  county = cAR,
+  table = "B25002",
+  cache_table = TRUE
+) %>% 
+  mutate(county = 1, .before = "GEOID")
+
+hsgST <- rbind(hsgTN, hsgAR, hsgMS)
+```
+
+```{r}
+library(tigris)
+options(tigris_use_cache = TRUE)
+```
+```{r}
+tractAR <- tracts("AR", cAR)
+tractTN <- tracts("TN")
+tractMS <- tracts("MS")
+
+tracts <- rbind(tractAR, tractTN, tractMS) %>% 
+  select(-NAME)
+```
+
+```{r}
+hsgGeo <- hsgST %>% left_join(tracts, by = "GEOID")
+```
+
+
 # Conclusion
 
 Memphis's population stagnated between 2010 and 2020, hovering around 635,000 people. Over this same time period, a decrease in average household size lead to an increase in the number of households. This means that while the population in the city remained flat, there was still an increase in the demand for housing over the past decade.
