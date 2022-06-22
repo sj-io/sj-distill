@@ -12,8 +12,12 @@ collections:
     categories: true
   ref:
     categories: true
+  mphs:
+    categories: true
 navbar:
   right:
+    - text: "Memphis"
+      href: mphs.html
     - text: "Reference"
       href: ref.html
     - text: "About"

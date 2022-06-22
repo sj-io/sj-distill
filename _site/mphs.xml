@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>SJ</title>
+    <link>https://sarahjohnson.io</link>
+    <atom:link href="https://sarahjohnson.io/mphs.xml" rel="self" type="application/rss+xml"/>
+    <description>SJ
+</description>
+    <generator>Distill</generator>
+    <lastBuildDate>Tue, 21 Jun 2022 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>Population and Housing</title>
+      <dc:creator>Sarah Johnson</dc:creator>
+      <link>https://sarahjohnson.io/mphs/pop-hsg</link>
+      <description>Using Census data to find how many people live in the Memphis area, how many housing units exist, and vacancy rates.</description>
+      <category>census</category>
+      <guid>https://sarahjohnson.io/mphs/pop-hsg</guid>
+      <pubDate>Tue, 21 Jun 2022 00:00:00 +0000</pubDate>
+      <media:content url="https://sarahjohnson.io/mphs/pop-hsg/ph.png" medium="image" type="image/png" width="714" height="345"/>
+    </item>
+  </channel>
+</rss>
