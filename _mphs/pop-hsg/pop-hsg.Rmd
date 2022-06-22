@@ -166,25 +166,39 @@ write_csv(pophsg, "../_data/pophsg.csv")
 ```
 
 ```{r readCSV}
-pophsg <- read_csv("../_data/pophsg.csv")
+pophsg <- read_csv("../_data/pophsg.csv") %>% 
+  select(-c(GEOID, moe)) 
 ```
 
 ```{r pctChgIn}
 pophsgIn <- pophsg %>% 
+  pivot_wider(names_from = variable, 
+              values_from = estimate) %>% 
+  mutate(`Vacancy Rate` = 
+           (`Vacant Units` / `Total Housing Units`)) %>% 
+  pivot_longer(cols = 3:10,
+               names_to = "variable",
+               values_to = "estimate") %>% 
   group_by(NAME, variable) %>% 
   mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
   filter(!is.na(pct_chg)) %>% 
-  select(-c(year, GEOID, moe)) %>% ungroup() 
+  select(-year) %>% ungroup() 
 ```
 
 ```{r pctChgEx}
 pophsgEx <- pophsg %>% 
-  select(-c(GEOID, moe)) %>% 
   pivot_wider(names_from = NAME, values_from = estimate) %>% 
   mutate(Metro = Metro - County,
          County = County - Memphis) %>% 
   pivot_longer(cols = c(Memphis, County, Metro), 
                names_to = "NAME", 
+               values_to = "estimate") %>% 
+  pivot_wider(names_from = variable, 
+              values_from = estimate) %>% 
+  mutate(`Vacancy Rate` = 
+           (`Vacant Units` / `Total Housing Units`)) %>% 
+  pivot_longer(cols = 3:10,
+               names_to = "variable",
                values_to = "estimate") %>% 
   group_by(NAME, variable) %>% 
   mutate(pct_chg = (estimate/lag(estimate) - 1)) %>% 
@@ -203,7 +217,8 @@ totalIn <- pophsgIn %>%
          'Occupied Units' = 'Households'))
 
 hsgtblIn <- pophsgIn %>% 
-  filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
+  filter(str_detect(variable, "Units|Rate") & 
+           !str_detect(variable, "Pop"))
 
 totalEx <- pophsgEx %>% 
   filter(variable == "Pop in Housing Units" | 
@@ -213,7 +228,8 @@ totalEx <- pophsgEx %>%
          'Occupied Units' = 'Households'))
 
 hsgtblEx <- pophsgEx %>% 
-  filter(str_detect(variable, "Units") & !str_detect(variable, "Pop"))
+  filter(str_detect(variable, "Units|Rate") & 
+           !str_detect(variable, "Pop"))
 ```
 
 # Intro
@@ -361,10 +377,17 @@ hsgtblIn %>%
     'pct_chg_County',
     'pct_chg_Metro'
     )) %>% 
+  fmt_percent(columns = c(
+    'estimate_Memphis', 
+    'estimate_County',
+    'estimate_Metro'),
+    rows = 4,
+    decimals = 1) %>% 
   fmt_number(columns = c(
     'estimate_Memphis', 
     'estimate_County',
     'estimate_Metro'),
+    rows = 1:3,
     decimals = 0) %>% 
   cols_label(
     'estimate_Memphis' = '2020',
@@ -384,7 +407,7 @@ hsgtblIn %>%
   )
 ```
 
-Overall, there was a significant decrease in the number of vacant housing units. For the city of Memphis, there was a drop of 5,680 vacant units and an increase of 9,261 occupied units between 2010 and 2020. Since the increase in occupied units exceeded the decrease in vacant units, we can conclude there was some new development--a minimum of 3,581 units--though this is considerably small considering the 10 year time span.
+Overall, there was a significant decrease in vacancy in the Memphis area. Between 2010 and 2020, the city saw a drop of 5,680 vacant units (-11.5%) and an increase of 9,261 occupied units (3.8%). Since real number increase in occupied units exceeded the decrease in vacant units, we can conclude there was some new development--a minimum of 3,581 units. This is considerably small considering the 10 year time span.
 
 To better analyze changes in housing units for areas outside the city, the following table subtracts Memphis data from Shelby County and Shelby County data from the Memphis Metro region.
 
@@ -410,10 +433,17 @@ hsgtblEx %>%
     'pct_chg_County',
     'pct_chg_Metro'
     )) %>% 
+  fmt_percent(columns = c(
+    'estimate_Memphis', 
+    'estimate_County',
+    'estimate_Metro'),
+    rows = 4,
+    decimals = 1) %>% 
   fmt_number(columns = c(
     'estimate_Memphis', 
     'estimate_County',
     'estimate_Metro'),
+    rows = 1:3,
     decimals = 0) %>% 
   cols_label(
     'estimate_Memphis' = '2020',
@@ -435,14 +465,14 @@ hsgtblEx %>%
 
 While Memphis has a high vacancy rate (14.6%), the county outside the city has a significantly lower rate of 5.2%. The county saw an increase of 6,903 occupied units and a decrease in 761 vacant units, meaning at least 6,142 new units were developed.
 
-The outlying metro's vacancy rate falls somewhere in the middle at 9.1%. Removing the county's data reveals that the outlying metro area saw an increase in the number of vacant units, in contrast to the city and county. Overall, there was an increase of 12,992 occupied units AND an increase in 1,696 vacant units. This combination of increased occupancy and vacancy signifies substantial new development in areas outside Shelby County--at least 14,688 units.
+Removing the county's data from the metro reveals that the outlying area saw an increase in the number of vacant units and vacancy rate, in contrast to the city and county. Overall, there was an increase of 12,992 occupied units AND an increase in 1,696 vacant units. This combination of increased occupancy and vacancy signifies substantial new development in areas outside Shelby County--at least 14,688 units. The increase in the vacancy rate also suggest that supply in these areas may exceed demand.
 
 In total, at least 24,411 new housing units were developed in the Memphis area from 2010-2020, with development primarily in the metro area outside Shelby County.
 
-Despite most development occurring outside the city limits, Memphis' high vacancy rate means there is still a large amount of existing housing that should be available. However, the quality of these homes may make them uninhabitable, the area may be undesirable, or the costs may be too high for existing residents to afford. This information is outside the scope of this post and further research is needed to draw any conclusions.
+Despite most development occurring outside the city limits and large drops in vacancy, this data suggests Memphis still has tens of thousands of existing units that should be available. However, the quality of these homes may make them uninhabitable, the area may be undesirable, or the costs may be too high for existing residents to afford. This information is outside the scope of this post and further research is needed to draw any conclusions.
 
 # Conclusion
 
 Memphis's population stagnated between 2010 and 2020, hovering around 635,000 people. Over this same time period, a decrease in average household size lead to an increase in the number of households. This means that while the population in the city remained flat, there was still an increase in the demand for housing over the past decade.
 
-Meanwhile, areas outside the city saw strong population/household growth. Despite a recent desire by city officials to increase density, new development over the past decade was primarily in the metro region outside the county limits. Memphis's high vacancy rate should mean there is still a large amount of the existing housing stock available for occupancy. Further research is needed on the quality, cost, and location of this housing to determine actual availability.
+Meanwhile, areas outside the city saw strong population/household growth. Despite a recent desire by city officials to increase density, new development over the past decade was primarily in the metro region outside the county limits. Though the vacancy rate in Memphis has decreased, the figure is still high and a large portion of the existing housing stock should still be available for occupancy. Further research is needed on the quality, cost, and location of this housing to determine actual availability.
