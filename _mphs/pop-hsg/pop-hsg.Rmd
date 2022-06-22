@@ -1,7 +1,7 @@
 ---
 title: "Population and Housing"
 description: |
-  Census data for Memphis, Shelby County, and the Memphis MSA.
+  Using Census data to find how many people live in the Memphis area, how many housing units exist, and vacancy rates.
 author:
   - name: Sarah Johnson
 date: 2022-06-20
@@ -217,7 +217,7 @@ hsgtblEx <- pophsgEx %>%
 
 # Intro
 
-While "the housing crisis" is present nearly everywhere across America, how it manifests is unique to each and every place. Tackling the crisis requires understanding a place's existing market, the needs of its residents, and the laws that shape how the market functions. This post will examine Census data to learn: how many people live in the Memphis area, how many housing units exist, how many are vacant, and how these figures have changed over the past decade.
+While the housing crisis is present nearly everywhere across America, how it manifests is unique to each and every place. Tackling the crisis requires understanding a place's existing market, the needs of its residents, and the laws that shape how the market functions. This post will examine Census data to learn: how many people live in the Memphis area, how many housing units exist, how many are vacant, and how these figures have changed over the past decade.
 
 # Population and Households
 
