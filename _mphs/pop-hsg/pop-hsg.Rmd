@@ -4,9 +4,10 @@ description: |
   Using Census data to find how many people live in the Memphis area, how many housing units exist, and vacancy rates.
 author:
   - name: Sarah Johnson
-date: 2022-06-20
+date: 2022-06-21
 categories:
   - census
+preview: ph.png
 output:
   distill::distill_article:
     self_contained: false
