@@ -50,16 +50,17 @@ pre.numberSource code > span > a:first-child::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {   }
+  { color: #00769e; background-color: #f1f3f5; }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
+code span { color: #00769e; } /* Normal */
 code span.al { color: #ad0000; } /* Alert */
 code span.an { color: #5e5e5e; } /* Annotation */
-code span.at { } /* Attribute */
+code span.at { color: #657422; } /* Attribute */
 code span.bn { color: #ad0000; } /* BaseN */
 code span.bu { } /* BuiltIn */
-code span.cf { color: #007ba5; } /* ControlFlow */
+code span.cf { color: #00769e; } /* ControlFlow */
 code span.ch { color: #20794d; } /* Char */
 code span.cn { color: #8f5902; } /* Constant */
 code span.co { color: #5e5e5e; } /* Comment */
@@ -73,9 +74,9 @@ code span.fl { color: #ad0000; } /* Float */
 code span.fu { color: #4758ab; } /* Function */
 code span.im { } /* Import */
 code span.in { color: #5e5e5e; } /* Information */
-code span.kw { color: #007ba5; } /* Keyword */
+code span.kw { color: #00769e; } /* Keyword */
 code span.op { color: #5e5e5e; } /* Operator */
-code span.ot { color: #007ba5; } /* Other */
+code span.ot { color: #00769e; } /* Other */
 code span.pp { color: #ad0000; } /* Preprocessor */
 code span.sc { color: #5e5e5e; } /* SpecialChar */
 code span.ss { color: #20794d; } /* SpecialString */
@@ -146,6 +147,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <meta name="citation_reference" content="citation_title=Overview of Federal Housing Assistance Programs and Policy;citation_publication_date=2019;citation_author=Maggie McCarty;citation_author=Libby Perl;citation_author=Katie Jones"/>
   <meta name="citation_reference" content="citation_title=Homeownership and opportunity;citation_author= HUD"/>
   <meta name="citation_reference" content="citation_title=FY 2019 processing guidance;citation_publication_date=2020;citation_author= HUD"/>
+  <meta name="citation_reference" content="citation_title=How the past informs present-day polcy and program decision-making: What have 4,000 years of off-site houring technology innovation taught us and where do we go from here?;citation_publication_date=2022;citation_author=Kent Watkins"/>
   <!--radix_placeholder_rmarkdown_metadata-->
 
 <script type="text/json" id="radix-rmarkdown-metadata">
@@ -1074,10 +1076,6 @@ figure img.external {
   margin-top: 1.5em;
 }
 
-.figure img {
-  width: 100%;
-}
-
 .figure .caption {
   color: rgba(0, 0, 0, 0.6);
   font-size: 12px;
@@ -1907,6 +1905,12 @@ function init_distill() {
 
     // hoverable references
     $('span.citation[data-cites]').each(function() {
+      if ($(this).children()[0].nodeName == "D-FOOTNOTE") {
+        var fn = $(this).children()[0]
+        $(this).html(fn.shadowRoot.querySelector("sup"))
+        $(this).id = fn.id
+        fn.remove()
+      }
       var refs = $(this).attr('data-cites').split(" ");
       var refHtml = refs.map(function(ref) {
         return "<p>" + $('#ref-' + ref).html() + "</p>";
@@ -1921,6 +1925,31 @@ function init_distill() {
         placement: 'bottom-start'
       });
     });
+
+    // fix footnotes in tables (#411)
+    // replacing broken distill.pub feature
+    $('table d-footnote').each(function() {
+      // we replace internal showAtNode methode which is triggered when hovering a footnote
+      this.hoverBox.showAtNode = function(node) {
+        // ported from https://github.com/distillpub/template/pull/105/files
+        calcOffset = function(elem) {
+            let x = elem.offsetLeft;
+            let y = elem.offsetTop;
+            // Traverse upwards until an `absolute` element is found or `elem`
+            // becomes null.
+            while (elem = elem.offsetParent && elem.style.position != 'absolute') {
+                x += elem.offsetLeft;
+                y += elem.offsetTop;
+            }
+
+            return { left: x, top: y };
+        }
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetTop
+        const bbox = node.getBoundingClientRect();
+        const offset = calcOffset(node);
+        this.show([offset.left + bbox.width, offset.top + bbox.height]);
+      }
+    })
 
     // clear polling timer
     clearInterval(tid);
@@ -2020,6 +2049,8 @@ function init_common() {
   // mark non-body figures created by knitr chunks as 100% width
   $('.layout-chunk').each(function(i, val) {
     var figures = $(this).find('img, .html-widget');
+    // ignore leaflet img layers (#106)
+    figures = figures.filter(':not(img[class*="leaflet"])')
     if ($(this).attr('data-layout') !== "l-body") {
       figures.css('width', '100%');
     } else {
@@ -2042,7 +2073,7 @@ function init_common() {
   // get rid of index.html references in header
   if (window.location.protocol !== "file:") {
     $('.distill-site-header a[href]').each(function(i,val) {
-      $(this).attr('href', $(this).attr('href').replace("index.html", "./"));
+      $(this).attr('href', $(this).attr('href').replace(/^index[.]html/, "./"));
     });
   }
 
@@ -2201,6 +2232,9 @@ Readjustment Act of 1944 (G.I. Bill)</a></li>
 <li><a href="#housing-act-of-1964">Housing Act of 1964</a></li>
 <li><a href="#housing-and-urban-development-act-of-1965">Housing and
 Urban Development Act of 1965</a></li>
+<li><a
+href="#demonstration-cities-and-metropolitan-development-act-of-1966">Demonstration
+Cities and Metropolitan Development Act of 1966</a></li>
 <li><a href="#civil-rights-act-of-1968">Civil Rights Act of
 1968</a></li>
 <li><a href="#housing-and-urban-development-act-of-1968">Housing and
@@ -2216,6 +2250,8 @@ Urban Development Act of 1969</a></li>
 <ul>
 <li><a href="#richard-nixon-1">Richard Nixon</a>
 <ul>
+<li><a href="#housing-and-urban-development-act-of-1970">Housing and
+Urban Development Act of 1970</a></li>
 <li><a href="#housing-and-community-development-act-of-1974">Housing and
 Community Development Act of 1974</a></li>
 </ul></li>
@@ -2754,6 +2790,20 @@ parks and other major concerns of the Nation by establishing the
 <strong>Department of Housing and Urban Development</strong>.” <span
 class="citation" data-cites="coan1969">(<a href="#ref-coan1969"
 role="doc-biblioref">Coan 1969</a>)</span></p>
+<h3
+id="demonstration-cities-and-metropolitan-development-act-of-1966">Demonstration
+Cities and Metropolitan Development Act of 1966</h3>
+<p><strong>Section 1011</strong> directed HUD “to conduct research about
+the ‘ecological factors involved in urban living’ and also to conduct
+studies and demonstrations on <em>ways to apply <strong>innovative
+technologies</strong> to housing construction, rehabilitation, and
+maintenance and to urban development activities.</em>” <span
+class="citation" data-cites="watkins2022">(<a href="#ref-watkins2022"
+role="doc-biblioref">Watkins 2022</a>)</span></p>
+<aside>
+<p>(<a href="https://uslaw.link/citation/us-law/public/89/754">P.L.
+89-754, November 3, 1966</a>)</p>
+</aside>
 <h3 id="civil-rights-act-of-1968">Civil Rights Act of 1968</h3>
 <p>The <strong>Fair Housing Act</strong>, enacted as Title VIII of the
 Civil Rights Act, “<strong>prohibits discrimination in the sale, rental,
@@ -2873,6 +2923,18 @@ support, the Model Cities program was ultimately canceled in 1974.”
 <span class="citation" data-cites="soifer2014">(<a
 href="#ref-soifer2014" role="doc-biblioref">Soifer et al.
 2014</a>)</span></p>
+<p>The Act “established a 10-year housing goal of 26 million new homes,
+6 million of them for low- and moderate-income families. The same act
+directed HUD (<strong>Section 108</strong>) to encourage the <strong>use
+of new technologies</strong> in the development of low-income
+housing.</p>
+<p>This mandate called for HUD to solicit and approve no more than five
+plans by public or private entities to develop low-income housing ‘using
+new and advanced technologies… where local building regulations permit
+the construction of experimental housing,’ or where local zoning law
+permits variances for the construction of ‘experimental housing.’” <span
+class="citation" data-cites="watkins2022">(<a href="#ref-watkins2022"
+role="doc-biblioref">Watkins 2022</a>)</span></p>
 <h2 id="richard-nixon">Richard Nixon</h2>
 <h3 id="housing-and-urban-development-act-of-1969">Housing and Urban
 Development Act of 1969</h3>
@@ -2895,6 +2957,22 @@ role="doc-biblioref">McCarty, Perl, and Jones 2019</a>)</span></p>
 </aside>
 <h1 id="s-4">1970s</h1>
 <h2 id="richard-nixon-1">Richard Nixon</h2>
+<h3 id="housing-and-urban-development-act-of-1970">Housing and Urban
+Development Act of 1970</h3>
+<p><strong>Title V</strong> of this Act “re-emphasized Section 108 of
+the 1968 HUD Act. It stated ‘the Secretary shall require, to the
+greatest extent feasible, the employment of <strong>new and improved
+technologies</strong>, methods, and materials in housing construction,
+rehabilitation, and maintenance… with a view to reducing costs, and
+shall encourage and promote the acceptance and application of such
+advanced technology, methods, and materials by all segments of the
+housing industry.’” <span class="citation" data-cites="watkins2022">(<a
+href="#ref-watkins2022" role="doc-biblioref">Watkins
+2022</a>)</span></p>
+<aside>
+<p>(<a href="https://uslaw.link/citation/us-law/public/91/609">P.L.
+91-609, December 31, 1970</a>)</p>
+</aside>
 <h3 id="housing-and-community-development-act-of-1974">Housing and
 Community Development Act of 1974</h3>
 <p>“By the early 1970s, concern was growing about the cost, efficacy,
@@ -3423,6 +3501,11 @@ Federal Housing Assistance Programs and Policy.”</span>
 Soifer, Steven, Joseph McNeely, Cathy Costa, and Nancy
 Pickering-Bernheim. 2014. <em>Community Economic Development in Social
 Work</em>. Columbia University Press.
+</div>
+<div id="ref-watkins2022" class="csl-entry" role="doc-biblioentry">
+Watkins, Kent. 2022. <span>“How the Past Informs Present-Day Polcy and
+Program Decision-Making: What Have 4,000 Years of Off-Site Houring
+Technology Innovation Taught Us and Where Do We Go from Here?”</span>
 </div>
 </div>
 <!--radix_placeholder_article_footer-->

@@ -244,6 +244,16 @@ The 1965 Act further expanded the Federal Government's concern about the quality
 
 Also in 1965, the Congress recognized that the problems of the city had come of age and should be considered on a par with agriculture, parks and other major concerns of the Nation by establishing the **Department of Housing and Urban Development**." [@coan1969]
 
+### Demonstration Cities and Metropolitan Development Act of 1966
+
+**Section 1011** directed HUD "to conduct research about the 'ecological factors involved in urban living' and also to conduct studies and demonstrations on *ways to apply **innovative technologies** to housing construction, rehabilitation, and maintenance and to urban development activities.*" [@watkins2022]
+
+<aside>
+
+([P.L. 89-754, November 3, 1966](https://uslaw.link/citation/us-law/public/89/754))
+
+</aside>
+
 ### Civil Rights Act of 1968
 
 The **Fair Housing Act**, enacted as Title VIII of the Civil Rights Act, "**prohibits discrimination in the sale, rental, or financing of housing** based on race, color, religion, national origin, sex, familial status, and handicap" (familial status and handicap were added as part of the Fair Housing Amendments Act of 1988, P.L. 100-430). "In addition to prohibiting discrimination, the Fair Housing Act also requires HUD and other federal agencies to administer their housing and urban development programs in ways that affirmatively further fair housing. In other words, as determined by courts, **HUD is to prevent segregation** and **ensure that housing is open to everyone**." [@mccarty2019]
@@ -278,6 +288,10 @@ The consultants were motivated to close deals and were effective at getting proj
 
 The political pressures on the **Model Cities** program to produce large-scale results quickly also condemned the program to failure. For example, it called on community institutions to increase the volume of housing production by 400 to 1000% in just a year or two. The complications of achieving volume overwhelmed the program's capacity and spirit. The government could not, or did not, continue to provide the massive, long-term resources that were needed in order to continue. Johnson's attention subsequently shifted from the domestic housing agenda to the Vietnam War. Without adequate resources and federal support, the Model Cities program was ultimately canceled in 1974." [@soifer2014]
 
+The Act "established a 10-year housing goal of 26 million new homes, 6 million of them for low- and moderate-income families. The same act directed HUD (**Section 108**) to encourage the **use of new technologies** in the development of low-income housing.
+
+This mandate called for HUD to solicit and approve no more than five plans by public or private entities to develop low-income housing 'using new and advanced technologies... where local building regulations permit the construction of experimental housing,' or where local zoning law permits variances for the construction of 'experimental housing.'" [@watkins2022]
+
 ## Richard Nixon
 
 ### Housing and Urban Development Act of 1969
@@ -293,6 +307,16 @@ The political pressures on the **Model Cities** program to produce large-scale r
 # 1970s
 
 ## Richard Nixon
+
+### Housing and Urban Development Act of 1970
+
+**Title V** of this Act "re-emphasized Section 108 of the 1968 HUD Act. It stated 'the Secretary shall require, to the greatest extent feasible, the employment of **new and improved technologies**, methods, and materials in housing construction, rehabilitation, and maintenance... with a view to reducing costs, and shall encourage and promote the acceptance and application of such advanced technology, methods, and materials by all segments of the housing industry.'" [@watkins2022]
+
+<aside>
+
+([P.L. 91-609, December 31, 1970](https://uslaw.link/citation/us-law/public/91/609))
+
+</aside>
 
 ### Housing and Community Development Act of 1974
 
