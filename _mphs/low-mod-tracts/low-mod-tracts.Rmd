@@ -1,0 +1,118 @@
+---
+title: "low-mod-tracts"
+description: |
+  A short description of the post.
+author:
+  - name: Sarah Johnson
+    url: {}
+date: 2022-06-24
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(tigris)
+```
+
+```{r}
+v20 <- load_variables(2020, "acs5") 
+```
+
+```{r}
+shelby <- counties(state = "TN") %>% 
+  filter(NAME == "Shelby")
+```
+
+
+```{r}
+medInc <- get_acs(
+  geography = "tract",
+  variables = "B07011_001",
+  state = "TN",
+  county = "Shelby",
+  geometry = TRUE,
+  year = 2020
+)
+```
+
+```{r}
+medIncOnly <- medInc %>% 
+  filter(estimate <= 52092)
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = shelby) +
+  geom_sf(data = medIncOnly, aes(fill = estimate), color = NA) +
+  scale_fill_viridis_c(labels = scales::label_dollar()) +
+  theme_void() +
+  labs(fill = "Median Income",
+       title = "Low-Moderate Income Tracts in Shelby County, TN",
+       subtitle = "Year: ~2018",
+       caption = "Data: 5-Year ACS 2015-2020")
+
+```
+
+```{r}
+medInc15 <- get_acs(
+  geography = "tract",
+  variables = "B07011_001",
+  state = "TN",
+  county = "Shelby",
+  geometry = TRUE,
+  year = 2015
+)
+```
+
+```{r}
+medIncOnly15 <- medInc15 %>% 
+  filter(estimate <= 46224)
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = shelby) +
+  geom_sf(data = medIncOnly15, aes(fill = estimate), color = NA) +
+  scale_fill_viridis_c(labels = scales::label_dollar()) +
+  theme_void() +
+  labs(fill = "Median Income",
+       title = "Low-Moderate Income Tracts in Shelby County, TN",
+       subtitle = "Year: ~2013",
+       caption = "Data: 5-Year ACS 2010-2015")
+```
+
+```{r}
+medInc10 <- get_acs(
+  geography = "tract",
+  variables = "B07011_001",
+  state = "TN",
+  county = "Shelby",
+  geometry = TRUE,
+  year = 2010
+)
+```
+
+```{r}
+medIncOnly10 <- medInc10 %>% 
+  filter(estimate <= 44705)
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = shelby) +
+  geom_sf(data = medIncOnly10, aes(fill = estimate), color = NA) +
+  scale_fill_viridis_c(labels = scales::label_dollar()) +
+  theme_void() +
+  labs(fill = "Median Income",
+       title = "Low-Moderate Income Tracts in Shelby County, TN",
+       subtitle = "Year: ~2007",
+       caption = "Data: 5-Year ACS 2005-2010")
+```
