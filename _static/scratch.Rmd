@@ -1,0 +1,77 @@
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+
+```{r}
+acs <- read_csv("../_data/acs.csv")
+acss <- read_csv("../_data/acs_sum.csv")
+v19 <- read_csv("../_data/v19acs1.csv")
+yr <- read_csv("../_data/year.csv")
+```
+
+```{r}
+y05 <- 2005:2019
+```
+
+# Summary
+
+```{r}
+ACS1 <- map_dfr(y05, ~ {
+  get_acs(
+    geography = "place",
+    survey = "acs1",
+    table = "B25070",
+    summary_var = "B25070_001",
+    state = "TN",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "yr") %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  mutate(yr = as.numeric(yr))
+```
+
+```{r}
+ACS1 <- ACS1 %>%
+  left_join(yr) %>% 
+  select(-yr) %>% 
+  select(year, everything())
+```
+
+```{r}
+acss <- rbind(acss, ACS1)
+write_csv(acss, "../_data/acs_sum.csv")
+```
+
+# Single Variable
+
+```{r}
+ACS1 <- map_dfr(y05, ~ {
+  get_acs(
+    geography = "place",
+    survey = "acs1",
+    variables = "B25001_001",
+    state = "TN",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "yr") %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  mutate(yr = as.numeric(yr))
+```
+
+```{r}
+ACS1 <- ACS1 %>%
+  left_join(yr) %>% 
+  select(-yr) %>% 
+  select(year, everything()) %>% 
+  mutate(dataset = "ACS1")
+```
+
+```{r}
+acs <- rbind(acs, ACS1)
+write_csv(acs, "../_data/acs.csv")
+```

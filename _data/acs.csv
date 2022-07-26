@@ -9,3 +9,8 @@ year,GEOID,NAME,variable,estimate,moe,dataset
 2017,4748000,"Memphis city, Tennessee",B25001_001,298121,3353,ACS1
 2018,4748000,"Memphis city, Tennessee",B25001_001,300305,3664,ACS1
 2019,4748000,"Memphis city, Tennessee",B25001_001,301473,4146,ACS1
+2005,4748000,"Memphis city, Tennessee",B25001_001,299386,3148,ACS1
+2006,4748000,"Memphis city, Tennessee",B25001_001,294262,3647,ACS1
+2007,4748000,"Memphis city, Tennessee",B25001_001,297383,3353,ACS1
+2008,4748000,"Memphis city, Tennessee",B25001_001,298204,3685,ACS1
+2009,4748000,"Memphis city, Tennessee",B25001_001,309811,3679,ACS1

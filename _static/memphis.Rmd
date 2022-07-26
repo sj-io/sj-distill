@@ -1,0 +1,117 @@
+---
+title: "Memphis Data"
+output:
+    flexdashboard::flex_dashboard:
+      orientation: columns
+---
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(scales)
+```
+
+# Memphis
+
+```{r}
+acs <- read_csv("../_data/acs.csv")
+acss <- read_csv("../_data/acs_sum.csv")
+v19 <- read_csv("../_data/v19acs1.csv")
+yr <- read_csv("../_data/year.csv")
+```
+
+```{r}
+hh <- acss %>% 
+  filter(variable == "B25002_002")
+pop <- acss %>% 
+  filter(variable == "B25008_001")
+```
+
+## Col1
+
+### B25008_001: Population in Occupied Housing Units
+
+```{r}
+ggpop <- pop %>% 
+  ggplot(aes(x = year, y = estimate, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              fill = "navy",
+              alpha = 0.4) +
+  geom_line(color = "navy") +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(pop$year)) +
+  labs(title = "Population in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggpop)
+```
+
+### B25001_001: Housing Units
+
+```{r}
+gghsg <- ggplot(data = acs, aes(x = year, y = estimate, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              fill = "navy",
+              alpha = 0.4) +
+  geom_line(color = "navy") +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(acs$year)) +
+  labs(title = "Housing Units in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "",
+       color = "Dataset") +
+  theme_light()
+
+ggplotly(gghsg)
+```
+
+# Cost Burden
+
+```{r}
+cb <- acss %>% 
+  filter(str_starts(variable, "B25070"))
+```
+
+```{r}
+vCB <- c(
+  "B25070_002" = "Affordable Rent",
+  "B25070_003" = "Affordable Rent",
+  "B25070_004" = "Affordable Rent",
+  "B25070_005" = "Affordable Rent",
+  "B25070_006" = "Affordable Rent",
+  "B25070_007" = "Rent Burdened",
+  "B25070_008" = "Rent Burdened",
+  "B25070_009" = "Rent Burdened",
+  "B25070_010" = "Extremely Rent Burdened"
+)
+```
+
+```{r}
+cb2 <- cb %>% 
+  filter(variable != "B25070_001" & variable != "B25070_011") %>% 
+  mutate(variable = recode_factor(variable, !!!vCB)) %>% 
+  group_by(year, variable) %>% 
+  summarise(estimate = sum(estimate), summary_est = summary_est) %>% 
+  ungroup() %>% 
+  distinct() %>% 
+  mutate(pct = estimate / summary_est)
+```
+
+```{r}
+ggcb2 <- cb2 %>%
+  ggplot(aes(x = year, y = pct, fill = variable)) +
+  geom_col(position = "fill") +
+  scale_y_reverse() +
+  scale_x_continuous(breaks = unique(cb2$year)) +
+  labs(title = "Affordable Rent in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "",
+       color = "Dataset") +
+  theme_light()
+
+ggplotly(ggcb2)
+```
+
