@@ -31,88 +31,74 @@ shelby <- counties(state = "TN") %>%
   filter(NAME == "Shelby")
 ```
 
-
 ```{r}
-medInc <- get_acs(
-  geography = "tract",
-  variables = "B07011_001",
-  state = "TN",
-  county = "Shelby",
-  geometry = TRUE,
-  year = 2020
-)
+lowmod <- read_csv("../_data/lowmod_tract.csv")
+
+lomodCO <- lowmod %>%
+  filter(STATE == 47 & COUNTY == 157) %>% 
+  select(GEOID, LOWMODPCT)
 ```
 
 ```{r}
-medIncOnly <- medInc %>% 
-  filter(estimate <= 52092)
+tract <- tracts(state = "TN", county = "Shelby")
 ```
 
 ```{r}
-ggplot() +
-  geom_sf(data = shelby) +
-  geom_sf(data = medIncOnly, aes(fill = estimate), color = NA) +
-  scale_fill_viridis_c(labels = scales::label_dollar()) +
+mphs <- places(state = "TN") %>% 
+  filter(NAME == "Memphis")
+```
+
+
+```{r}
+lowtr <- tract %>% 
+  left_join(lomodCO, by = "GEOID") %>% 
+  filter(LOWMODPCT >= 51)
+```
+
+```{r}
+gglowmod <-  ggplot() +
+  geom_sf(data = shelby) + 
+  geom_sf(data = lowtr, aes(fill = LOWMODPCT), color = NA) +
+  geom_sf(data = mphs, fill = NA, color = "red") +
+  scale_fill_viridis_c() +
   theme_void() +
-  labs(fill = "Median Income",
-       title = "Low-Moderate Income Tracts in Shelby County, TN",
-       subtitle = "Year: ~2018",
-       caption = "Data: 5-Year ACS 2015-2020")
-
+  labs(fill = "% Low-Mod",
+       title = "Low-Moderate Income Census Tracts in Shelby County",
+       subtitle = "Tracts with at least 51% low-mod households",
+       caption = "Source: FY21 HUD Low- and Moderate-Income Summary Data using ACS 2011-2015")
 ```
 
 ```{r}
-medInc15 <- get_acs(
-  geography = "tract",
-  variables = "B07011_001",
-  state = "TN",
-  county = "Shelby",
-  geometry = TRUE,
-  year = 2015
-)
+ggsave("lowmodtracts.png", gglowmod, bg = "white", width = 7, height = 5)
+```
+
+
+```{r}
+rds <- roads(state = "TN", county = "Shelby")
 ```
 
 ```{r}
-medIncOnly15 <- medInc15 %>% 
-  filter(estimate <= 46224)
+rds2 <- rds %>% 
+  filter(RTTYP != "M")
 ```
 
+
 ```{r}
-ggplot() +
-  geom_sf(data = shelby) +
-  geom_sf(data = medIncOnly15, aes(fill = estimate), color = NA) +
-  scale_fill_viridis_c(labels = scales::label_dollar()) +
+gg2 <- ggplot() +
+  geom_sf(data = shelby, size = 1) + 
+  geom_sf(data = lowtr, aes(fill = LOWMODPCT), color = NA) +
+  geom_sf(data = rds2, color = "black", alpha = .2) +
+  geom_sf(data = mphs, fill = NA, color = "red", size = .72) +
+  scale_fill_viridis_c() +
   theme_void() +
-  labs(fill = "Median Income",
-       title = "Low-Moderate Income Tracts in Shelby County, TN",
-       subtitle = "Year: ~2013",
-       caption = "Data: 5-Year ACS 2010-2015")
+  labs(fill = "% Low-Mod",
+       title = "Low-Moderate Income Census Tracts in Shelby County",
+       subtitle = "Tracts with at least 51% low-mod households",
+       caption = "Source: FY21 HUD Low- and Moderate-Income Summary Data using ACS 2011-2015")
 ```
 
 ```{r}
-medInc10 <- get_acs(
-  geography = "tract",
-  variables = "B07011_001",
-  state = "TN",
-  county = "Shelby",
-  geometry = TRUE,
-  year = 2010
-)
+ggsave("lowmodtracts.png", gg2, bg = "white", width = 7, height = 5)
 ```
 
-```{r}
-medIncOnly10 <- medInc10 %>% 
-  filter(estimate <= 44705)
-```
 
-```{r}
-ggplot() +
-  geom_sf(data = shelby) +
-  geom_sf(data = medIncOnly10, aes(fill = estimate), color = NA) +
-  scale_fill_viridis_c(labels = scales::label_dollar()) +
-  theme_void() +
-  labs(fill = "Median Income",
-       title = "Low-Moderate Income Tracts in Shelby County, TN",
-       subtitle = "Year: ~2007",
-       caption = "Data: 5-Year ACS 2005-2010")
-```
