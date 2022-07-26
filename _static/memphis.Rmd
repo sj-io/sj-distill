@@ -1,8 +1,7 @@
 ---
 title: "Memphis Data"
 output:
-    flexdashboard::flex_dashboard:
-      orientation: columns
+    flexdashboard::flex_dashboard
 ---
 
 ```{r}
@@ -20,18 +19,14 @@ v19 <- read_csv("../_data/v19acs1.csv")
 yr <- read_csv("../_data/year.csv")
 ```
 
-```{r}
-hh <- acss %>% 
-  filter(variable == "B25002_002")
-pop <- acss %>% 
-  filter(variable == "B25008_001")
-```
-
 ## Col1
 
 ### B25008_001: Population in Occupied Housing Units
 
 ```{r}
+pop <- acss %>% 
+  filter(variable == "B25008_001")
+
 ggpop <- pop %>% 
   ggplot(aes(x = year, y = estimate, group = 1)) +
   geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
@@ -48,6 +43,31 @@ ggpop <- pop %>%
 
 ggplotly(ggpop)
 ```
+### B25002_002: Occupied
+
+```{r}
+hh <- acss %>% 
+  filter(variable == "B25002_002")
+
+ggpop <- hh %>% 
+  ggplot(aes(x = year, y = estimate, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              fill = "navy",
+              alpha = 0.4) +
+  geom_line(color = "navy") +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(pop$year)) +
+  labs(title = "Households in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggpop)
+```
+
+
+## Col 2
 
 ### B25001_001: Housing Units
 
@@ -85,19 +105,20 @@ vCB <- c(
   "B25070_007" = "Rent Burdened",
   "B25070_008" = "Rent Burdened",
   "B25070_009" = "Rent Burdened",
-  "B25070_010" = "Extremely Rent Burdened"
+  "B25070_010" = "Extremely Rent Burdened",
+  "B25070_011" = "Not Computed"
 )
 ```
 
 ```{r}
 cb2 <- cb %>% 
-  filter(variable != "B25070_001" & variable != "B25070_011") %>% 
+  filter(variable != "B25070_001") %>% 
   mutate(variable = recode_factor(variable, !!!vCB)) %>% 
   group_by(year, variable) %>% 
   summarise(estimate = sum(estimate), summary_est = summary_est) %>% 
   ungroup() %>% 
   distinct() %>% 
-  mutate(pct = estimate / summary_est)
+  mutate(pct = (estimate / summary_est)*100)
 ```
 
 ```{r}
@@ -106,8 +127,8 @@ ggcb2 <- cb2 %>%
   geom_col(position = "fill") +
   scale_y_reverse() +
   scale_x_continuous(breaks = unique(cb2$year)) +
-  labs(title = "Affordable Rent in Memphis, 2005-2019",
-       y = "ACS estimate",
+  labs(title = "Cost Burden in Memphis, 2005-2019",
+       y = "Percent",
        x = "",
        color = "Dataset") +
   theme_light()
