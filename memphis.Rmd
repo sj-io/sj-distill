@@ -1,0 +1,37 @@
+---
+title: "Memphis Data"
+output:
+    flexdashboard::flex_dashboard:
+      orientation: columns
+---
+
+```{r}
+library(tidyverse)
+library(plotly)
+```
+
+# Memphis
+
+## Col1
+
+### Population
+
+```{r}
+acs <- read_csv("_data/acs.csv")
+```
+
+```{r}
+gg <- ggplot(acs, aes(x = year, y = estimate)) +
+  geom_line() +
+  scale_x_continuous(breaks = unique(acs$year)) +
+  labs(title = "Population in Memphis, 2010-2019",
+       y = "Estimate",
+       x = "Year",
+       color = "Dataset") +
+  theme_light()
+
+ggplotly(gg)
+```
+
+
+### Housing
