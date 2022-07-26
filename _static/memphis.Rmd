@@ -69,6 +69,28 @@ ggplotly(ggpop)
 
 ## Col 2
 
+### Occupancy Status
+
+```{r}
+hsg <- acss %>% 
+  filter(str_detect(variable, "B25002_003")) %>% 
+  mutate(pct = (estimate / summary_est)*100)
+```
+
+```{r}
+ggocc <- hsg %>% 
+  ggplot(aes(x = year, y = pct)) +
+  geom_line() +
+  scale_x_continuous(breaks = unique(hsg$year)) +
+  labs(title = "Vacancy Rate in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggocc)
+```
+
 ### B25001_001: Housing Units
 
 ```{r}
