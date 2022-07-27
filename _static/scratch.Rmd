@@ -5,7 +5,7 @@ library(tidycensus)
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 acs <- read_csv("../_data/acs.csv")
 acss <- read_csv("../_data/acs_sum.csv")
 v19 <- read_csv("../_data/v19acs1.csv")
@@ -16,15 +16,41 @@ yr <- read_csv("../_data/year.csv")
 y05 <- 2005:2019
 ```
 
-# Summary
+```{r}
+vACS1 <- map_dfr(y05, ~ {
+  load_variables(.x, dataset = "acs1")}, .id = "yr")
+```
 
 ```{r}
+vACS1 <- vACS1 %>% 
+  mutate(yr = as.numeric(yr)) %>%
+  left_join(yr) %>% 
+  select(-yr) %>% 
+  select(year, everything()) %>% 
+  rename(variable = name)
+```
+
+```{r}
+write_csv(vACS1, "../_data/vacs1.csv")
+```
+
+```{r}
+v74 <- vACS1 %>% 
+  filter(str_starts(variable, "B25074")) 
+
+write_csv(v74, "../_data/vB25074.csv")
+```
+
+
+# Summary
+
+```{r message=FALSE, warning=FALSE}
 ACS1 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    table = "B25070",
-    summary_var = "B25070_001",
+    table = "B25074",
+    summary_var = "B25074_001",
     state = "TN",
     year = .x,
     cache_table = TRUE
@@ -49,11 +75,11 @@ write_csv(acss, "../_data/acs_sum.csv")
 # Single Variable
 
 ```{r}
-ACS1 <- map_dfr(y05, ~ {
+ACS2 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    variables = "B25001_001",
+    variables = "B25058_001",
     state = "TN",
     year = .x,
     cache_table = TRUE
@@ -64,7 +90,7 @@ ACS1 <- map_dfr(y05, ~ {
 ```
 
 ```{r}
-ACS1 <- ACS1 %>%
+ACS2 <- ACS2 %>%
   left_join(yr) %>% 
   select(-yr) %>% 
   select(year, everything()) %>% 
@@ -72,6 +98,6 @@ ACS1 <- ACS1 %>%
 ```
 
 ```{r}
-acs <- rbind(acs, ACS1)
+acs <- rbind(acs, ACS2)
 write_csv(acs, "../_data/acs.csv")
 ```
