@@ -166,16 +166,19 @@ ggplotly(ggpop)
 
 ```{r}
 hh <- acss %>% 
-  filter(variable == "B25002_002")
+  filter(str_detect(variable, "B25002_00(1|2)")) %>% 
+  mutate(variable = recode_factor(variable,
+                                  "B25002_001" = "Housing Units",
+                                  "B25002_002" = "Occupied Units"))
 
 ggpop <- hh %>% 
-  ggplot(aes(x = year, y = estimate, group = 1)) +
+  ggplot(aes(x = year, y = estimate, color = variable, group = 1)) +
   geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
               fill = "navy",
               alpha = 0.4) +
-  geom_line(color = "navy") +
+  geom_line() +
   scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
-  scale_x_continuous(breaks = unique(pop$year)) +
+  scale_x_continuous(breaks = unique(hh$year)) +
   labs(title = "Households in Memphis, 2005-2019",
        y = "ACS estimate",
        x = "Year",
@@ -210,17 +213,19 @@ ggocc <- hsg %>%
 ggplotly(ggocc)
 ```
 
-### B25001_001: Housing Units
+### B25077_001: Median Home Value
 
 ```{r}
-gghsg <- ggplot(data = acs, aes(x = year, y = estimate, group = 1)) +
+gghsg <- acs %>%
+  filter(str_detect(variable, "B25077")) %>% 
+  ggplot(aes(x = year, y = estimate, group = 1)) +
   geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
               fill = "navy",
               alpha = 0.4) +
   geom_line(color = "navy") +
-  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_y_continuous(labels = label_dollar(scale = .001, suffix = "K"))+
   scale_x_continuous(breaks = unique(acs$year)) +
-  labs(title = "Housing Units in Memphis, 2005-2019",
+  labs(title = "Median Home Value in Memphis, 2005-2019",
        y = "ACS estimate",
        x = "",
        color = "Dataset") +

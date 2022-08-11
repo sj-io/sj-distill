@@ -79,7 +79,7 @@ ACS2 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    variables = "B25058_001",
+    variables = "B25077_001",
     state = "TN",
     year = .x,
     cache_table = TRUE
