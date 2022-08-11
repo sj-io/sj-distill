@@ -13,22 +13,36 @@ yr <- read_csv("../_data/year.csv")
 ```
 
 ```{r}
+vsum <- v19 %>% 
+  filter(str_detect(name, "\\d_001"),
+         !str_detect(concept, "ALLOCATION"))
+```
+
+
+```{r}
 y05 <- 2005:2019
+y20 <- 2009:2020
 ```
 
 ```{r}
-vACS1 <- map_dfr(y05, ~ {
-  load_variables(.x, dataset = "acs1")}, .id = "yr")
+vACS5 <- map_dfr(y20, ~ {
+  load_variables(.x, dataset = "acs5")}, .id = "yr")
 ```
 
 ```{r}
-vACS1 <- vACS1 %>% 
+vACS5 <- vACS5 %>% 
   mutate(yr = as.numeric(yr)) %>%
   left_join(yr) %>% 
   select(-yr) %>% 
   select(year, everything()) %>% 
   rename(variable = name)
 ```
+
+```{r}
+vACS1 <- vACS1 %>%
+  filter(!str_detect(variable, "PR"))
+```
+
 
 ```{r}
 write_csv(vACS1, "../_data/vacs1.csv")
@@ -44,13 +58,13 @@ write_csv(v74, "../_data/vB25074.csv")
 
 # Summary
 
-```{r message=FALSE, warning=FALSE}
+```{r}
 ACS1 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    table = "B25074",
-    summary_var = "B25074_001",
+    table = "B07013",
+    summary_var = "	B07013_001",
     state = "TN",
     year = .x,
     cache_table = TRUE
@@ -58,6 +72,26 @@ ACS1 <- map_dfr(y05, ~ {
 }, .id = "yr") %>% 
   filter(str_detect(NAME, "Memphis")) %>% 
   mutate(yr = as.numeric(yr))
+```
+
+# fixes error w/ summary variable
+```{r}
+ACS1 <- map_dfr(y05, ~ {
+  get_acs(
+    geography = "place",
+    survey = "acs1",
+    table = "B07013",
+    state = "TN",
+    year = .x,
+    cache_table = TRUE
+  )
+}, .id = "yr") %>% 
+  filter(str_detect(NAME, "Memphis")) %>% 
+  mutate(yr = as.numeric(yr)) %>% 
+  group_by(yr) %>% 
+  mutate(summary_est = first(estimate),
+         summary_moe = first(moe)) %>% 
+  ungroup()
 ```
 
 ```{r}
