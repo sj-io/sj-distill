@@ -43,16 +43,25 @@ vACS1 <- vACS1 %>%
   filter(!str_detect(variable, "PR"))
 ```
 
-
 ```{r}
 write_csv(vACS1, "../_data/vacs1.csv")
 ```
 
 ```{r}
-v74 <- vACS1 %>% 
-  filter(str_starts(variable, "B25074")) 
+v19w <- v19 %>% 
+  separate(label, sep = "(\\:)?!!", into = c("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"))
+```
 
-write_csv(v74, "../_data/vB25074.csv")
+```{r}
+vACS1 <- read_csv("../_data/vacs1.csv")
+```
+
+
+```{r}
+v7012 <- vACS1 %>% 
+  filter(str_starts(variable, "B07012")) 
+
+write_csv(v7012, "../_data/vB07012.csv")
 ```
 
 
@@ -80,7 +89,7 @@ ACS1 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    table = "B07013",
+    table = "B07012",
     state = "TN",
     year = .x,
     cache_table = TRUE

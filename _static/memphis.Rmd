@@ -234,6 +234,141 @@ gghsg <- acs %>%
 ggplotly(gghsg)
 ```
 
+# Geo Mobility
+
+## Tenure {.tabset}
+
+```{r}
+v713 <- read_csv("../_data/vB07013.csv")
+v711 <- read_csv("../_data/vB07011.csv")
+v712 <- read_csv("../_data/vB07012.csv")
+```
+
+
+```{r}
+gmT <- acss %>% 
+  filter(str_starts(variable, "B07013")) %>% 
+  left_join(v713, by = c("year", "variable")) %>% 
+  separate(label,
+           into = c("A", "B", "loc", "tenure"),
+           sep = "!!(:)?") %>% 
+  select(-c(concept, A, B, summary_moe)) %>% 
+  mutate(loc = str_remove_all(loc, ":"))
+```
+
+```{r}
+gmT2 <- gmT %>% 
+  select(year, loc, tenure, estimate) %>% 
+  filter(!is.na(tenure)) %>% 
+  group_by(year, loc) %>% 
+  mutate(group_est = sum(estimate),
+         loc = fct_inorder(loc),
+         tenure = recode_factor(tenure, 
+                                "Householder lived in owner-occupied housing units" = "Owner",
+                                "Householder lived in renter-occupied housing units" = "Renter")) %>% 
+  ungroup()
+```
+
+### Estimates
+
+```{r}
+ggGMT2 <- gmT2 %>% 
+  ggplot(aes(x = year, y = estimate, fill = loc)) + 
+  geom_col() +
+  facet_wrap(~tenure) +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))
+
+ggplotly(ggGMT2)
+```
+
+### Proportions
+
+```{r}
+ggGMT3 <- gmT2 %>% 
+  ggplot(aes(x = year, y = estimate, fill = loc)) +
+  geom_col(position = "fill") + 
+  facet_wrap(~tenure) +
+  scale_y_continuous(labels = label_percent())
+
+ggplotly(ggGMT3)
+```
+
+### Median Income
+
+```{r}
+gmI <- acss %>% 
+  filter(str_starts(variable, "B07011")) %>% 
+  left_join(v711, by = c("year", "variable")) %>% 
+  separate(label,
+           into = c("A", "B", "C", "loc"),
+           sep = "!!(:)?") %>% 
+  select(-c(concept, A, B, C, summary_moe)) %>% 
+  mutate(loc = str_remove_all(loc, ":"))
+```
+
+```{r}
+gmI2 <- gmI %>% 
+  select(year, loc, estimate) %>% 
+  filter(!is.na(loc)) %>% 
+  group_by(year, loc) %>% 
+  mutate(loc = fct_inorder(loc)) %>% 
+  ungroup()
+```
+
+```{r}
+ggGMI2 <- gmI2 %>% 
+  ggplot(aes(x = year, y = estimate, color = loc)) +
+  geom_line() +
+  scale_x_continuous(breaks = unique(gmI2$year)) +
+  theme_light()
+
+ggplotly(ggGMI2)
+```
+
+### Poverty Level Estimate
+
+```{r}
+gmPL <- acss %>% 
+  filter(str_starts(variable, "B07012")) %>% 
+  left_join(v712, by = c("year", "variable")) %>% 
+  separate(label,
+           into = c("A", "B", "loc", "pl"),
+           sep = "!!(:)?") %>% 
+  select(year, loc, pl, estimate) %>% 
+  mutate(loc = str_remove_all(loc, ":")) %>% 
+  filter(!is.na(pl)) %>% 
+  group_by(year, loc) %>% 
+  mutate(loc = fct_inorder(loc),
+         pl = recode_factor(pl, 
+                            "Below 100 percent of the poverty level" = "<100% PL",
+                            "100 to 149 percent of the poverty level" = "100-149% PL",
+                            "At or above 150 percent of the poverty level" = "150+% PL")) %>% 
+  ungroup()
+```
+
+
+```{r}
+ggGMPL <- gmPL %>% 
+  ggplot(aes(x = year, y = estimate, fill = loc)) + 
+  geom_col() +
+  facet_wrap(~pl) +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))
+
+ggplotly(ggGMPL)
+```
+
+### PL Proportions
+
+```{r}
+ggPL2 <- gmPL %>% 
+  ggplot(aes(x = year, y = estimate, fill = loc)) +
+  geom_col(position = "fill") + 
+  facet_wrap(~pl) +
+  scale_y_continuous(labels = label_percent())
+
+ggplotly(ggPL2)
+```
+
 # Cost Burden
 
 ```{r}
@@ -382,7 +517,7 @@ ggplotly(gggD2)
 ### Proportions
 
 ```{r}
-gggD2 <- graphiD2 %>% 
+gggD3 <- graphiD2 %>% 
   ggplot(aes(x = year, y = estimate, fill = burden)) +
   geom_col(position = "fill") +
   facet_wrap(~income) +
