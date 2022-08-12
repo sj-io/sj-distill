@@ -60,10 +60,10 @@ vACS1 <- read_csv("../_data/vacs1.csv")
 
 
 ```{r}
-v106 <- vACS1 %>% 
-  filter(str_starts(variable, "B25106")) 
+v118 <- vACS1 %>% 
+  filter(str_starts(variable, "B25118")) 
 
-write_csv(v106, "../_data/vB25106.csv")
+write_csv(v118, "../_data/vB25118.csv")
 ```
 
 
@@ -91,7 +91,7 @@ ACS1 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    table = "B25106",
+    table = "B25118",
     state = "TN",
     year = .x,
     cache_table = TRUE
