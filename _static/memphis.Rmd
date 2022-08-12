@@ -11,8 +11,6 @@ library(scales)
 library(DT)
 ```
 
-# Memphis {data-orientation=rows}
-
 ```{r message=FALSE, warning=FALSE}
 acs <- read_csv("../_data/acs.csv") %>% 
   select(-dataset)
@@ -27,6 +25,224 @@ acs3 <- acss %>%
   select(-c(summary_est, summary_moe)) %>% 
   rbind(acs)
 ```
+
+# Home Values 
+
+## Col
+
+### B25077_001: Median Home Value
+
+```{r}
+gghsg <- acs %>%
+  filter(str_detect(variable, "B25077")) %>% 
+  ggplot(aes(x = year, y = estimate, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              fill = "navy",
+              alpha = 0.4) +
+  geom_line(color = "navy") +
+  scale_y_continuous(labels = label_dollar(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(acs$year)) +
+  labs(title = "Median Home Value in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "",
+       color = "Dataset") +
+  theme_light()
+
+ggplotly(gghsg)
+```
+
+# Population {data-orientation=rows}
+
+## Row 1
+
+### B25002: Occupancy Status
+
+```{r}
+hh <- acss %>% 
+  filter(str_detect(variable, "B25002_00(1|2)")) %>% 
+  mutate(variable = recode_factor(variable,
+                                  "B25002_001" = "Housing Units",
+                                  "B25002_002" = "Households"))
+
+ggHH <- hh %>% 
+  ggplot(aes(x = year, y = estimate, color = variable, fill = variable, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              alpha = 0.4) +
+  geom_line() +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(hh$year)) +
+  labs(title = "Households & Housing Units in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       fill = "Variable",
+       color = "",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggHH)
+```
+
+## Row 2
+
+### B25008_001: Population in Occupied Housing Units
+
+```{r}
+pop <- acss %>% 
+  filter(variable == "B25008_001")
+
+ggpop <- pop %>% 
+  ggplot(aes(x = year, y = estimate, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              fill = "navy",
+              alpha = 0.4) +
+  geom_line(color = "navy") +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(pop$year)) +
+  labs(title = "Population in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggpop)
+```
+
+# Tenure {data-orientation=rows}
+
+## Row 1
+
+### B25003: Tenure 
+
+```{r}
+ten <- acss %>% 
+  filter(str_detect(variable, "B25003_00(2|3)")) %>% 
+  mutate(variable = recode_factor(variable,
+                                  "B25003_002" = "Owners",
+                                  "B25003_003" = "Renters"))
+
+ggTEN <- ten %>% 
+  ggplot(aes(x = year, y = estimate, color = variable, fill = variable, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              alpha = 0.4) +
+  geom_line() +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(ten$year)) +
+  labs(title = "Tenure of Households in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       fill = "Tenure",
+       color = "",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggTEN)
+```
+
+## Row 2
+
+### B25008:  Total Population in Occupied Housing Units by Tenure 
+
+```{r}
+ten2 <- acss %>% 
+  filter(str_detect(variable, "B25008_00(2|3)")) %>% 
+  mutate(variable = recode_factor(variable,
+                                  "B25008_002" = "Owners",
+                                  "B25008_003" = "Renters"))
+
+ggTEN2 <- ten2 %>% 
+  ggplot(aes(x = year, y = estimate, color = variable, fill = variable, group = 1)) +
+  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
+              alpha = 0.4) +
+  geom_line() +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
+  scale_x_continuous(breaks = unique(ten2$year)) +
+  labs(title = "Tenure of Population in Memphis, 2005-2019",
+       y = "ACS estimate",
+       x = "Year",
+       fill = "Tenure",
+       color = "",
+       caption = "Shaded area represents margin of error around the ACS estimate") +
+  theme_light()
+
+ggplotly(ggTEN2)
+```
+
+# Cost Burden 
+
+## B25106: Tenure by Housing Costs as a Percentage of Household Income {.tabset}
+
+### Estimates
+
+```{r}
+v106 <- read_csv("../_data/vB25106.csv")
+```
+
+```{r}
+thc <- acss %>%
+  filter(str_starts(variable, "B25106")) %>%
+  left_join(v106, by = c("year", "variable")) %>%
+  separate(label,
+           into = c("A", "B", "ten", "inc", "cb"),
+           sep = "(:)?!!") %>%
+  select(year, ten, inc, cb, estimate) %>%
+  mutate(ten = str_remove_all(ten, "-occupied housing units(:)?"),
+         inc = str_remove_all(inc, "(:|\\$)"),
+         inc = fct_inorder(inc, ordered = TRUE)) %>%
+  filter(!is.na(inc)) %>%
+  mutate(
+    cb = case_when(
+      inc == "No cash rent" ~ "Affordable",
+      inc == "Zero or negative income" ~ "Burden",
+      cb == "Less than 20 percent" | cb == "20 to 29 percent" ~ "Affordable",
+      cb == "30 percent or more" ~ "Burden"
+    ),
+    inc = str_replace_all(inc, "Zero or negative income", "Less than 20,000")
+  ) %>% 
+  filter(!is.na(cb)) %>% 
+  group_by(year, ten, inc, cb) %>% 
+  summarise(estimate = sum(estimate)) %>% 
+  ungroup() %>% 
+  mutate(inc = fct_relevel(inc, "Less than 20,000"))
+```
+
+```{r}
+ggTHC <- thc %>%
+  ggplot(aes(x = year, y = estimate, fill = cb)) +
+  geom_col(position = "stack") +
+  facet_grid(rows = vars(ten),
+             cols = vars(inc),
+             switch = "y") +
+  scale_fill_manual(values = c("yellowgreen", "tomato")) +
+  scale_y_continuous(labels = label_number(scale = .001, suffix = "K")) +
+  labs(title = "Tenure by Income by Housing Cost Burden in Memphis, 2005-2019",
+       y = "",
+       x = "",
+       fill = "Housing Costs") +
+  theme_light()
+
+ggplotly(ggTHC)
+```
+
+### Proportions
+
+```{r}
+ggTHC2 <- thc %>% 
+  ggplot(aes(x = year, y = estimate, fill = cb)) +
+    geom_col(position = "fill") +
+    facet_grid(rows = vars(ten), cols = vars(inc), scales = "free") +
+  scale_fill_manual(values = c("yellowgreen", "tomato")) +
+  scale_y_continuous(labels = label_percent()) +
+  labs(title = "Tenure by Income by Housing Cost Burden in Memphis, 2005-2019",
+       y = "",
+       x = "", 
+       fill = "Housing Costs") +
+  theme_light()
+
+ggplotly(ggTHC2)
+```
+
+
+# Year over Year {data-orientation=rows}
 
 ```{r}
 vYoY2 <- c(
@@ -90,6 +306,7 @@ yoy2 %>%
 
 
 # Variables
+
 ## Col1
 
 ```{r}
@@ -136,58 +353,7 @@ yoy %>%
   summarise(sum = sum(diff))
 ```
 
-
-# Small
-## Col2
-
-### B25008_001: Population in Occupied Housing Units
-
-```{r}
-pop <- acss %>% 
-  filter(variable == "B25008_001")
-
-ggpop <- pop %>% 
-  ggplot(aes(x = year, y = estimate, group = 1)) +
-  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
-              fill = "navy",
-              alpha = 0.4) +
-  geom_line(color = "navy") +
-  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
-  scale_x_continuous(breaks = unique(pop$year)) +
-  labs(title = "Population in Memphis, 2005-2019",
-       y = "ACS estimate",
-       x = "Year",
-       caption = "Shaded area represents margin of error around the ACS estimate") +
-  theme_light()
-
-ggplotly(ggpop)
-```
-### B25002_002: Occupied
-
-```{r}
-hh <- acss %>% 
-  filter(str_detect(variable, "B25002_00(1|2)")) %>% 
-  mutate(variable = recode_factor(variable,
-                                  "B25002_001" = "Housing Units",
-                                  "B25002_002" = "Occupied Units"))
-
-ggpop <- hh %>% 
-  ggplot(aes(x = year, y = estimate, color = variable, group = 1)) +
-  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
-              fill = "navy",
-              alpha = 0.4) +
-  geom_line() +
-  scale_y_continuous(labels = label_number(scale = .001, suffix = "K"))+
-  scale_x_continuous(breaks = unique(hh$year)) +
-  labs(title = "Households in Memphis, 2005-2019",
-       y = "ACS estimate",
-       x = "Year",
-       caption = "Shaded area represents margin of error around the ACS estimate") +
-  theme_light()
-
-ggplotly(ggpop)
-```
-
+# Vacancy
 
 ## Col 2
 
@@ -211,27 +377,6 @@ ggocc <- hsg %>%
   theme_light()
 
 ggplotly(ggocc)
-```
-
-### B25077_001: Median Home Value
-
-```{r}
-gghsg <- acs %>%
-  filter(str_detect(variable, "B25077")) %>% 
-  ggplot(aes(x = year, y = estimate, group = 1)) +
-  geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
-              fill = "navy",
-              alpha = 0.4) +
-  geom_line(color = "navy") +
-  scale_y_continuous(labels = label_dollar(scale = .001, suffix = "K"))+
-  scale_x_continuous(breaks = unique(acs$year)) +
-  labs(title = "Median Home Value in Memphis, 2005-2019",
-       y = "ACS estimate",
-       x = "",
-       color = "Dataset") +
-  theme_light()
-
-ggplotly(gghsg)
 ```
 
 # Geo Mobility
@@ -367,168 +512,4 @@ ggPL2 <- gmPL %>%
   scale_y_continuous(labels = label_percent())
 
 ggplotly(ggPL2)
-```
-
-# Cost Burden
-
-```{r}
-cb <- acss %>% 
-  filter(str_starts(variable, "B25070"))
-```
-
-```{r}
-vCB <- c(
-  "B25070_002" = "Affordable Rent",
-  "B25070_003" = "Affordable Rent",
-  "B25070_004" = "Affordable Rent",
-  "B25070_005" = "Affordable Rent",
-  "B25070_006" = "Affordable Rent",
-  "B25070_007" = "Rent Burdened",
-  "B25070_008" = "Rent Burdened",
-  "B25070_009" = "Rent Burdened",
-  "B25070_010" = "Extremely Rent Burdened",
-  "B25070_011" = "Not Computed"
-)
-```
-
-```{r}
-cb2 <- cb %>% 
-  filter(variable != "B25070_001") %>% 
-  mutate(variable = recode_factor(variable, !!!vCB)) %>% 
-  group_by(year, variable) %>% 
-  summarise(estimate = sum(estimate), summary_est = summary_est) %>% 
-  ungroup() %>% 
-  distinct() %>% 
-  mutate(pct = (estimate / summary_est)*100)
-```
-
-```{r}
-ggcb2 <- cb2 %>%
-  ggplot(aes(x = year, y = pct, fill = variable)) +
-  geom_col(position = "fill") +
-  scale_y_reverse() +
-  scale_x_continuous(breaks = unique(cb2$year)) +
-  labs(title = "Cost Burden in Memphis, 2005-2019",
-       y = "Percent",
-       x = "",
-       color = "Dataset") +
-  theme_light()
-
-ggplotly(ggcb2)
-```
-
-# CB Detail
-
-## Col {.tabset}
-
-```{r message=FALSE, warning=FALSE}
-grapi <- acss %>%
-  filter(str_starts(variable, "B25074")) %>%
-  left_join(v74, by = c("year", "variable")) %>%
-  separate(label,
-           into = c("A", "B", "income", "burden"),
-           sep = "!!") %>%
-  select(-c(concept, A, B, summary_moe)) %>% 
-  mutate(income = str_remove_all(income, ":"))
-```
-
-```{r}
-vGr <- c(
-  "Less than 20.0 percent",
-  "20.0 to 24.9 percent",
-  "25.0 to 29.9 percent",
-  "30.0 to 34.9 percent",
-  "35.0 to 39.9 percent",
-  "40.0 to 49.9 percent",
-  "50.0 percent or more",
-  "35.0 percent or more",
-  "Not computed"
-)
-
-vGr2 <- c(
-  "Less than 20.0 percent" = "Affordable",
-  "20.0 to 24.9 percent" = "Affordable",
-  "25.0 to 29.9 percent" = "Affordable",
-  "30.0 to 34.9 percent" = "Burdened",
-  "35.0 to 39.9 percent" = "Burdened",
-  "40.0 to 49.9 percent" = "Burdened",
-  "50.0 percent or more" = "Burdened",
-  "35.0 percent or more" = "Burdened",
-  "Not computed" = "Not computed"
-)
-
-vInc <- c(
-  "Less than $10,000" = "Less than $10,000",
-  "$10,000 to $19,999" = "$10,000 to $19,999",
-  "$20,000 to $34,999" = "$20,000 to $34,999",
-  "$35,000 to $49,999" = "$35,000 to $49,999",
-  "$50,000 to $74,999" = "$50,000 to $74,999",
-  "$75,000 to $99,999" = "$75,000 or more",
-  "$100,000 or more" = "$75,000 or more"
-)
-```
-
-```{r}
-graphiD <- grapi %>% 
-  filter(!is.na(burden)) %>% 
-  group_by(year, income) %>% 
-  mutate(group_est = sum(estimate), .before = summary_est,
-         income = fct_inorder(income),
-         burden = factor(burden, vGr)) %>% 
-  ungroup()
-
-graphiD2 <- grapi %>% 
-  select(year, income, burden, estimate) %>%
-  filter(!is.na(burden)) %>%
-  mutate(
-    burden = if_else(income != "Less than $10,000" & burden == "Not computed", "Affordable", burden)
-  ) %>% 
-  group_by(year, income) %>% 
-  mutate(income = recode(income, !!!vInc),
-         burden = recode_factor(burden, !!!vGr2)) %>% 
-  ungroup() %>%
-  distinct() %>% 
-  group_by(year, income, burden) %>% 
-  mutate(estimate = sum(estimate)) %>% 
-  ungroup() %>% 
-  distinct() %>% 
-  mutate(income = fct_inorder(income))
-```
-
-### Estimates
-
-```{r}
-gggD2 <- graphiD2 %>% 
-  ggplot(aes(x = year, y = estimate, fill = burden)) +
-  geom_col() +
-  facet_wrap(~income) +
-  scale_y_continuous(labels = label_number(scale = .001, suffix = "K")) +
-  scale_x_continuous(breaks = unique(graphiD2$year)) +
-  scale_fill_manual(values = c("yellowgreen", "tomato", "steelblue")) +
-  labs(title = "Cost Burden in Memphis, 2005-2019",
-       y = "",
-       x = "",
-       color = "Dataset") +
-  theme_light()
-
-ggplotly(gggD2)
-```
-
-### Proportions
-
-```{r}
-gggD3 <- graphiD2 %>% 
-  ggplot(aes(x = year, y = estimate, fill = burden)) +
-  geom_col(position = "fill") +
-  facet_wrap(~income) +
-  scale_y_continuous(labels = label_percent()) +
-  scale_x_continuous(breaks = unique(graphiD2$year)) +
-  scale_fill_manual(values = c("yellowgreen", "tomato", "steelblue")) +
-  labs(title = "Cost Burden in Memphis, 2005-2019",
-       y = "",
-       x = "",
-       color = "Dataset") +
-  theme_light()
-
-ggplotly(gggD2)
 ```

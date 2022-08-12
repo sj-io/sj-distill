@@ -52,16 +52,18 @@ v19w <- v19 %>%
   separate(label, sep = "(\\:)?!!", into = c("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"))
 ```
 
+# Get variable names
+
 ```{r}
 vACS1 <- read_csv("../_data/vacs1.csv")
 ```
 
 
 ```{r}
-v7012 <- vACS1 %>% 
-  filter(str_starts(variable, "B07012")) 
+v106 <- vACS1 %>% 
+  filter(str_starts(variable, "B25106")) 
 
-write_csv(v7012, "../_data/vB07012.csv")
+write_csv(v106, "../_data/vB25106.csv")
 ```
 
 
@@ -89,7 +91,7 @@ ACS1 <- map_dfr(y05, ~ {
   get_acs(
     geography = "place",
     survey = "acs1",
-    table = "B07012",
+    table = "B25106",
     state = "TN",
     year = .x,
     cache_table = TRUE
