@@ -34,7 +34,8 @@ acs3 <- acss %>%
 
 ```{r}
 gghsg <- acs %>%
-  filter(str_detect(variable, "B25077")) %>% 
+  filter(str_detect(variable, "B25077"),
+         str_detect(NAME, "Memphis")) %>% 
   ggplot(aes(x = year, y = estimate, group = 1)) +
   geom_ribbon(aes(ymax = estimate + moe, ymin = estimate - moe),
               fill = "navy",
@@ -49,6 +50,95 @@ gghsg <- acs %>%
   theme_light()
 
 ggplotly(gghsg)
+```
+
+# Map
+
+## Col
+
+### B25077_001: Median Home Value
+
+```{r}
+library(tidycensus)
+library(sf)
+library(mapboxapi)
+library(mapview)
+```
+
+
+```{r}
+acsg <- read_sf("../_data/geo/acsg.shp")
+shelby_blocks <- read_sf("../_data/geo/blocks.shp")
+```
+
+```{r}
+mv15 <- acsg %>% 
+  filter(year == 2015) %>% 
+  mutate(estimate = estimate * 1.09257667)
+
+## inflation adjusted per https://www.census.gov/programs-surveys/acs/guidance/comparing-acs-data/2020/5-year-comparison.html
+
+mv20 <- acsg %>% 
+  filter(year == 2020)
+```
+
+```{r}
+mv_interpolate <- interpolate_pw(
+  mv15,
+  mv20,
+  to_id = "GEOID",
+  extensive = FALSE,
+  weights = shelby_blocks,
+  weight_column = "HOUSING20",
+  crs = 6510
+)
+```
+
+```{r}
+mv_shift <- mv20 %>% 
+  left_join(st_drop_geometry(mv_interpolate),
+            by = "GEOID",
+            suffix = c("_2020", "_2015")) %>% 
+  mutate(mv_shift = estimate_2020 - estimate_2015)
+```
+
+```{r}
+shelby_basemap <- layer_static_mapbox(
+   location = mv_shift,
+   style_url = "mapbox://styles/mapbox/dark-v10",
+   username = "sarahjohnson"
+ )
+ 
+ggplot() +
+   shelby_basemap +
+   geom_sf(data = mv_shift,
+           aes(fill = mv_shift),
+           color = NA, alpha = 0.8) +
+   scale_fill_distiller(palette = "PuOr", direction = -1) + 
+   labs(fill = "Shift, 2011-2015 to\n2016-2020 ACS",
+        title = "Change in median value",
+        subtitle = "Shelby County, Tennessee") + 
+   theme_void()
+```
+
+```{r}
+up <- mv_shift %>% filter(mv_shift > 0) %>% 
+  mutate(mv_log = log(mv_shift))
+down <- mv_shift %>% filter(mv_shift < 0) %>% 
+  mutate(mv_log = log(abs(mv_shift)) * -1)
+mv_log <- mv_shift %>% 
+  mutate(mv_log = log(mv_shift))
+```
+
+```{r}
+mapview(up, zcol = "mv_log", col.regions=brewer.pal(9, "Greens")) +
+mapview(down, zcol = "mv_log", col.regions=rev(brewer.pal(9, "Reds")))
+```
+
+```{r}
+mapview(mv_shift, 
+        zcol = "mv_shift", 
+        col.regions=brewer.pal(9, "RdYlGn"))
 ```
 
 # Population {data-orientation=rows}

@@ -10,18 +10,21 @@ acs <- read_csv("../_data/acs.csv")
 acss <- read_csv("../_data/acs_sum.csv")
 v19 <- read_csv("../_data/v19acs1.csv")
 yr <- read_csv("../_data/year.csv")
+yr5 <- read_csv("../_data/year5.csv")
+
+y05 <- 2005:2019
+y20 <- 2009:2020
 ```
+
+```{r}
+vacs5 <- read_csv("../_data/vacs5.csv")
+```
+
 
 ```{r}
 vsum <- v19 %>% 
   filter(str_detect(name, "\\d_001"),
          !str_detect(concept, "ALLOCATION"))
-```
-
-
-```{r}
-y05 <- 2005:2019
-y20 <- 2009:2020
 ```
 
 ```{r}
@@ -116,6 +119,80 @@ ACS1 <- ACS1 %>%
 acss <- rbind(acss, ACS1)
 write_csv(acss, "../_data/acs_sum.csv")
 ```
+
+# ACS5 single variable geometry
+
+```{r}
+library(sf)
+```
+
+```{r}
+ACS2 <- map_dfr(y20, ~ {
+  get_acs(
+    geography = "tract",
+    county = "Shelby",
+    survey = "acs5",
+    variables = "B25077_001",
+    state = "TN",
+    year = .x,
+    cache_table = TRUE,
+    geometry = TRUE
+  )
+}, .id = "yr") %>% 
+  mutate(yr = as.numeric(yr))
+```
+
+```{r}
+ACS2 <- ACS2 %>% 
+  left_join(yr5) %>% 
+  select(-yr) %>% 
+  select(year, everything()) %>% 
+  mutate(dataset = "ACS5")
+```
+
+```{r}
+st_write(ACS2, "../_data/geo/acsg.shp")
+```
+
+```{r}
+library(tigris)
+```
+
+```{r}
+shelby_blocks <- blocks(
+  state = "TN",
+  county = "Shelby",
+  year = 2020
+)
+```
+
+```{r}
+st_write(shelby_blocks, "../_data/geo/blocks.shp")
+```
+
+```{r}
+memphis <- places(state = "TN") %>% 
+  filter(NAME == "Memphis")
+```
+
+```{r}
+memtracts <- mv_shift %>% 
+  st_filter(memphis, .predicate = st_within)
+```
+
+# Comparison Profiles
+
+```{r}
+mv_compare <- get_acs(
+  geography = "tract",
+  
+)
+```
+
+```{r}
+vcom <- load_variables(2020, dataset = "acs5/cprofile")
+```
+
 
 # Single Variable
 
