@@ -28,7 +28,7 @@ acs3 <- acss %>%
 
 # Home Values 
 
-## Col
+## Col {.tabset}
 
 ### B25077_001: Median Home Value
 
@@ -52,17 +52,13 @@ gghsg <- acs %>%
 ggplotly(gghsg)
 ```
 
-# Map
-
-## Col
-
-### B25077_001: Median Home Value
+### Map: Change in Median Value, 2015-2020
 
 ```{r}
 library(tidycensus)
 library(sf)
-library(mapboxapi)
 library(mapview)
+library(RColorBrewer)
 ```
 
 
@@ -99,46 +95,25 @@ mv_shift <- mv20 %>%
   left_join(st_drop_geometry(mv_interpolate),
             by = "GEOID",
             suffix = c("_2020", "_2015")) %>% 
-  mutate(mv_shift = estimate_2020 - estimate_2015)
+  mutate(mv_shift = estimate_2020 - estimate_2015,
+         mv_log = case_when(
+           mv_shift > 0 ~ log(mv_shift),
+           mv_shift < 0 ~ log(abs(mv_shift)) * -1,
+           TRUE ~ mv_shift
+         ))
 ```
 
 ```{r}
-shelby_basemap <- layer_static_mapbox(
-   location = mv_shift,
-   style_url = "mapbox://styles/mapbox/dark-v10",
-   username = "sarahjohnson"
- )
- 
-ggplot() +
-   shelby_basemap +
-   geom_sf(data = mv_shift,
-           aes(fill = mv_shift),
-           color = NA, alpha = 0.8) +
-   scale_fill_distiller(palette = "PuOr", direction = -1) + 
-   labs(fill = "Shift, 2011-2015 to\n2016-2020 ACS",
-        title = "Change in median value",
-        subtitle = "Shelby County, Tennessee") + 
-   theme_void()
-```
-
-```{r}
-up <- mv_shift %>% filter(mv_shift > 0) %>% 
-  mutate(mv_log = log(mv_shift))
-down <- mv_shift %>% filter(mv_shift < 0) %>% 
-  mutate(mv_log = log(abs(mv_shift)) * -1)
-mv_log <- mv_shift %>% 
-  mutate(mv_log = log(mv_shift))
-```
-
-```{r}
-mapview(up, zcol = "mv_log", col.regions=brewer.pal(9, "Greens")) +
-mapview(down, zcol = "mv_log", col.regions=rev(brewer.pal(9, "Reds")))
-```
-
-```{r}
+mapviewOptions(basemaps.color.shuffle = FALSE)
+ld <- scales::label_dollar()
 mapview(mv_shift, 
-        zcol = "mv_shift", 
-        col.regions=brewer.pal(9, "RdYlGn"))
+        zcol = c("mv_shift", "mv_log"),
+        layer.name = c("Change in Median Value", "Change in Median Value (Log)"),
+        label = ld(mv_shift$mv_shift),
+        col.regions=brewer.pal(11, "RdYlGn"),
+        legend = c(TRUE, FALSE),
+        homebutton = c(TRUE, FALSE),
+        hide = c(TRUE, FALSE)) 
 ```
 
 # Population {data-orientation=rows}
