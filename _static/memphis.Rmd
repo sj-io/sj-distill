@@ -52,7 +52,7 @@ gghsg <- acs %>%
 ggplotly(gghsg)
 ```
 
-### Map: Change in Median Value, 2015-2020
+### Map: Median Value, 2020
 
 ```{r}
 library(tidycensus)
@@ -60,7 +60,6 @@ library(sf)
 library(mapview)
 library(RColorBrewer)
 ```
-
 
 ```{r}
 acsg <- read_sf("../_data/geo/acsg.shp")
@@ -104,8 +103,30 @@ mv_shift <- mv20 %>%
 ```
 
 ```{r}
+mv20 <- mv20 %>% 
+  mutate(mv_log = case_when(
+           estimate > 0 ~ log(estimate),
+           estimate < 0 ~ log(abs(estimate)) * -1,
+           TRUE ~ estimate
+         ))
+```
+
+```{r}
 mapviewOptions(basemaps.color.shuffle = FALSE)
 ld <- scales::label_dollar()
+mapview(mv20, 
+        zcol = c("estimate", "mv_log"), 
+        layer.name = c("Median Value", "Median Value (log)"), 
+        label = ld(mv20$estimate),
+        col.regions = brewer.pal(11, "RdYlGn"),
+        legend = c(TRUE, FALSE),
+        homebutton = c(TRUE, FALSE),
+        hide = c(TRUE, FALSE))
+```
+
+### Map: Change in Median Value, 2015-2020
+
+```{r}
 mapview(mv_shift, 
         zcol = c("mv_shift", "mv_log"),
         layer.name = c("Change in Median Value", "Change in Median Value (Log)"),

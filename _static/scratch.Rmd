@@ -13,7 +13,10 @@ yr <- read_csv("../_data/year.csv")
 yr5 <- read_csv("../_data/year5.csv")
 
 y05 <- 2005:2019
+y15 <- c(2015, 2020)
 y20 <- 2009:2020
+
+options(tigris_use_cache = TRUE)
 ```
 
 ```{r}
@@ -67,6 +70,15 @@ v118 <- vACS1 %>%
   filter(str_starts(variable, "B25118")) 
 
 write_csv(v118, "../_data/vB25118.csv")
+```
+
+```{r}
+vDL <-
+  acss %>% 
+  filter(str_ends(variable, "_001")) %>% 
+  select(variable) %>% 
+  distinct() %>% 
+  left_join(v19, by = c("variable" = "name"))
 ```
 
 
@@ -127,19 +139,18 @@ library(sf)
 ```
 
 ```{r}
-ACS2 <- map_dfr(y20, ~ {
+ACS2 <- map_dfr(y15, ~ {
   get_acs(
     geography = "tract",
     county = "Shelby",
     survey = "acs5",
-    variables = "B25077_001",
+    table = "B25002",
     state = "TN",
     year = .x,
     cache_table = TRUE,
     geometry = TRUE
   )
-}, .id = "yr") %>% 
-  mutate(yr = as.numeric(yr))
+}, .id = "yr")
 ```
 
 ```{r}
